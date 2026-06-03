@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Géo-Select — Dimensionnement PAC géothermique</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#eceae3; --paper:#f7f5ef; --panel:#ffffff; --ink:#1d2125; --ink-soft:#5b6066;
+    --line:#d7d3c8; --line-strong:#b9b3a4; --rail:#22282d; --rail-ink:#e9e6dd;
+    --heat:#cf4310; --heat-soft:#fbeae1; --geo:#0c7a8c; --geo-soft:#e0f0f2;
+    --ok:#2f7d3b; --warn:#b5740c; --bad:#b32d2d; --field:#fcfbf7;
+    --shadow:0 1px 0 var(--line), 0 8px 24px -16px rgba(20,20,20,.35);
+    --mono:'IBM Plex Mono',monospace; --sans:'IBM Plex Sans',sans-serif; --disp:'Saira Condensed',sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:14px;line-height:1.45;-webkit-font-smoothing:antialiased}
+  h1,h2,h3,h4{font-family:var(--disp);font-weight:600;letter-spacing:.01em;margin:0;text-transform:uppercase}
+  .mono{font-family:var(--mono)}
+  .app{max-width:1320px;margin:0 auto;padding:0 18px 80px}
+  header.bar{position:sticky;top:0;z-index:40;background:var(--rail);color:var(--rail-ink);
+    display:flex;align-items:center;gap:18px;padding:11px 18px;margin:0 -18px 0;border-bottom:3px solid var(--heat)}
+  header.bar .logo{font-family:var(--disp);font-weight:700;font-size:21px;letter-spacing:.04em;display:flex;align-items:center;gap:10px;white-space:nowrap}
+  header.bar .logo b{color:var(--heat)}
+  header.bar .spark{width:13px;height:13px;border-radius:50%;background:radial-gradient(circle at 30% 30%,var(--heat),#7d2306)}
+  header.bar .ver{font-family:var(--mono);font-size:11px;color:#9aa1a6}
+  header.bar .grow{flex:1}
+  .iobtns{display:flex;gap:8px}
+  button{font-family:var(--sans);font-size:13px;font-weight:500;cursor:pointer;border:none;border-radius:5px;padding:8px 13px;transition:.12s}
+  .btn-ghost{background:transparent;color:var(--rail-ink);border:1px solid #3a4248}
+  .btn-ghost:hover{background:#2c3439}
+  .btn-heat{background:var(--heat);color:#fff}.btn-heat:hover{background:#a93409}
+  .btn-soft{background:var(--field);color:var(--ink);border:1px solid var(--line-strong)}.btn-soft:hover{background:#efece4}
+  nav.tabs{display:flex;gap:2px;background:var(--rail);margin:0 -18px;padding:0 18px 0;border-bottom:1px solid var(--line);flex-wrap:wrap}
+  nav.tabs button{border-radius:0;background:transparent;color:#9aa1a6;font-family:var(--disp);font-size:15px;font-weight:600;
+    text-transform:uppercase;letter-spacing:.02em;padding:13px 15px 12px;border-bottom:3px solid transparent;display:flex;gap:8px;align-items:center}
+  nav.tabs button .n{font-family:var(--mono);font-size:12px;background:#2c3439;color:#cdd2d6;border-radius:4px;padding:1px 7px}
+  nav.tabs button:hover{color:var(--rail-ink)}
+  nav.tabs button.active{color:#fff;border-bottom-color:var(--heat)}
+  nav.tabs button.active .n{background:var(--heat);color:#fff}
+  .view{display:none;padding-top:22px}.view.active{display:block}
+  .grid2{display:grid;grid-template-columns:1fr 360px;gap:22px;align-items:start}
+  @media(max-width:980px){.grid2{grid-template-columns:1fr}}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:9px;box-shadow:var(--shadow);margin-bottom:18px;overflow:hidden}
+  .panel>.head{display:flex;align-items:center;gap:10px;padding:11px 16px;background:var(--paper);border-bottom:1px solid var(--line)}
+  .panel>.head h3{font-size:16px}
+  .panel>.head .tag{margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--ink-soft)}
+  .panel>.body{padding:15px 16px}
+  .blk-geo>.head{border-left:4px solid var(--geo)}.blk-heat>.head{border-left:4px solid var(--heat)}
+  .row{display:grid;grid-template-columns:1fr 130px 56px;gap:9px;align-items:center;padding:5px 0}
+  .row label{font-size:13px}.row .unit{font-family:var(--mono);font-size:12px;color:var(--ink-soft)}
+  .row.full{grid-template-columns:1fr}
+  input,select{font-family:var(--sans);font-size:13px;padding:7px 9px;border:1px solid var(--line-strong);border-radius:5px;background:var(--field);color:var(--ink);width:100%}
+  input.mono,input[type=number]{font-family:var(--mono)}
+  input:focus,select:focus{outline:none;border-color:var(--geo);box-shadow:0 0 0 3px var(--geo-soft)}
+  input[readonly]{background:#f0eee7;color:var(--ink-soft)}
+  .seg{display:flex;border:1px solid var(--line-strong);border-radius:5px;overflow:hidden}
+  .seg button{flex:1;border-radius:0;background:var(--field);color:var(--ink-soft);font-size:12.5px;padding:7px 6px;border-right:1px solid var(--line)}
+  .seg button:last-child{border-right:none}.seg button.on{background:var(--ink);color:#fff}
+  .subhead{font-family:var(--disp);font-size:12px;letter-spacing:.05em;color:var(--ink-soft);text-transform:uppercase;margin:12px 0 4px;border-bottom:1px dashed var(--line);padding-bottom:3px}
+  .note{font-size:12px;color:var(--ink-soft);margin:4px 0}
+  .recap{position:sticky;top:120px}
+  .recap .panel>.body{padding:0}
+  .metric{display:flex;justify-content:space-between;align-items:baseline;padding:11px 16px;border-bottom:1px solid var(--line)}
+  .metric:last-child{border-bottom:none}
+  .metric .k{font-size:12px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.03em}
+  .metric .v{font-family:var(--mono);font-weight:600;font-size:20px}
+  .metric .v small{font-size:12px;color:var(--ink-soft);font-weight:400}
+  .metric.big .v{font-size:26px;color:var(--heat)}.metric.geo .v{color:var(--geo)}
+  .toolbar{display:flex;gap:9px;flex-wrap:wrap;align-items:center;margin-bottom:12px}.toolbar .grow{flex:1}
+  table{border-collapse:collapse;width:100%;font-size:12.5px}
+  th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line)}
+  th{font-family:var(--disp);font-size:11.5px;letter-spacing:.02em;text-transform:uppercase;color:var(--ink-soft);background:var(--paper);position:sticky;top:0;z-index:2}
+  td.num,th.num{text-align:right;font-family:var(--mono)}
+  tbody tr:hover{background:var(--paper)}
+  td input{padding:4px 6px;font-size:12px}
+  .tablewrap{max-height:430px;overflow:auto;border:1px solid var(--line);border-radius:7px}
+  .x{color:var(--bad);cursor:pointer;font-weight:600;border:none;background:none;font-size:15px}
+  .edit{color:var(--geo);cursor:pointer;border:none;background:none;font-size:14px}
+  .badge{font-family:var(--mono);font-size:11px;padding:1px 6px;border-radius:4px;background:var(--geo-soft);color:var(--geo)}
+  .badge.m{background:var(--heat-soft);color:var(--heat)}
+  .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(255px,1fr));gap:14px}
+  .mcard{background:var(--panel);border:1px solid var(--line);border-radius:9px;overflow:hidden;box-shadow:var(--shadow);position:relative}
+  .mcard.reco{border:2px solid var(--heat)}
+  .mcard .top{padding:12px 14px;background:var(--paper);border-bottom:1px solid var(--line)}
+  .mcard.reco .top{background:var(--heat-soft)}
+  .mcard h4{font-size:18px}.mcard .sub{font-size:12px;color:var(--ink-soft);font-family:var(--mono)}
+  .mcard .body{padding:10px 14px}
+  .mline{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px dotted var(--line);font-size:13px}
+  .mline:last-child{border:none}.mline b{font-family:var(--mono)}
+  .cov{height:7px;border-radius:4px;background:#e7e3d9;overflow:hidden;margin:8px 0 2px}
+  .cov i{display:block;height:100%;background:var(--geo)}.cov i.over{background:var(--heat)}
+  .reco-flag{position:absolute;top:10px;right:10px;font-family:var(--disp);font-size:11px;letter-spacing:.05em;background:var(--heat);color:#fff;padding:2px 8px;border-radius:20px}
+  .empty{padding:40px;text-align:center;color:var(--ink-soft);font-family:var(--mono);font-size:13px}
+  .doc{background:#fff;border:1px solid var(--line);border-radius:6px;max-width:820px;margin:0 auto;box-shadow:var(--shadow)}
+  .doc .dhead{display:flex;align-items:center;gap:14px;padding:18px 26px;border-bottom:3px solid var(--rail)}
+  .doc .dhead .spark{width:30px;height:30px;border-radius:6px;background:linear-gradient(135deg,var(--heat),#7d2306)}
+  .doc .dhead h2{font-size:25px}
+  .doc .dhead .meta{margin-left:auto;text-align:right;font-family:var(--mono);font-size:11px;color:var(--ink-soft)}
+  .doc section{padding:14px 26px}
+  .doc h3.dt{font-size:15px;background:var(--rail);color:#fff;padding:5px 12px;border-radius:4px;margin-bottom:10px}
+  .drow{display:grid;grid-template-columns:1fr 90px 160px;gap:8px;padding:4px 0;border-bottom:1px dotted var(--line);font-size:13px}
+  .drow .u{font-family:var(--mono);font-size:11px;color:var(--ink-soft);text-align:center}
+  .drow .val{font-family:var(--mono);font-weight:500;text-align:right}
+  .doc .foot{padding:10px 26px 20px;font-size:11px;color:var(--ink-soft);border-top:1px solid var(--line);font-style:italic}
+  .hl{background:var(--heat-soft);border:1px solid var(--heat);border-radius:6px;padding:10px 14px;margin:8px 0;display:flex;justify-content:space-between;align-items:center}
+  .hl .v{font-family:var(--mono);font-size:22px;font-weight:600;color:var(--heat)}
+  .hint{font-size:11.5px;color:var(--ink-soft);background:var(--paper);border:1px dashed var(--line-strong);border-radius:6px;padding:8px 11px;margin-top:6px}
+  .toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:var(--rail);color:#fff;padding:11px 20px;border-radius:7px;font-size:13px;z-index:80;opacity:0;transition:.25s;pointer-events:none}
+  .toast.show{opacity:1}
+  /* modal detail */
+  .modal{position:fixed;inset:0;background:rgba(20,22,24,.55);z-index:60;display:none;align-items:flex-start;justify-content:center;padding:34px 14px;overflow:auto}
+  .modal.show{display:flex}
+  .modal .card{background:var(--panel);border-radius:10px;max-width:920px;width:100%;box-shadow:0 30px 80px -20px rgba(0,0,0,.6)}
+  .modal .mhead{display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--paper);border-radius:10px 10px 0 0}
+  .modal .mbody{padding:16px 18px}
+  .fgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:9px 14px}
+  .f{display:flex;flex-direction:column;gap:2px}
+  .f label{font-size:11px;color:var(--ink-soft)}
+  .f .u{font-size:10px;color:var(--ink-soft);font-family:var(--mono)}
+  /* comparison bars */
+  .barrow{display:grid;grid-template-columns:150px 1fr 110px;gap:12px;align-items:center;padding:7px 0}
+  .barrow .lbl{font-size:13px}
+  .bar{height:26px;border-radius:5px;background:linear-gradient(90deg,var(--heat),#e8703f);display:flex;align-items:center;justify-content:flex-end;padding:0 8px;color:#fff;font-family:var(--mono);font-size:12px;min-width:40px}
+  .bar.pac{background:linear-gradient(90deg,var(--geo),#3aa9bb)}
+  .barrow .cost{font-family:var(--mono);font-weight:600;text-align:right;font-size:14px}
+  @media print{header.bar,nav.tabs,.noprint{display:none!important}body{background:#fff}.app{padding:0}.doc{border:none;box-shadow:none;max-width:100%}.view{display:none!important}.view#v-note{display:block!important;padding:0}}
+</style>
+</head>
+<body>
+<header class="bar">
+  <div class="logo"><span class="spark"></span>Géo<b>·</b>Select</div>
+  <span class="ver mono" id="verLabel">v2.0 web · 2025</span>
+  <div class="grow"></div>
+  <div class="iobtns noprint">
+    <button class="btn-ghost" onclick="fileImport('project')">⤓ Ouvrir projet</button>
+    <button class="btn-heat" onclick="exportProject()">⤒ Enregistrer projet</button>
+  </div>
+</header>
+<nav class="tabs noprint">
+  <button data-tab="db" class="active"><span class="n">1</span>Performances machines</button>
+  <button data-tab="projet"><span class="n">2</span>Saisie projet</button>
+  <button data-tab="result"><span class="n">3</span>Résultats &amp; sélection</button>
+  <button data-tab="compare"><span class="n">4</span>Comparaison énergies</button>
+  <button data-tab="note"><span class="n">5</span>Note de dimensionnement</button>
+</nav>
+
+<div class="app">
+
+<!-- ============ TAB 1 : MACHINES ============ -->
+<section class="view active" id="v-db">
+  <div class="toolbar">
+    <select id="dbGamme" onchange="dbGammeChanged()" style="max-width:230px"></select>
+    <span class="grow"></span>
+    <button class="btn-soft" onclick="addMachine()">+ Ajouter une machine</button>
+    <button class="btn-soft" onclick="exportDB()">⤒ Exporter base machines</button>
+    <button class="btn-soft" onclick="fileImport('db')">⤓ Importer base machines</button>
+  </div>
+  <div class="panel blk-geo">
+    <div class="head"><h3>Catalogue &amp; performances</h3><span class="tag mono" id="dbCount"></span></div>
+    <div class="body">
+      <div class="hint">Donnée maîtresse. La vue rapide montre la puissance et le COP par régime de départ (source <b id="dbSrcLabel"></b>). Cliquez <span class="edit">✎</span> pour ouvrir la <b>fiche thermodynamique complète</b> (pressions, débit R407C, sous-refroidisseur, pertes de charge, capteurs, intensités, EtaS…). Le COP est recalculé = P calo / P absorbée.</div>
+      <div class="row" style="grid-template-columns:1fr 1fr;margin-top:10px">
+        <div><label class="subhead">Régime source affiché</label><select id="dbSrc" onchange="renderDB()"></select></div>
+        <div></div>
+      </div>
+      <div class="tablewrap" style="margin-top:12px"><table id="dbTable"></table></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ TAB 2 : PROJET ============ -->
+<section class="view" id="v-projet">
+  <div class="grid2">
+    <div>
+      <div class="panel"><div class="head"><h3>Opération &amp; client</h3></div><div class="body">
+        <div class="row full"><div><label class="subhead">Référence chantier</label><input id="p_ref"></div></div>
+        <div class="row full"><div><label class="subhead">Type de chantier</label><input id="p_type"></div></div>
+        <div class="row full"><div><label class="subhead">Nom et prénom client</label><input id="p_nom"></div></div>
+        <div class="row" style="grid-template-columns:2fr 1fr 2fr">
+          <div><label class="subhead">Adresse</label><input id="p_adr"></div>
+          <div><label class="subhead">CP</label><input id="p_cp"></div>
+          <div><label class="subhead">Ville</label><input id="p_ville"></div></div>
+        <label class="subhead">Installateur / chargé d'affaire</label>
+        <div class="row" style="grid-template-columns:1fr 1fr"><input id="p_inst" placeholder="Société installateur"><input id="p_referent" placeholder="Référent"></div>
+      </div></div>
+
+      <div class="panel blk-geo"><div class="head"><h3>A · Bâtiment &amp; localisation</h3></div><div class="body">
+        <div class="row"><label>Département du bâtiment</label><select id="b_dept" oninput="recalc()" style="grid-column:2/4"></select></div>
+        <div class="row"><label>Proximité du littoral</label><div class="seg" style="grid-column:2/4" id="seg_littoral"><button data-v="0" class="on">Non</button><button data-v="1">Oui</button></div></div>
+        <div class="row"><label>Altitude</label><input type="number" id="b_alt" value="0" oninput="recalc()"><span class="unit">m</span></div>
+        <div class="row"><label>Mode température de base</label><div class="seg" style="grid-column:2/4" id="seg_tbase"><button data-v="auto" class="on">Auto</button><button data-v="manuel">Manuel</button></div></div>
+        <div class="row"><label>Température de base retenue</label><input type="number" id="b_tbase" value="-10" oninput="recalc()"><span class="unit">°C</span></div>
+        <div class="subhead">Volume chauffé</div>
+        <div class="row"><label>Mode de saisie</label><div class="seg" style="grid-column:2/4" id="seg_volmode"><button data-v="surf" class="on">Surfaces</button><button data-v="vol">Volume direct</button></div></div>
+        <div id="grp_surf">
+          <div class="row"><label>Surface RDC</label><input type="number" id="b_s1" value="200" oninput="recalc()"><span class="unit">m²</span></div>
+          <div class="row"><label>Hauteur sous plafond RDC</label><input type="number" id="b_h1" value="2.5" step="0.1" oninput="recalc()"><span class="unit">m</span></div>
+          <div class="row"><label>Surface étage</label><input type="number" id="b_s2" value="0" oninput="recalc()"><span class="unit">m²</span></div>
+          <div class="row"><label>Hauteur sous plafond étage</label><input type="number" id="b_h2" value="2.5" step="0.1" oninput="recalc()"><span class="unit">m</span></div></div>
+        <div class="row" id="grp_vol" style="display:none"><label>Volume saisi</label><input type="number" id="b_vol" value="500" oninput="recalc()"><span class="unit">m³</span></div>
+        <div class="row"><label>Volume retenu</label><input class="mono" id="b_volret" readonly><span class="unit">m³</span></div>
+        <div class="subhead">Température intérieure &amp; isolation</div>
+        <div class="row"><label>Température intérieure souhaitée</label><input type="number" id="b_tint" value="22" oninput="recalc()"><span class="unit">°C</span></div>
+        <div class="row"><label>Mode coefficient d'isolation</label><div class="seg" style="grid-column:2/4" id="seg_isomode"><button data-v="auto" class="on">Auto</button><button data-v="manuel">Manuel</button></div></div>
+        <div class="row" id="grp_isoauto"><label>Type de bâti</label><select id="b_isotype" oninput="recalc()" style="grid-column:2/4"></select></div>
+        <div class="row" id="grp_isoman" style="display:none"><label>Coefficient G manuel</label><input type="number" id="b_gman" value="0.6" step="0.01" oninput="recalc()"><span class="unit">W/m³.°C</span></div>
+        <div class="row"><label>Coefficient G retenu</label><input class="mono" id="b_gret" readonly><span class="unit">W/m³.°C</span></div>
+      </div></div>
+
+      <div class="panel blk-heat"><div class="head"><h3>B · Besoin de chauffage</h3></div><div class="body">
+        <div class="row"><label>Saisie de la puissance</label><div class="seg" style="grid-column:2/4" id="seg_pdirect"><button data-v="0" class="on">Calcul auto</button><button data-v="1">Puissance directe</button></div></div>
+        <div class="row" id="grp_pdirect" style="display:none"><label>Puissance imposée</label><input type="number" id="b_pdir" value="12" step="0.1" oninput="recalc()"><span class="unit">kW</span></div>
+        <div class="row"><label>Type d'émetteurs (1)</label><select id="b_em1" oninput="recalc()" style="grid-column:2/4"></select></div>
+        <div class="row"><label>Type d'émetteurs (2)</label><select id="b_em2" oninput="recalc()" style="grid-column:2/4"></select></div>
+        <div class="row"><label>Rendement de l'installation</label><input type="number" id="b_rdt" value="100" oninput="recalc()"><span class="unit">%</span></div>
+        <div class="row"><label>Surpuissance de la PAC</label><input type="number" id="b_surp" value="0" oninput="recalc()"><span class="unit">%</span></div>
+      </div></div>
+
+      <div class="panel blk-heat"><div class="head"><h3>C · Eau chaude sanitaire</h3></div><div class="body">
+        <div class="row"><label>Présence d'ECS</label><div class="seg" style="grid-column:2/4" id="seg_ecs"><button data-v="0" class="on">Non</button><button data-v="1">Oui</button></div></div>
+        <div id="grp_ecs" style="display:none">
+          <div class="row"><label>Nombre de personnes</label><input type="number" id="e_nb" value="4" oninput="recalc()"><span class="unit">pers</span></div>
+          <div class="row"><label>Volume ECS par personne</label><input type="number" id="e_vol" value="60" oninput="recalc()"><span class="unit">L/j</span></div>
+          <div class="row"><label>Volume ballon recommandé</label><input class="mono" id="e_ballon" readonly><span class="unit">L</span></div></div>
+      </div></div>
+
+      <div class="panel blk-geo"><div class="head"><h3>D · Source &amp; choix de gamme</h3></div><div class="body">
+        <div class="row"><label>Gamme de PAC</label><select id="s_gamme" oninput="onGammeChange()" style="grid-column:2/4"></select></div>
+        <div class="row"><label>Régime de source</label><select id="s_source" oninput="recalc()" style="grid-column:2/4"></select></div>
+        <div class="row"><label>Alimentation électrique</label><div class="seg" style="grid-column:2/4" id="seg_tension"><button data-v="2" class="on">Indiff.</button><button data-v="0">Mono 230V</button><button data-v="1">Tri 400V</button></div></div>
+        <div class="row"><label>Besoin de rafraîchissement</label><div class="seg" style="grid-column:2/4" id="seg_rev"><button data-v="0" class="on">Non</button><button data-v="1">Oui</button></div></div>
+        <div class="row"><label>Type de captage</label><select id="s_capt" oninput="recalc()" style="grid-column:2/4"></select></div>
+      </div></div>
+    </div>
+
+    <div class="recap noprint">
+      <div class="panel blk-heat"><div class="head"><h3>Récapitulatif live</h3></div><div class="body">
+        <div class="metric"><span class="k">Déperditions à T base</span><span class="v" id="r_dep">— <small>W</small></span></div>
+        <div class="metric"><span class="k">Puissance ECS add.</span><span class="v" id="r_ecs">— <small>kW</small></span></div>
+        <div class="metric big"><span class="k">Puissance à installer</span><span class="v" id="r_pinst">— <small>kW</small></span></div>
+        <div class="metric geo"><span class="k">Besoin annuel (DJU intégrés)</span><span class="v" id="r_besoin">— <small>kWh</small></span></div>
+        <div class="metric geo"><span class="k">SCOP (saisonnier)</span><span class="v" id="r_cop">—</span></div>
+        <div class="metric"><span class="k">Conso élec PAC / an</span><span class="v" id="r_conso">— <small>kWh</small></span></div>
+        <div class="metric"><span class="k">Heures de chauffage / an</span><span class="v" id="r_heures">— <small>h</small></span></div>
+        <div class="metric"><span class="k">Économie d'énergie</span><span class="v" id="r_eco">— <small>%</small></span></div>
+      </div></div>
+      <button class="btn-heat" style="width:100%" onclick="goTab('result')">Lancer la sélection →</button>
+    </div>
+  </div>
+</section>
+
+<!-- ============ TAB 3 : RESULTATS ============ -->
+<section class="view" id="v-result">
+  <div class="panel blk-heat"><div class="head"><h3>Cible de sélection</h3><span class="tag mono" id="res_ctx"></span></div>
+    <div class="body" style="display:flex;gap:26px;flex-wrap:wrap;align-items:center">
+      <div style="text-align:center"><div class="v mono" style="color:var(--heat);font-size:30px;font-weight:600" id="res_cible">—</div><div class="k" style="font-size:12px;color:var(--ink-soft)">kW à installer</div></div>
+      <div style="text-align:center"><div class="v mono" id="res_regime" style="font-size:16px;font-weight:600"></div><div class="k" style="font-size:12px;color:var(--ink-soft)">régime évalué</div></div>
+      <div style="text-align:center"><div class="v mono" id="res_biv" style="font-size:16px;font-weight:600"></div><div class="k" style="font-size:12px;color:var(--ink-soft)">point de bivalence</div></div>
+      <span class="grow" style="flex:1"></span>
+      <button class="btn-heat noprint" onclick="runSelection()">↻ Recalculer</button>
+    </div></div>
+  <div class="subhead" style="font-size:14px;margin:18px 0 6px">Mono-compresseur</div>
+  <div class="cards" id="cards_mono"></div>
+  <div class="subhead" style="font-size:14px;margin:24px 0 6px">Multi-compresseur</div>
+  <div class="cards" id="cards_multi"></div>
+</section>
+
+<!-- ============ TAB 4 : COMPARAISON ============ -->
+<section class="view" id="v-compare">
+  <div class="grid2">
+    <div>
+      <div class="panel blk-heat"><div class="head"><h3>Coût annuel de chauffage par énergie</h3><span class="tag mono" id="cmp_besoin"></span></div>
+        <div class="body"><div id="cmp_bars"></div></div></div>
+      <div class="panel blk-geo"><div class="head"><h3>Émissions de CO₂ par énergie</h3></div>
+        <div class="body"><div id="cmp_co2"></div></div></div>
+    </div>
+    <div class="recap noprint">
+      <div class="panel"><div class="head"><h3>Hypothèses de prix &amp; rendements</h3></div><div class="body" style="padding:12px 14px">
+        <div class="subhead">Électricité</div>
+        <div class="row" style="grid-template-columns:1fr 90px"><label>Prix élec</label><input type="number" id="c_pelec" step="0.001" oninput="renderCompare()"></div>
+        <div class="subhead">Fioul</div>
+        <div class="row" style="grid-template-columns:1fr 90px"><label>Prix (€/L)</label><input type="number" id="c_pfuel" step="0.01" oninput="renderCompare()"></div>
+        <div class="row" style="grid-template-columns:1fr 90px"><label>Rendement (%)</label><input type="number" id="c_rfuel" oninput="renderCompare()"></div>
+        <div class="subhead">Gaz naturel</div>
+        <div class="row" style="grid-template-columns:1fr 90px"><label>Prix (€/kWh)</label><input type="number" id="c_pgaz" step="0.001" oninput="renderCompare()"></div>
+        <div class="row" style="grid-template-columns:1fr 90px"><label>Rendement (%)</label><input type="number" id="c_rgaz" oninput="renderCompare()"></div>
+        <div class="subhead">Granulés bois</div>
+        <div class="row" style="grid-template-columns:1fr 90px"><label>Prix (€/kg)</label><input type="number" id="c_pgran" step="0.01" oninput="renderCompare()"></div>
+        <div class="row" style="grid-template-columns:1fr 90px"><label>Rendement (%)</label><input type="number" id="c_rgran" oninput="renderCompare()"></div>
+        <div class="subhead">Bûches bois</div>
+        <div class="row" style="grid-template-columns:1fr 90px"><label>Prix (€/kWh)</label><input type="number" id="c_pbuche" step="0.001" oninput="renderCompare()"></div>
+        <div class="row" style="grid-template-columns:1fr 90px"><label>Rendement (%)</label><input type="number" id="c_rbuche" oninput="renderCompare()"></div>
+        <div class="hint">PCI : fioul 9,97 kWh/L · granulés 4,8 kWh/kg. SCOP de la PAC issu de l'intégration DJU.</div>
+      </div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ TAB 5 : NOTE ============ -->
+<section class="view" id="v-note">
+  <div class="toolbar noprint"><span class="grow"></span><button class="btn-soft" onclick="window.print()">🖶 Imprimer / PDF</button></div>
+  <div class="doc" id="doc"></div>
+</section>
+
+</div>
+
+<!-- modal fiche machine -->
+<div class="modal" id="modal"><div class="card">
+  <div class="mhead"><h3 id="mTitle">Fiche machine</h3><span class="grow" style="flex:1"></span>
+    <button class="btn-soft" onclick="closeModal()">Fermer</button></div>
+  <div class="mbody" id="mBody"></div>
+</div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============================================================
+   GÉO-SELECT WEB v2 · intégration DJU + modèle machine enrichi
+   ============================================================ */
+
+/* ---------- 1. DONNÉES (graine) ---------- */
+const REG = ["20/25°C","30/35°C","40/45°C","50/55°C","60/65°C"]; // régimes de départ standard
+
+const SEED = {
+  meta:{ outil:"Géo-Select", version:"v2.0 web", millesime:2025, utilisateur:"" },
+  reglages:{ tnc:14.58, baseFactorDJU:0.702, pasMatrice:1 }, // tnc = T° de non-chauffage ; baseFactor : conversion DJU base17 -> base tnc
+  prix:{ elec:0.2100, fuelL:1.10, rdtFuel:92, gazKwh:0.1200, rdtGaz:93, granKg:0.45, rdtGran:90, bucheKwh:0.075, rdtBuche:75 },
+  pci:{ fuelL:9.97, granKg:4.8 }, // kWh par unité
+  co2:{ pac:60, joule:60, fuel:324, gaz:227, gran:30, buche:30 }, // gCO2/kWh utile (élec FR ~60)
+  isolationTypes:[
+    {nom:"RE 2020 / RT 2012 (très isolé)", g:0.60},
+    {nom:"RT 2005 (bien isolé)", g:0.90},
+    {nom:"Isolation moyenne (années 90)", g:1.20},
+    {nom:"Ancien partiellement isolé", g:1.45},
+    {nom:"Ancien non isolé", g:1.80}
+  ],
+  emetteurs:[
+    {nom:"Plancher chauffant", regime:"30/35°C"},
+    {nom:"Ventilo-convecteur", regime:"40/45°C"},
+    {nom:"Radiateurs basse T°", regime:"50/55°C"},
+    {nom:"Radiateurs haute T°", regime:"60/65°C"}
+  ],
+  captages:[
+    {nom:"Captage horizontal", mlParKw:35},
+    {nom:"Forage vertical", mlParKw:18},
+    {nom:"Eau de nappe", mlParKw:0}
+  ],
+  departements:[
+    {code:"22", nom:"Côtes-d'Armor", tbase:-4, dju:2050},
+    {code:"29", nom:"Finistère", tbase:-4, dju:1950},
+    {code:"35", nom:"Ille-et-Vilaine", tbase:-4, dju:2100},
+    {code:"44", nom:"Loire-Atlantique", tbase:-4, dju:2050},
+    {code:"56", nom:"Morbihan", tbase:-4, dju:2000},
+    {code:"51", nom:"Marne", tbase:-10, dju:2450},
+    {code:"75", nom:"Paris", tbase:-7, dju:2150},
+    {code:"05", nom:"Hautes-Alpes", tbase:-15, dju:2900},
+    {code:"06", nom:"Alpes-Maritimes", tbase:-2, dju:1250},
+    {code:"69", nom:"Rhône", tbase:-10, dju:2400}
+  ],
+  gammes:[
+    {nom:"Aqua+", code:2, sources:["-2/-5°C","0/-3°C","6/2°C - Forage Vertical","6/2°C - Eau de nappe"],
+      departs:REG, desc:"Eau glycolée/eau · 65°C max · multi-compresseur"},
+    {nom:"GMG", code:5, sources:["-2/-5°C","0/-3°C","6/2°C - Forage Vertical"], departs:["30/35°C","40/45°C","50/55°C"],
+      desc:"Mono-compresseur · 55°C max · 6.7→225 kW"}
+  ],
+  machines:[
+    {pac:"Aqua+ 3",   gammeCode:2, tension:2, nbComp:1, ref:4,  reversible:1},
+    {pac:"Aqua+ 4",   gammeCode:2, tension:2, nbComp:1, ref:5,  reversible:1},
+    {pac:"Aqua+ 5",   gammeCode:2, tension:2, nbComp:1, ref:6,  reversible:1},
+    {pac:"Aqua+ 2.2", gammeCode:2, tension:2, nbComp:2, ref:19, reversible:1},
+    {pac:"Aqua+ 4.2", gammeCode:2, tension:2, nbComp:2, ref:20, reversible:1},
+    {pac:"Aqua+ 6.2", gammeCode:2, tension:2, nbComp:2, ref:21, reversible:1},
+    {pac:"GMG 5 10",  gammeCode:5, tension:2, nbComp:1, ref:3,  reversible:1},
+    {pac:"GMG 5 12",  gammeCode:5, tension:2, nbComp:1, ref:4,  reversible:1}
+  ],
+  /* performances : performances[pac][regimeSource] = fiche complète */
+  performances:{
+    "Aqua+ 3":{ "0/-3°C": mk({
+      chaud:9.51,froid:6.60,absorbee:2.91,intensite:4.92,cop:3.27,hp:18.40,bp:2.96,debitR407C:42.80,
+      froidM3H:2.10,pdcEvapF:2.06,pdcTuyF:1.10,pdcTotF:3.16, chaudM3H:1.64,pdcCondC:0.71,pdcTuyC:0.63,pdcTotC:1.34,
+      capteurM2:128.00,capteurMl:160.00, capteurHoriz:128.00,capteurVert:160.00, iMax230:4.92,iMax400:null,diamCoude:33,diamLyre:42,pCaptSpec:30,
+      etaS30:176,etaS50:120,
+      reg:{"20/25°C":[0,0,0],"30/35°C":[9.75,5.30,1.84],"40/45°C":[10.19,4.30,2.37],"50/55°C":[9.51,3.27,2.91],"60/65°C":[9.15,2.72,3.37]} })},
+    "Aqua+ 4":{ "0/-3°C": mk({
+      chaud:11.35,froid:7.93,absorbee:3.42,intensite:5.50,cop:3.32,hp:18.14,bp:2.98,debitR407C:50.10,
+      froidM3H:2.52,pdcEvapF:1.79,pdcTuyF:1.47,pdcTotF:3.26, chaudM3H:1.95,pdcCondC:0.60,pdcTuyC:0.84,pdcTotC:1.44,
+      capteurM2:150.80,capteurMl:180.00, capteurHoriz:150.80,capteurVert:180.00, iMax230:5.50,iMax400:null,diamCoude:33,diamLyre:42,pCaptSpec:30,
+      etaS30:178,etaS50:121,
+      reg:{"20/25°C":[0,0,0],"30/35°C":[11.35,5.59,2.03],"40/45°C":[11.72,4.25,2.76],"50/55°C":[11.35,3.32,3.42],"60/65°C":[10.69,2.69,3.98]} })},
+    "Aqua+ 5":{ "0/-3°C": mk({
+      chaud:14.47,froid:10.10,absorbee:3.85,intensite:7.10,cop:3.29,hp:18.30,bp:2.95,debitR407C:62.00,
+      froidM3H:3.20,pdcEvapF:2.10,pdcTuyF:1.55,pdcTotF:3.65, chaudM3H:2.49,pdcCondC:0.80,pdcTuyC:0.95,pdcTotC:1.75,
+      capteurM2:185.00,capteurMl:220.00, capteurHoriz:185.00,capteurVert:220.00, iMax230:7.10,iMax400:null,diamCoude:40,diamLyre:49,pCaptSpec:30,
+      etaS30:175,etaS50:119,
+      reg:{"20/25°C":[0,0,0],"30/35°C":[14.80,5.40,2.74],"40/45°C":[15.30,4.28,3.57],"50/55°C":[14.47,3.29,4.40],"60/65°C":[13.60,2.66,5.11]} })},
+    "Aqua+ 2.2":{ "0/-3°C": mk({
+      chaud:10.58,froid:8.72,absorbee:3.50,intensite:7.36,cop:3.02,hp:18.78,bp:2.83,debitR407C:29.20,
+      froidM3H:2.77,pdcEvapF:0.75,pdcTuyF:0.59,pdcTotF:1.34, chaudM3H:1.82,pdcCondC:0.31,pdcTuyC:0.36,pdcTotC:0.67,
+      capteurM2:172.40,capteurMl:200.00, capteurHoriz:172.40,capteurVert:200.00, iMax230:7.36,iMax400:null,diamCoude:33,diamLyre:42,pCaptSpec:30,
+      etaS30:170,etaS50:118,
+      reg:{"20/25°C":[0,0,0],"30/35°C":[13.24,4.83,2.74],"40/45°C":[11.60,4.03,2.88],"50/55°C":[10.58,3.02,3.50],"60/65°C":[10.60,2.53,4.18]} })},
+    "Aqua+ 4.2":{ "0/-3°C": mk({
+      chaud:15.02,froid:10.62,absorbee:4.34,intensite:7.36,cop:3.24,hp:18.88,bp:2.80,debitR407C:32.20,
+      froidM3H:3.37,pdcEvapF:0.85,pdcTuyF:0.70,pdcTotF:1.55, chaudM3H:2.58,pdcCondC:0.36,pdcTuyC:0.42,pdcTotC:0.78,
+      capteurM2:190.00,capteurMl:250.00, capteurHoriz:190.00,capteurVert:250.00, iMax230:7.36,iMax400:null,diamCoude:40,diamLyre:49,pCaptSpec:30,
+      etaS30:172,etaS50:120,
+      reg:{"20/25°C":[0,0,0],"30/35°C":[14.78,4.93,3.00],"40/45°C":[16.10,4.26,3.78],"50/55°C":[15.02,3.24,4.34],"60/65°C":[14.80,2.70,5.48]} })},
+    "Aqua+ 6.2":{ "0/-3°C": mk({
+      chaud:19.70,froid:14.00,absorbee:5.30,intensite:9.60,cop:3.18,hp:18.90,bp:2.78,debitR407C:42.00,
+      froidM3H:4.40,pdcEvapF:1.10,pdcTuyF:0.90,pdcTotF:2.00, chaudM3H:3.39,pdcCondC:0.48,pdcTuyC:0.55,pdcTotC:1.03,
+      capteurM2:235.00,capteurMl:300.00, capteurHoriz:235.00,capteurVert:300.00, iMax230:9.60,iMax400:null,diamCoude:40,diamLyre:49,pCaptSpec:30,
+      etaS30:171,etaS50:119,
+      reg:{"20/25°C":[0,0,0],"30/35°C":[19.50,4.85,4.02],"40/45°C":[21.20,4.18,5.07],"50/55°C":[19.70,3.18,6.20],"60/65°C":[19.40,2.60,7.46]} })},
+    "GMG 5 10":{ "0/-3°C": mkSimple(9.25,4.30,"GMG 5 10") },
+    "GMG 5 12":{ "0/-3°C": mkSimple(11.15,4.30,"GMG 5 12") }
+  }
+};
+/* fabrique une fiche complète à partir d'un objet partiel */
+function mk(o){
+  const reg={};
+  REG.forEach(k=>{ const a=o.reg&&o.reg[k]?o.reg[k]:[0,0,0]; reg[k]={puissance:a[0],cop:a[1],consoElec:a[2]}; });
+  return Object.assign({}, o, {reg});
+}
+/* fiche simplifiée (puissance nominale @40/45 + COP) pour machines sans data détaillée */
+function mkSimple(p4045, cop4045, name){
+  const reg={};
+  const facteurs={"20/25°C":[0,0],"30/35°C":[1.08,1.25],"40/45°C":[1,1],"50/55°C":[0.92,0.78],"60/65°C":[0.86,0.64]};
+  REG.forEach(k=>{ const f=facteurs[k]; const p=p4045*f[0]; const cop=cop4045*f[1]; reg[k]={puissance:+p.toFixed(2),cop:+cop.toFixed(2),consoElec: cop? +(p/cop).toFixed(2):0}; });
+  return { chaud:reg["50/55°C"].puissance, froid:p4045*0.7, absorbee:reg["50/55°C"].consoElec, intensite:null, cop:reg["50/55°C"].cop,
+    hp:null,bp:null,debitR407C:null, froidM3H:null,pdcEvapF:null,pdcTuyF:null,pdcTotF:null, chaudM3H:null,pdcCondC:null,pdcTuyC:null,pdcTotC:null,
+    capteurM2:null,capteurMl:null,capteurHoriz:null,capteurVert:null,iMax230:null,iMax400:null,diamCoude:null,diamLyre:null,pCaptSpec:30,
+    etaS30:null,etaS50:null, reg };
+}
+
+let state = JSON.parse(JSON.stringify(SEED));
+/* mk()/mkSimple() ont été appliqués au moment de la définition de SEED ci-dessus ;
+   après un clone JSON les fonctions sont déjà évaluées (objets), donc state est complet. */
+let projet = defaultProjet();
+function defaultProjet(){
+  return {
+    client:{ref:"",type:"",nom:"",adr:"",cp:"",ville:"",installateur:"",referent:""},
+    batiment:{dept:"51",littoral:0,alt:0,tbaseMode:"auto",tbase:-10,volMode:"surf",s1:200,h1:2.5,s2:0,h2:2.5,vol:500,tint:22,isoMode:"auto",isoType:0,gman:0.6},
+    besoin:{pDirectMode:0,pDir:12,em1:1,em2:1,rdt:100,surp:0},
+    ecs:{present:0,nb:4,volPers:60},
+    source:{gamme:0,regimeSource:1,tension:2,reversible:0,captage:1}
+  };
+}
+
+/* ---------- 2. MOTEUR (fonctions pures) ---------- */
+const Engine = {
+  volumeRetenu(b){ return b.volMode==="surf" ? (b.s1*b.h1+b.s2*b.h2) : (+b.vol||0); },
+  coeffG(b,iso){ return b.isoMode==="manuel" ? (+b.gman||0) : (iso[b.isoType]?iso[b.isoType].g:0.6); },
+  tbase(b,depts){
+    if(b.tbaseMode==="manuel") return +b.tbase||0;
+    const d=depts.find(x=>x.code===b.dept); let t=d?d.tbase:-10;
+    t -= (b.alt>200?Math.floor(b.alt/200):0); if(b.littoral==1) t+=1; return t;
+  },
+  deperditions(G,V,Tint,Tbase,rdt,pm,pd){ if(pm==1) return +pd||0; const r=(rdt||100)/100||1; return (G*V*(Tint-Tbase))/1000/r; },
+  puissanceECS(ecs){ return ecs.present ? ecs.nb*0.06 : 0; },
+  volumeBallon(ecs){ return ecs.present ? ecs.nb*ecs.volPers : 0; },
+  puissanceAInstaller(dep,surp,pECS){ return dep*(1+(surp||0)/100)+pECS; },
+  pCalo(perf,pac,src,dep){ const f=perf[pac]&&perf[pac][src]; if(!f)return null; const r=f.reg&&f.reg[dep]; return r?r.puissance:null; },
+  copReg(perf,pac,src,dep){ const f=perf[pac]&&perf[pac][src]; if(!f)return null; const r=f.reg&&f.reg[dep]; return r&&r.cop?r.cop:null; },
+
+  /* ----- MATRICE D'INTÉGRATION DJU PAR TRANCHES DE TEMPÉRATURE ----- */
+  matriceDJU(Tbase,tnc,dju,baseFactor,pas){
+    const djuTnc=dju*baseFactor, targetDH=djuTnc*24, bins=[]; let dhProv=0;
+    pas=pas||1;
+    for(let t=Math.ceil(Tbase); t<=Math.floor(tnc); t+=pas){
+      const w=(t-Tbase+1); bins.push({t,w}); dhProv+=w*(tnc-t);
+    }
+    const s = dhProv>0? targetDH/dhProv : 0;
+    bins.forEach(b=>{ b.hours=b.w*s; delete b.w; });
+    return bins;
+  },
+  /* intègre besoin, conso élec, SCOP, heures, point de bivalence, appoint */
+  integrer(G,V,Tint,Tbase,rdt,tnc,dju,baseFactor,pas, copParRegime, Ppac){
+    const r=(rdt||100)/100||1;
+    const bins=Engine.matriceDJU(Tbase,tnc,dju,baseFactor,pas);
+    let besoin=0,elec=0,heures=0,appoint=0,heuresAppoint=0,Tbiv=null;
+    bins.forEach(b=>{
+      const depNet = G*V*(tnc-b.t)/1000/r;       // énergie nette (apports gratuits déduits)
+      const depGross = G*V*(Tint-b.t)/1000/r;     // déperdition instantanée (dimensionnement)
+      const e = depNet*b.hours;
+      besoin += e; elec += e/(copParRegime||3.5); heures += b.hours;
+      if(Ppac && depGross>Ppac){
+        if(Tbiv===null) Tbiv=b.t;
+        const partPac=Ppac/depGross;
+        appoint += e*(1-partPac); heuresAppoint += b.hours;
+      }
+    });
+    return {besoin,elec,scop: elec>0?besoin/elec:0,heures,appoint,heuresAppoint,Tbiv,bins};
+  },
+  /* sélection mono/multi */
+  selection(machines,perf,gammeCode,tension,reversible,src,dep,cible){
+    const matchT=mt=> mt===2||tension===2||mt===tension;
+    const cand=machines.filter(m=>m.gammeCode===gammeCode&&matchT(m.tension)&&m.reversible>=reversible)
+      .map(m=>{ const pc=Engine.pCalo(perf,m.pac,src,dep), cop=Engine.copReg(perf,m.pac,src,dep);
+        return {...m,pCalo:pc,cop:cop,couverture:pc?pc/cible*100:null}; }).filter(m=>m.pCalo!=null&&m.pCalo>0);
+    const pick=arr=>{ arr.sort((a,b)=>a.pCalo-b.pCalo); const i=arr.findIndex(m=>m.pCalo>=cible);
+      return i===-1?arr.slice(-2):arr.slice(Math.max(0,i),i+2); };
+    return {mono:pick(cand.filter(m=>m.nbComp===1)), multi:pick(cand.filter(m=>m.nbComp>=2))};
+  }
+};
+
+/* ---------- 3. CALCUL GLOBAL ---------- */
+let LAST={};
+function compute(){
+  const b=projet.batiment,bs=projet.besoin,ecs=projet.ecs,s=projet.source,rg=state.reglages;
+  const V=Engine.volumeRetenu(b), G=Engine.coeffG(b,state.isolationTypes), Tbase=Engine.tbase(b,state.departements);
+  const dep=Engine.deperditions(G,V,b.tint,Tbase,bs.rdt,bs.pDirectMode,bs.pDir);
+  const pECS=Engine.puissanceECS(ecs), pInst=Engine.puissanceAInstaller(dep,bs.surp,pECS);
+  const d=state.departements.find(x=>x.code===b.dept), dju=d?d.dju:2200;
+  const gamme=state.gammes[s.gamme], src=gamme.sources[s.regimeSource]||gamme.sources[0];
+  const depRegime=state.emetteurs[bs.em1]?state.emetteurs[bs.em1].regime:"40/45°C";
+  const cop = medianeCop(gamme,src,depRegime)||3.5;
+  const integ=Engine.integrer(G,V,b.tint,Tbase,bs.rdt,rg.tnc,dju,rg.baseFactorDJU,rg.pasMatrice,cop,pInst);
+  const economie = integ.besoin>0 ? (integ.besoin-integ.elec)/integ.besoin*100 : 0;
+  LAST={V,G,Tbase,dep,pECS,pInst,dju,cop,src,depRegime,gamme,
+        besoin:integ.besoin,elec:integ.elec,scop:integ.scop,heures:integ.heures,
+        appoint:integ.appoint,Tbiv:integ.Tbiv,economie,integ};
+  return LAST;
+}
+function medianeCop(gamme,src,dep){
+  const c=[]; state.machines.filter(m=>m.gammeCode===gamme.code).forEach(m=>{const v=Engine.copReg(state.performances,m.pac,src,dep);if(v)c.push(v);});
+  if(!c.length)return null; c.sort((a,b)=>a-b); return c[Math.floor(c.length/2)];
+}
+
+/* ---------- 4. UI ---------- */
+const $=id=>document.getElementById(id);
+const fmt=(n,d=0)=> (n==null||isNaN(n)||n==='')?"—":Number(n).toLocaleString('fr-FR',{minimumFractionDigits:d,maximumFractionDigits:d});
+const num=v=>{ v=parseFloat(String(v).replace(',','.')); return isNaN(v)?null:v; };
+
+function fillSelects(){
+  $('s_gamme').innerHTML=state.gammes.map((g,i)=>`<option value="${i}">${g.nom}</option>`).join('');
+  $('dbGamme').innerHTML=state.gammes.map((g,i)=>`<option value="${i}">${g.nom} (code ${g.code})</option>`).join('');
+  $('b_dept').innerHTML=state.departements.map(d=>`<option value="${d.code}">${d.code} · ${d.nom}</option>`).join('');
+  $('b_isotype').innerHTML=state.isolationTypes.map((t,i)=>`<option value="${i}">${t.nom} (G=${t.g})</option>`).join('');
+  const e=state.emetteurs.map((x,i)=>`<option value="${i}">${x.nom} (${x.regime})</option>`).join(''); $('b_em1').innerHTML=e; $('b_em2').innerHTML=e;
+  $('s_capt').innerHTML=state.captages.map((c,i)=>`<option value="${i}">${c.nom}</option>`).join('');
+}
+function onGammeChange(){ const g=state.gammes[+$('s_gamme').value];
+  $('s_source').innerHTML=g.sources.map((s,i)=>`<option value="${i}">${s}</option>`).join('');
+  projet.source.gamme=+$('s_gamme').value; projet.source.regimeSource=0; recalc(); }
+function bindSeg(id,cb){ const el=$(id); el.querySelectorAll('button').forEach(btn=>btn.onclick=()=>{el.querySelectorAll('button').forEach(b=>b.classList.remove('on'));btn.classList.add('on');cb(btn.dataset.v);}); }
+function setSeg(id,v){ $(id).querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.v==String(v))); }
+
+function readForm(){
+  const c=projet.client,b=projet.batiment,bs=projet.besoin,e=projet.ecs;
+  c.ref=$('p_ref').value;c.type=$('p_type').value;c.nom=$('p_nom').value;c.adr=$('p_adr').value;c.cp=$('p_cp').value;c.ville=$('p_ville').value;c.installateur=$('p_inst').value;c.referent=$('p_referent').value;
+  b.dept=$('b_dept').value;b.alt=+$('b_alt').value;b.tbase=+$('b_tbase').value;b.s1=+$('b_s1').value;b.h1=+$('b_h1').value;b.s2=+$('b_s2').value;b.h2=+$('b_h2').value;b.vol=+$('b_vol').value;b.tint=+$('b_tint').value;b.isoType=+$('b_isotype').value;b.gman=+$('b_gman').value;
+  bs.pDir=+$('b_pdir').value;bs.em1=+$('b_em1').value;bs.em2=+$('b_em2').value;bs.rdt=+$('b_rdt').value;bs.surp=+$('b_surp').value;
+  e.nb=+$('e_nb').value;e.volPers=+$('e_vol').value;
+  projet.source.gamme=+$('s_gamme').value;projet.source.regimeSource=+$('s_source').value;projet.source.captage=+$('s_capt').value;
+}
+function writeForm(){
+  const c=projet.client,b=projet.batiment,bs=projet.besoin,e=projet.ecs,s=projet.source;
+  $('p_ref').value=c.ref;$('p_type').value=c.type;$('p_nom').value=c.nom;$('p_adr').value=c.adr;$('p_cp').value=c.cp;$('p_ville').value=c.ville;$('p_inst').value=c.installateur;$('p_referent').value=c.referent;
+  $('b_dept').value=b.dept;$('b_alt').value=b.alt;$('b_tbase').value=b.tbase;$('b_s1').value=b.s1;$('b_h1').value=b.h1;$('b_s2').value=b.s2;$('b_h2').value=b.h2;$('b_vol').value=b.vol;$('b_tint').value=b.tint;$('b_isotype').value=b.isoType;$('b_gman').value=b.gman;
+  $('b_pdir').value=bs.pDir;$('b_em1').value=bs.em1;$('b_em2').value=bs.em2;$('b_rdt').value=bs.rdt;$('b_surp').value=bs.surp;
+  $('e_nb').value=e.nb;$('e_vol').value=e.volPers;
+  $('s_gamme').value=s.gamme;onGammeChange();$('s_source').value=s.regimeSource;$('s_capt').value=s.captage;
+  setSeg('seg_littoral',b.littoral);setSeg('seg_tbase',b.tbaseMode);setSeg('seg_volmode',b.volMode);setSeg('seg_isomode',b.isoMode);setSeg('seg_pdirect',bs.pDirectMode);setSeg('seg_ecs',e.present);setSeg('seg_tension',s.tension);setSeg('seg_rev',s.reversible);
+  // prix
+  const p=state.prix; $('c_pelec').value=p.elec;$('c_pfuel').value=p.fuelL;$('c_rfuel').value=p.rdtFuel;$('c_pgaz').value=p.gazKwh;$('c_rgaz').value=p.rdtGaz;$('c_pgran').value=p.granKg;$('c_rgran').value=p.rdtGran;$('c_pbuche').value=p.bucheKwh;$('c_rbuche').value=p.rdtBuche;
+  toggleGroups();
+}
+function toggleGroups(){
+  $('grp_surf').style.display=projet.batiment.volMode==="surf"?"block":"none";
+  $('grp_vol').style.display=projet.batiment.volMode==="vol"?"flex":"none";
+  $('grp_isoauto').style.display=projet.batiment.isoMode==="auto"?"grid":"none";
+  $('grp_isoman').style.display=projet.batiment.isoMode==="manuel"?"grid":"none";
+  $('grp_pdirect').style.display=projet.besoin.pDirectMode==1?"grid":"none";
+  $('grp_ecs').style.display=projet.ecs.present==1?"block":"none";
+  $('b_tbase').readOnly=projet.batiment.tbaseMode==="auto";
+}
+function recalc(){
+  readForm(); const r=compute();
+  $('b_volret').value=fmt(r.V,1); $('b_gret').value=fmt(r.G,2);
+  if(projet.batiment.tbaseMode==="auto") $('b_tbase').value=fmt(r.Tbase,0);
+  $('e_ballon').value=fmt(Engine.volumeBallon(projet.ecs),0);
+  $('r_dep').innerHTML=`${fmt(r.dep*1000,0)} <small>W</small>`;
+  $('r_ecs').innerHTML=`${fmt(r.pECS,2)} <small>kW</small>`;
+  $('r_pinst').innerHTML=`${fmt(r.pInst,1)} <small>kW</small>`;
+  $('r_besoin').innerHTML=`${fmt(r.besoin,0)} <small>kWh</small>`;
+  $('r_cop').textContent=fmt(r.scop,2);
+  $('r_conso').innerHTML=`${fmt(r.elec,0)} <small>kWh</small>`;
+  $('r_heures').innerHTML=`${fmt(r.heures,0)} <small>h</small>`;
+  $('r_eco').innerHTML=`${fmt(r.economie,1)} <small>%</small>`;
+}
+
+/* ---------- TAB 1 : base machines ---------- */
+function dbGammeChanged(){ const g=state.gammes[+$('dbGamme').value];
+  $('dbSrc').innerHTML=g.sources.map(s=>`<option>${s}</option>`).join(''); renderDB(); }
+function renderDB(){
+  const g=state.gammes[+$('dbGamme').value], src=$('dbSrc').value||g.sources[0];
+  $('dbSrcLabel').textContent=src;
+  const list=state.machines.filter(m=>m.gammeCode===g.code);
+  $('dbCount').textContent=`${list.length} machine(s) · gamme ${g.nom}`;
+  const departs=g.departs;
+  let h=`<thead><tr><th>PAC</th><th>Tens.</th><th>Comp.</th><th>Rév.</th>`+
+    departs.map(d=>`<th class="num">${d}<br><span style="font-weight:400;font-size:9px">kW · COP</span></th>`).join('')+`<th></th></tr></thead><tbody>`;
+  list.forEach(m=>{
+    const gi=state.machines.indexOf(m);
+    const f=(state.performances[m.pac]&&state.performances[m.pac][src])||{reg:{}};
+    const tens=m.tension===0?"230V":m.tension===1?"400V":"Ind.";
+    h+=`<tr><td><input value="${m.pac}" onchange="editM(${gi},'pac',this.value)"></td>
+      <td><select onchange="editM(${gi},'tension',+this.value)"><option value="2"${m.tension===2?' selected':''}>Ind.</option><option value="0"${m.tension===0?' selected':''}>230V</option><option value="1"${m.tension===1?' selected':''}>400V</option></select></td>
+      <td><span class="badge${m.nbComp>=2?' m':''}">${m.nbComp}</span></td><td>${m.reversible?'✔':'—'}</td>`;
+    departs.forEach(d=>{ const r=f.reg&&f.reg[d]; const p=r?r.puissance:'', cop=r?r.cop:'';
+      h+=`<td class="num" style="white-space:nowrap"><input class="num" style="width:48px;text-align:right;display:inline" value="${p||''}" title="P calo ${d}" onchange="editReg('${m.pac}','${src}','${d}','puissance',this.value)">
+        <span style="color:var(--geo);font-size:11px">${cop?Number(cop).toFixed(2):'—'}</span></td>`; });
+    h+=`<td style="white-space:nowrap"><button class="edit" title="Fiche complète" onclick="openMachine('${m.pac}','${src}')">✎</button> <button class="x" onclick="delMachine(${gi})">✕</button></td></tr>`;
+  });
+  $('dbTable').innerHTML=h+`</tbody>`;
+}
+function editM(i,k,v){ state.machines[i][k]=v; renderDB(); }
+function ensureFiche(pac,src){
+  state.performances[pac]=state.performances[pac]||{};
+  if(!state.performances[pac][src]){ const reg={}; REG.forEach(k=>reg[k]={puissance:0,cop:0,consoElec:0}); state.performances[pac][src]={reg}; }
+  return state.performances[pac][src];
+}
+function editReg(pac,src,dep,k,v){ const f=ensureFiche(pac,src); f.reg[dep]=f.reg[dep]||{puissance:0,cop:0,consoElec:0};
+  f.reg[dep][k]=num(v)||0;
+  // recalcule COP si on a P et conso, sinon recalcule conso si P et COP
+  const rr=f.reg[dep]; if(rr.puissance&&rr.consoElec) rr.cop=+(rr.puissance/rr.consoElec).toFixed(2);
+  renderDB(); }
+
+/* ---- fiche machine complète (modal) ---- */
+const FIELDS=[
+  ["chaud","P chaud","kW"],["froid","P froid","kW"],["absorbee","P absorbée","kW"],["intensite","Intensité","A"],["cop","COP nominal","-"],
+  ["hp","Pression HP","barg"],["bp","Pression BP","barg"],["debitR407C","Débit R407C","g/s"],
+  ["froidM3H","Débit froid","M3/H"],["pdcEvapF","Pdc évap.","mce"],["pdcTuyF","Pdc tuyau. froid","mce"],["pdcTotF","Pdc totale froid","mce"],
+  ["chaudM3H","Débit chaud","M3/H"],["pdcCondC","Pdc cond.","mce"],["pdcTuyC","Pdc tuyau. chaud","mce"],["pdcTotC","Pdc totale chaud","mce"],
+  ["capteurHoriz","Surface capteur horizontal","m²"],["capteurVert","Capteur vertical","m²/ml"],["pCaptSpec","P capteur spécifique","W/ml"],
+  ["iMax230","Intensité max 230V","A"],["iMax400","Intensité max 400V","A"],["diamCoude","Diamètre int. coude","mm"],["diamLyre","Diamètre int. lyre","mm"],
+  ["etaS30","EtaS 30/35°C","%"],["etaS50","EtaS 50/55°C","%"]
+];
+const SR_FIELDS=[
+  ["sr_pFrigo","P frigo sous-ref.","kW"],["sr_debitInj","Débit injection","g/s"],["sr_pressInj","Pression inj.","bara"],
+  ["sr_tRosee","T° rosée intermédiaire","°C"],["sr_tVapeur","T° sortie vapeur","°C"],["sr_tLiq1","T° liquide L1","°C"],["sr_tLiq2","T° liquide L2","°C"]
+];
+let MOPEN=null;
+function openMachine(pac,src){ MOPEN={pac,src}; const f=ensureFiche(pac,src);
+  $('mTitle').textContent=`${pac} · source ${src}`;
+  let h=`<div class="subhead">Caractéristiques nominales &amp; hydraulique / frigorifique</div><div class="fgrid">`;
+  FIELDS.forEach(([k,lbl,u])=>{ h+=`<div class="f"><label>${lbl} <span class="u">${u}</span></label><input class="mono" value="${f[k]??''}" onchange="editFiche('${k}',this.value)"></div>`; });
+  h+=`</div><div class="subhead">Sous-refroidisseur (gamme Ultra uniquement)</div><div class="fgrid">`;
+  SR_FIELDS.forEach(([k,lbl,u])=>{ h+=`<div class="f"><label>${lbl} <span class="u">${u}</span></label><input class="mono" value="${f[k]??''}" onchange="editFiche('${k}',this.value)"></div>`; });
+  h+=`</div><div class="subhead">Performances par régime de départ</div>
+    <table><thead><tr><th>Régime</th><th class="num">Puissance (kW)</th><th class="num">Conso élec (kW)</th><th class="num">COP</th></tr></thead><tbody>`;
+  REG.forEach(d=>{ const r=f.reg[d]||{puissance:0,cop:0,consoElec:0};
+    h+=`<tr><td>${d}</td>
+      <td class="num"><input class="num" style="text-align:right" value="${r.puissance||''}" onchange="editRegFull('${d}','puissance',this.value)"></td>
+      <td class="num"><input class="num" style="text-align:right" value="${r.consoElec||''}" onchange="editRegFull('${d}','consoElec',this.value)"></td>
+      <td class="num" style="color:var(--geo)">${r.cop?Number(r.cop).toFixed(2):'—'}</td></tr>`; });
+  h+=`</tbody></table><div class="hint">Le COP par régime est recalculé automatiquement = Puissance / Conso élec.</div>`;
+  $('mBody').innerHTML=h; $('modal').classList.add('show');
+}
+function editFiche(k,v){ const f=state.performances[MOPEN.pac][MOPEN.src]; f[k]=num(v); }
+function editRegFull(dep,k,v){ const f=state.performances[MOPEN.pac][MOPEN.src]; f.reg[dep]=f.reg[dep]||{puissance:0,cop:0,consoElec:0};
+  f.reg[dep][k]=num(v)||0; const r=f.reg[dep]; if(r.puissance&&r.consoElec) r.cop=+(r.puissance/r.consoElec).toFixed(2); openMachine(MOPEN.pac,MOPEN.src); }
+function closeModal(){ $('modal').classList.remove('show'); renderDB(); recalc(); }
+function addMachine(){ const g=state.gammes[+$('dbGamme').value];
+  const nom="Nouvelle PAC "+(state.machines.length+1); state.machines.push({pac:nom,gammeCode:g.code,tension:2,nbComp:1,ref:0,reversible:1});
+  ensureFiche(nom,g.sources[0]); renderDB(); toast("Machine ajoutée"); }
+function delMachine(i){ if(confirm("Supprimer "+state.machines[i].pac+" ?")){ state.machines.splice(i,1); renderDB(); } }
+
+/* ---------- TAB 3 : sélection ---------- */
+function runSelection(){
+  recalc(); const r=LAST,s=projet.source;
+  $('res_cible').textContent=fmt(r.pInst,1);
+  $('res_regime').textContent=`${r.src} → ${r.depRegime}`;
+  $('res_biv').textContent = r.Tbiv!=null? `${fmt(r.Tbiv,0)} °C` : "couvert";
+  $('res_ctx').textContent=`gamme ${r.gamme.nom} · ${tLabel(s.tension)} · ${s.reversible?'réversible':'chaud seul'}`;
+  const sel=Engine.selection(state.machines,state.performances,r.gamme.code,s.tension,s.reversible,r.src,r.depRegime,r.pInst);
+  $('cards_mono').innerHTML=cards(sel.mono,r); $('cards_multi').innerHTML=cards(sel.multi,r);
+}
+function tLabel(t){ return t===0?"mono 230V":t===1?"tri 400V":"tension indiff."; }
+function cards(arr,r){
+  if(!arr||!arr.length) return `<div class="empty">Aucune machine de cette catégorie ne correspond aux paramètres.</div>`;
+  const capt=state.captages[projet.source.captage];
+  return arr.map((m,i)=>{ const cov=m.couverture, over=cov>=100, reco=i===0&&over;
+    const f=state.performances[m.pac]&&state.performances[m.pac][r.src];
+    let lcapt=null;
+    if(f&&f.capteurVert) lcapt=Math.round(f.capteurVert*(r.pInst/m.pCalo)); // longueur ajustée au besoin
+    else if(capt.mlParKw>0&&m.cop) lcapt=Math.round((m.pCalo-m.pCalo/m.cop)*capt.mlParKw);
+    return `<div class="mcard${reco?' reco':''}">${reco?'<span class="reco-flag">Recommandée</span>':''}
+      <div class="top"><h4>${m.pac}</h4><div class="sub">${m.nbComp} compresseur(s) · ${tLabel(m.tension)}</div></div>
+      <div class="body">
+        <div class="mline"><span>Puissance calorifique</span><b>${fmt(m.pCalo,2)} kW</b></div>
+        <div class="mline"><span>COP au régime</span><b>${m.cop?m.cop.toFixed(2):'—'}</b></div>
+        ${f&&f.hp?`<div class="mline"><span>Pressions HP / BP</span><b>${fmt(f.hp,1)} / ${fmt(f.bp,1)}</b></div>`:''}
+        <div class="mline"><span>Besoin à couvrir</span><b>${fmt(r.pInst,1)} kW</b></div>
+        ${lcapt!=null?`<div class="mline"><span>Capteur (${capt.nom.toLowerCase()})</span><b>${lcapt} ${capt.mlParKw>0&&!f?.capteurVert?'ml':'ml'}</b></div>`:''}
+        <div class="cov"><i class="${over?'':'over'}" style="width:${Math.min(100,cov)}%"></i></div>
+        <div class="mline" style="border:none"><span>Couverture</span><b style="color:${over?'var(--ok)':'var(--bad)'}">${fmt(cov,0)} %</b></div>
+        <button class="btn-soft noprint" style="width:100%;margin-top:8px" onclick="chooseForNote('${m.pac}')">Retenir pour la note →</button>
+      </div></div>`; }).join('');
+}
+let chosen=null;
+function chooseForNote(pac){ const r=LAST; const m=Engine.selection(state.machines,state.performances,r.gamme.code,projet.source.tension,projet.source.reversible,r.src,r.depRegime,r.pInst);
+  const all=[...m.mono,...m.multi].find(x=>x.pac===pac)||{pac,pCalo:Engine.pCalo(state.performances,pac,r.src,r.depRegime),cop:Engine.copReg(state.performances,pac,r.src,r.depRegime),nbComp:1};
+  chosen=all; renderNote(); goTab('note'); toast(pac+" retenue"); }
+
+/* ---------- TAB 4 : comparaison énergies ---------- */
+function readPrix(){ const p=state.prix;
+  p.elec=+$('c_pelec').value;p.fuelL=+$('c_pfuel').value;p.rdtFuel=+$('c_rfuel').value;p.gazKwh=+$('c_pgaz').value;p.rdtGaz=+$('c_rgaz').value;p.granKg=+$('c_pgran').value;p.rdtGran=+$('c_rgran').value;p.bucheKwh=+$('c_pbuche').value;p.rdtBuche=+$('c_rbuche').value;
+}
+function renderCompare(){
+  readPrix(); const r=compute(); const p=state.prix,pci=state.pci,co2=state.co2; const besoin=r.besoin;
+  $('cmp_besoin').textContent=`besoin ${fmt(besoin,0)} kWh/an · SCOP PAC ${fmt(r.scop,2)}`;
+  const sol=[
+    {nom:`PAC géothermique`, pac:true, kwhUtileToCost: besoin/(r.scop||3.5)*p.elec, co2: besoin/(r.scop||3.5)*co2.pac},
+    {nom:`Convecteurs élec.`, kwhUtileToCost: besoin/1.0*p.elec, co2: besoin*co2.joule},
+    {nom:`Chaudière fioul`, kwhUtileToCost: (besoin/(p.rdtFuel/100))/pci.fuelL*p.fuelL, co2: besoin/(p.rdtFuel/100)*co2.fuel},
+    {nom:`Chaudière gaz nat.`, kwhUtileToCost: besoin/(p.rdtGaz/100)*p.gazKwh, co2: besoin/(p.rdtGaz/100)*co2.gaz},
+    {nom:`Chaudière granulés`, kwhUtileToCost: (besoin/(p.rdtGran/100))/pci.granKg*p.granKg, co2: besoin/(p.rdtGran/100)*co2.gran},
+    {nom:`Chaudière bûches`, kwhUtileToCost: besoin/(p.rdtBuche/100)*p.bucheKwh, co2: besoin/(p.rdtBuche/100)*co2.buche}
+  ];
+  const maxC=Math.max(...sol.map(s=>s.kwhUtileToCost));
+  $('cmp_bars').innerHTML=sol.map(s=>`<div class="barrow"><span class="lbl">${s.nom}</span>
+    <div class="bar ${s.pac?'pac':''}" style="width:${Math.max(8,s.kwhUtileToCost/maxC*100)}%">${fmt(s.kwhUtileToCost,0)} €</div>
+    <span class="cost">${fmt(s.kwhUtileToCost,0)} €/an</span></div>`).join('')
+    +`<div class="hint" style="margin-top:10px">La PAC est prise comme référence : économie de <b>${fmt((1-sol[0].kwhUtileToCost/sol[2].kwhUtileToCost)*100,0)} %</b> vs fioul, <b>${fmt((1-sol[0].kwhUtileToCost/sol[3].kwhUtileToCost)*100,0)} %</b> vs gaz, <b>${fmt((1-sol[0].kwhUtileToCost/sol[1].kwhUtileToCost)*100,0)} %</b> vs convecteurs.</div>`;
+  const maxCo2=Math.max(...sol.map(s=>s.co2));
+  $('cmp_co2').innerHTML=sol.map(s=>`<div class="barrow"><span class="lbl">${s.nom}</span>
+    <div class="bar ${s.pac?'pac':''}" style="width:${Math.max(8,s.co2/maxCo2*100)}%;background:${s.pac?'linear-gradient(90deg,var(--geo),#3aa9bb)':'linear-gradient(90deg,#6b7177,#9aa1a6)'}">${fmt(s.co2/1000,0)} kg</div>
+    <span class="cost">${fmt(s.co2/1000,0)} kg/an</span></div>`).join('');
+}
+
+/* ---------- TAB 5 : note ---------- */
+function renderNote(){
+  recalc(); const r=LAST,c=projet.client,b=projet.batiment,bs=projet.besoin,e=projet.ecs,s=projet.source;
+  const d=state.departements.find(x=>x.code===b.dept)||{}, em1=state.emetteurs[bs.em1],em2=state.emetteurs[bs.em2];
+  const row=(k,u,v)=>`<div class="drow"><span>${k}</span><span class="u">${u||''}</span><span class="val">${v}</span></div>`;
+  let h=`<div class="dhead"><div class="spark"></div><div><h2>Note de dimensionnement</h2><div class="note">Mise en place d'une pompe à chaleur géothermique eau/eau</div></div>
+    <div class="meta">${state.meta.outil} ${state.meta.version}<br>Réf : ${c.ref||'—'}<br>${new Date().toLocaleDateString('fr-FR')}</div></div>
+  <section><h3 class="dt">Opération &amp; client</h3>
+    ${row("Référence chantier","",c.ref||'—')}${row("Type de chantier","",c.type||'—')}${row("Client","",c.nom||'—')}
+    ${row("Adresse","",(c.adr||'')+' '+(c.cp||'')+' '+(c.ville||''))}${row("Installateur","",c.installateur||'—')}${row("Référent","",c.referent||'—')}</section>
+  <section><h3 class="dt">Données d'entrée de l'étude</h3>
+    ${row("Localité","-",(d.code||'')+" · "+(d.nom||''))}${row("Altitude","m",fmt(b.alt,0))}${row("Température de base","°C",fmt(r.Tbase,0))}
+    ${row("Volume chauffé","m³",fmt(r.V,0))}${row("Température intérieure","°C",fmt(b.tint,0))}${row("Coefficient G","W/m³.°C",fmt(r.G,2))}
+    ${row("Émetteurs (1)","-",em1?em1.nom+" ("+em1.regime+")":'—')}${row("Émetteurs (2)","-",em2?em2.nom+" ("+em2.regime+")":'—')}
+    ${row("Eau chaude sanitaire","-",e.present?("Oui · "+e.nb+" pers · ballon "+fmt(Engine.volumeBallon(e),0)+" L"):"Non")}${row("Type de source","-",r.src)}</section>
+  <section><h3 class="dt">Besoins en puissance</h3>
+    ${row("Déperditions thermiques à T base","W",fmt(r.dep*1000,0))}${row("Puissance additionnelle ECS","W",fmt(r.pECS*1000,0))}${row("Surpuissance appliquée","%",fmt(bs.surp,0))}
+    <div class="hl"><span><b>Puissance à installer</b></span><span class="v">${fmt(r.pInst,1)} kW</span></div></section>
+  <section><h3 class="dt">Étude énergétique annuelle (DJU intégrés par tranches)</h3>
+    ${row("DJU de référence (base 17°C)","DJU",fmt(r.dju,0))}${row("T° de non-chauffage","°C",fmt(state.reglages.tnc,1))}
+    ${row("Heures de chauffage","h/an",fmt(r.heures,0))}${row("Point de bivalence",">°C", r.Tbiv!=null?fmt(r.Tbiv,0):"sans appoint")}
+    ${row("Besoin énergétique annuel","kWh/an",fmt(r.besoin,0))}${row("Énergie d'appoint","kWh/an",fmt(r.appoint,0))}
+    ${row("SCOP saisonnier","-",fmt(r.scop,2))}${row("Consommation électrique PAC","kWh/an",fmt(r.elec,0))}${row("Économie d'énergie","%",fmt(r.economie,1))}</section>`;
+  if(chosen){ const capt=state.captages[s.captage]; const f=state.performances[chosen.pac]&&state.performances[chosen.pac][r.src];
+    let lcapt = f&&f.capteurVert? Math.round(f.capteurVert*(r.pInst/chosen.pCalo)) : null;
+    h+=`<section><h3 class="dt">Solution retenue</h3>
+      ${row("Modèle de PAC","-",chosen.pac)}${row("Gamme","-",r.gamme.nom)}${row("Compresseurs","-",chosen.nbComp)}
+      ${row("Puissance calorifique au régime","kW",fmt(chosen.pCalo,2))}${row("COP au régime","-",chosen.cop?fmt(chosen.cop,2):'—')}
+      ${row("Taux de couverture","%",fmt(chosen.pCalo/r.pInst*100,0))}
+      ${f&&f.hp?row("Pressions HP / BP","barg",fmt(f.hp,1)+" / "+fmt(f.bp,1)):''}
+      ${f&&f.debitR407C?row("Débit R407C","g/s",fmt(f.debitR407C,1)):''}
+      ${f&&f.chaudM3H?row("Débit hydraulique chaud","m³/h",fmt(f.chaudM3H,2)):''}
+      ${lcapt?row("Longueur de captage ("+capt.nom.toLowerCase()+")","ml",fmt(lcapt,0)):''}</section>`;
+  } else { h+=`<section><h3 class="dt">Solution retenue</h3><div class="note">Aucune machine retenue — onglet « Résultats &amp; sélection », bouton « Retenir pour la note ».</div></section>`; }
+  h+=`<div class="foot">Ces informations sont non contractuelles et données à titre indicatif. Besoin annuel calculé par intégration des DJU sur les tranches de température (base ${state.reglages.tnc}°C). — ${state.meta.outil} ${state.meta.version}</div>`;
+  $('doc').innerHTML=h;
+}
+
+/* ---------- NAV ---------- */
+function goTab(t){ document.querySelectorAll('nav.tabs button').forEach(b=>b.classList.toggle('active',b.dataset.tab===t));
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active')); $('v-'+t).classList.add('active');
+  if(t==='result')runSelection(); if(t==='note')renderNote(); if(t==='db')renderDB(); if(t==='compare')renderCompare(); window.scrollTo(0,0); }
+document.querySelectorAll('nav.tabs button').forEach(b=>b.onclick=()=>goTab(b.dataset.tab));
+
+/* ---------- IMPORT / EXPORT JSON ---------- */
+function download(obj,name){ const blob=new Blob([JSON.stringify(obj,null,2)],{type:'application/json'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=name; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),1500); }
+function exportProject(){ readForm(); readPrix();
+  download({type:"geoselect-project",version:2,date:new Date().toISOString(),meta:state.meta,reglages:state.reglages,prix:state.prix,pci:state.pci,co2:state.co2,
+    data:{isolationTypes:state.isolationTypes,emetteurs:state.emetteurs,captages:state.captages,departements:state.departements,gammes:state.gammes,machines:state.machines,performances:state.performances},
+    projet}, `projet_${(projet.client.ref||'sans-ref').replace(/\W+/g,'_')}.json`); toast("Projet enregistré (JSON)"); }
+function exportDB(){ download({type:"geoselect-db",version:2,date:new Date().toISOString(),
+    gammes:state.gammes,machines:state.machines,performances:state.performances,
+    isolationTypes:state.isolationTypes,emetteurs:state.emetteurs,captages:state.captages,departements:state.departements},"base_machines_geoselect.json"); toast("Base machines exportée"); }
+function fileImport(kind){ const inp=document.createElement('input'); inp.type='file'; inp.accept='.json,application/json';
+  inp.onchange=e=>{ const f=e.target.files[0]; if(!f)return; const rd=new FileReader();
+    rd.onload=()=>{ try{ applyImport(JSON.parse(rd.result),kind);}catch(err){ alert("JSON invalide : "+err.message);} }; rd.readAsText(f); }; inp.click(); }
+function applyImport(obj,kind){
+  if(kind==='db'||obj.type==='geoselect-db'){ ['gammes','machines','performances','isolationTypes','emetteurs','captages','departements'].forEach(k=>{if(obj[k])state[k]=obj[k];});
+    fillSelects(); writeForm(); dbGammeChanged(); toast("Base machines importée"); return; }
+  if(obj.meta)state.meta=obj.meta; if(obj.reglages)state.reglages=obj.reglages; if(obj.prix)state.prix=obj.prix; if(obj.pci)state.pci=obj.pci; if(obj.co2)state.co2=obj.co2;
+  if(obj.data){['isolationTypes','emetteurs','captages','departements','gammes','machines','performances'].forEach(k=>{if(obj.data[k])state[k]=obj.data[k];});}
+  if(obj.projet)projet=obj.projet;
+  fillSelects(); writeForm(); recalc(); dbGammeChanged(); $('verLabel').textContent=`${state.meta.version} · ${state.meta.millesime||''}`; toast("Projet ouvert"); }
+
+/* ---------- toast ---------- */
+let toastT; function toast(m){ const t=$('toast'); t.textContent=m; t.classList.add('show'); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('show'),2200); }
+
+/* ---------- INIT ---------- */
+bindSeg('seg_littoral',v=>{projet.batiment.littoral=+v;recalc();});
+bindSeg('seg_tbase',v=>{projet.batiment.tbaseMode=v;toggleGroups();recalc();});
+bindSeg('seg_volmode',v=>{projet.batiment.volMode=v;toggleGroups();recalc();});
+bindSeg('seg_isomode',v=>{projet.batiment.isoMode=v;toggleGroups();recalc();});
+bindSeg('seg_pdirect',v=>{projet.besoin.pDirectMode=+v;toggleGroups();recalc();});
+bindSeg('seg_ecs',v=>{projet.ecs.present=+v;toggleGroups();recalc();});
+bindSeg('seg_tension',v=>{projet.source.tension=+v;recalc();});
+bindSeg('seg_rev',v=>{projet.source.reversible=+v;recalc();});
+$('modal').addEventListener('click',e=>{ if(e.target.id==='modal') closeModal(); });
+
+fillSelects(); writeForm(); recalc(); dbGammeChanged();
+</script>
+</body>
+</html>
