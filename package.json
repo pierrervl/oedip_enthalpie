@@ -1,0 +1,14 @@
+{
+  "private": true,
+  "scripts": {
+    "dju:import": "node scripts/xlsx-to-dju.mjs",
+    "echangeurs:import": "node scripts/xlsx-to-echangeurs-pdc.mjs",
+    "procedures:photos:import": "python scripts/convert-procedure-photos.py",
+    "procedures:geo:build": "node scripts/build-procedures-geo.mjs",
+    "default:build": "node scripts/build-procedures-geo.mjs && node scripts/build-default-project.mjs",
+    "gpac:build": "node scripts/build-gpac-pack.mjs"
+  },
+  "devDependencies": {
+    "xlsx": "^0.18.5"
+  }
+}

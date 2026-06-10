@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fiche Procédure — Template</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#1a1f24;
+    --ink-soft:#454e57;
+    --line:#d4d8dd;
+    --line-strong:#9aa1a9;
+    --slate:#1d242c;        /* bandeau foncé */
+    --slate-2:#2a333d;
+    --paper:#ffffff;
+    --paper-2:#f6f7f8;
+    --copper:#b5642f;       /* accent (cuivre) */
+    --copper-soft:#f3e6db;
+    --warn:#b54a2f;
+    --ok:#2f7d4f;
+    --mono:'IBM Plex Mono',monospace;
+    --sans:'IBM Plex Sans',sans-serif;
+    --display:'Archivo',sans-serif;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:#e9ebed;
+    font-family:var(--sans);
+    color:var(--ink);
+    font-size:11px;
+    line-height:1.5;
+    -webkit-print-color-adjust:exact;
+    print-color-adjust:exact;
+  }
+
+  /* ---------- Barre d'outils écran ---------- */
+  .toolbar{
+    max-width:820px;margin:18px auto 0;display:flex;gap:10px;align-items:center;
+    font-family:var(--sans);
+  }
+  .toolbar p{margin:0;color:#5b636b;font-size:12px;}
+  .btn{
+    font-family:var(--display);font-weight:700;letter-spacing:.04em;text-transform:uppercase;
+    font-size:11px;background:var(--slate);color:#fff;border:none;border-radius:6px;
+    padding:9px 16px;cursor:pointer;transition:background .15s;
+  }
+  .btn:hover{background:var(--copper);}
+
+  /* ---------- Page A4 ---------- */
+  .sheet{
+    width:210mm;min-height:297mm;margin:18px auto;background:var(--paper);
+    box-shadow:0 4px 24px rgba(0,0,0,.14);
+    padding:13mm 13mm 11mm;display:flex;flex-direction:column;
+  }
+
+  /* ---------- Cartouche d'en-tête ---------- */
+  .cartouche{border:1.5px solid var(--ink);display:grid;grid-template-columns:150px 1fr 180px;}
+  .cart-logo{
+    border-right:1px solid var(--line-strong);padding:10px;display:flex;
+    flex-direction:column;justify-content:center;align-items:center;gap:6px;text-align:center;
+  }
+  .logo-box{
+    width:100%;height:42px;border:1.5px dashed var(--line-strong);border-radius:4px;
+    display:flex;align-items:center;justify-content:center;color:#9aa1a9;
+    font-family:var(--mono);font-size:9px;letter-spacing:.1em;
+  }
+  .cart-logo .co{font-family:var(--display);font-weight:800;font-size:12px;letter-spacing:.02em;color:var(--ink);}
+  .cart-title{padding:10px 14px;display:flex;flex-direction:column;justify-content:center;border-right:1px solid var(--line-strong);}
+  .cart-title .kicker{font-family:var(--mono);font-size:9px;letter-spacing:.18em;color:var(--copper);text-transform:uppercase;margin-bottom:3px;}
+  .cart-title h1{font-family:var(--display);font-weight:800;font-size:19px;line-height:1.1;margin:0;letter-spacing:-.01em;}
+  .cart-title .sub{margin-top:4px;color:var(--ink-soft);font-size:11px;}
+  .cart-meta{display:flex;flex-direction:column;font-family:var(--mono);}
+  .cart-meta .mrow{display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid var(--line);}
+  .cart-meta .mrow:last-child{border-bottom:none;}
+  .cart-meta .mk{padding:4px 7px;background:var(--paper-2);font-size:8px;letter-spacing:.06em;color:#5b636b;text-transform:uppercase;border-right:1px solid var(--line);}
+  .cart-meta .mv{padding:4px 7px;font-size:10px;font-weight:500;}
+
+  /* ---------- Bloc validation (responsables) ---------- */
+  .valid{display:grid;grid-template-columns:repeat(3,1fr);border:1px solid var(--ink);border-top:none;}
+  .valid .cell{padding:7px 10px 22px;border-right:1px solid var(--line-strong);position:relative;}
+  .valid .cell:last-child{border-right:none;}
+  .valid .role{font-family:var(--mono);font-size:8.5px;letter-spacing:.1em;text-transform:uppercase;color:#5b636b;}
+  .valid .name{font-weight:600;margin-top:2px;}
+  .valid .ph{color:#aeb4bb;font-weight:400;}
+  .valid .sig{position:absolute;left:10px;bottom:5px;font-family:var(--mono);font-size:8px;color:#9aa1a9;letter-spacing:.06em;}
+
+  /* ---------- Sections ---------- */
+  .section{margin-top:14px;}
+  .sec-head{
+    display:flex;align-items:center;gap:9px;margin-bottom:7px;
+  }
+  .sec-num{
+    font-family:var(--display);font-weight:800;font-size:11px;color:#fff;background:var(--slate);
+    width:20px;height:20px;border-radius:4px;display:flex;align-items:center;justify-content:center;flex:0 0 auto;
+  }
+  .sec-head h2{
+    font-family:var(--display);font-weight:700;font-size:12.5px;letter-spacing:.04em;text-transform:uppercase;margin:0;
+  }
+  .sec-head .rule{flex:1;height:1px;background:var(--line);}
+
+  /* ---------- EPI ---------- */
+  .epi-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;}
+  .epi{
+    border:1px solid var(--line);border-radius:6px;padding:8px 6px 7px;text-align:center;
+    display:flex;flex-direction:column;align-items:center;gap:5px;background:var(--paper-2);position:relative;
+  }
+  .epi.req{border-color:var(--copper);background:var(--copper-soft);}
+  .epi svg{width:30px;height:30px;}
+  .epi .lab{font-size:9px;font-weight:600;line-height:1.2;letter-spacing:.01em;}
+  .epi .chk{position:absolute;top:5px;right:6px;width:11px;height:11px;border:1.4px solid var(--line-strong);border-radius:3px;}
+  .epi.req .chk{background:var(--copper);border-color:var(--copper);}
+  .epi.req .chk::after{content:"";position:absolute;left:2.6px;top:0px;width:3px;height:6px;border:solid #fff;border-width:0 1.6px 1.6px 0;transform:rotate(45deg);}
+
+  /* ---------- Sécurité ---------- */
+  .risks{border:1px solid var(--warn);border-left:4px solid var(--warn);border-radius:5px;padding:9px 12px;background:#fcf4f1;}
+  .risks .rt{font-family:var(--display);font-weight:700;font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--warn);display:flex;align-items:center;gap:6px;margin-bottom:4px;}
+  .risks ul{margin:0;padding-left:16px;}
+  .risks li{margin:1px 0;}
+
+  /* ---------- Listes deux colonnes (outillage) ---------- */
+  .two-col{columns:2;column-gap:24px;}
+  .checklist{list-style:none;margin:0;padding:0;}
+  .checklist li{padding:2.5px 0 2.5px 20px;position:relative;break-inside:avoid;border-bottom:1px dotted var(--line);}
+  .checklist li::before{content:"";position:absolute;left:0;top:4px;width:11px;height:11px;border:1.3px solid var(--line-strong);border-radius:3px;}
+
+  /* ---------- Tableau mesures ---------- */
+  table.meas{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:9.5px;}
+  table.meas thead th{
+    background:var(--slate);color:#fff;font-family:var(--display);font-weight:600;font-size:9px;
+    letter-spacing:.05em;text-transform:uppercase;padding:6px 7px;text-align:left;border-right:1px solid var(--slate-2);
+  }
+  table.meas thead th:first-child{position:sticky;left:0;}
+  table.meas tbody td{padding:5px 7px;border-bottom:1px solid var(--line);border-right:1px solid var(--line);}
+  table.meas tbody td:first-child{font-family:var(--sans);font-weight:600;background:var(--paper-2);}
+  table.meas tbody tr:nth-child(even) td:not(:first-child){background:#fbfbfc;}
+  table.meas tbody tr.default-row td{background:var(--copper-soft);}
+  table.meas tbody tr.default-row td:first-child{background:#ecd8c8;}
+
+  /* ---------- Note rappel ---------- */
+  .note{
+    border:1px solid var(--copper);border-left:4px solid var(--copper);border-radius:5px;
+    background:var(--copper-soft);padding:8px 12px;margin-bottom:10px;font-size:10.5px;
+  }
+  .note b{font-weight:700;}
+
+  /* ---------- Étapes ---------- */
+  ol.steps{counter-reset:st;list-style:none;margin:0;padding:0;}
+  ol.steps li{
+    counter-increment:st;display:grid;grid-template-columns:24px 1fr 185px;gap:11px;align-items:start;
+    padding:9px 0;border-bottom:1px solid var(--line);break-inside:avoid;
+  }
+  ol.steps li .num{
+    font-family:var(--display);font-weight:700;font-size:10px;color:#fff;background:var(--copper);
+    width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin-top:1px;
+  }
+  ol.steps li .num::before{content:counter(st);}
+  ol.steps li .txt{padding-top:2px;}
+  ol.steps li b{font-weight:600;}
+  ol.steps li .shot{
+    border:1px solid var(--line);border-radius:5px;aspect-ratio:4/3;background:var(--paper-2);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;color:#9aa1a9;text-align:center;overflow:hidden;
+  }
+  ol.steps li .shot svg{width:22px;height:22px;opacity:.5;}
+  ol.steps li .shot .cap{font-family:var(--mono);font-size:7.5px;letter-spacing:.06em;text-transform:uppercase;}
+  ol.steps li .shot img{width:100%;height:100%;object-fit:cover;}
+
+  /* ---------- Photos ---------- */
+  .photos{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .photo{
+    border:1px solid var(--line);border-radius:6px;aspect-ratio:16/10;background:var(--paper-2);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;color:#9aa1a9;text-align:center;
+  }
+  .photo svg{width:34px;height:34px;opacity:.5;}
+  .photo .cap{font-family:var(--mono);font-size:8.5px;letter-spacing:.08em;text-transform:uppercase;}
+  .photo img{width:100%;height:100%;object-fit:cover;border-radius:6px;}
+
+  /* ---------- Pied de page / révisions ---------- */
+  .footer{margin-top:auto;padding-top:12px;}
+  table.rev{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:8.5px;}
+  table.rev th{background:var(--paper-2);text-align:left;padding:4px 7px;border:1px solid var(--line);font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:#5b636b;}
+  table.rev td{padding:4px 7px;border:1px solid var(--line);}
+  .foot-bar{
+    display:flex;justify-content:space-between;align-items:center;margin-top:8px;padding-top:7px;
+    border-top:1.5px solid var(--ink);font-family:var(--mono);font-size:8px;letter-spacing:.06em;color:#6b727a;text-transform:uppercase;
+  }
+
+  /* ---------- Impression ---------- */
+  @page{size:A4;margin:0;}
+  @media print{
+    body{background:#fff;}
+    .toolbar{display:none;}
+    .sheet{box-shadow:none;margin:0;width:auto;min-height:auto;}
+    .section,.epi,.photo,ol.steps li,.checklist li{break-inside:avoid;}
+  }
+</style>
+</head>
+<body>
+
+<div class="toolbar">
+  <button class="btn" onclick="window.print()">Imprimer / PDF</button>
+  <p>Remplace les champs entre crochets. Coche une case EPI en ajoutant la classe <code>req</code>. Une fiche = un tube.</p>
+</div>
+
+<div class="sheet">
+
+  <!-- ============ CARTOUCHE ============ -->
+  <div class="cartouche">
+    <div class="cart-logo">
+      <div class="logo-box">LOGO</div>
+      <div class="co">[ Nom société ]</div>
+    </div>
+    <div class="cart-title">
+      <div class="kicker">Fiche de fabrication · Tube</div>
+      <h1>Tube 1 — Compresseur → Condenseur</h1>
+      <div class="sub">Plan : [ G-110 · YH09K1E-TFD-GBS · R454c ] · Atelier cintrage / brasage</div>
+    </div>
+    <div class="cart-meta">
+      <div class="mrow"><div class="mk">Réf. doc.</div><div class="mv">[ PRC-T01 ]</div></div>
+      <div class="mrow"><div class="mk">Indice rév.</div><div class="mv">[ C ]</div></div>
+      <div class="mrow"><div class="mk">Créé le</div><div class="mv">[ 12/02/26 ]</div></div>
+      <div class="mrow"><div class="mk">MàJ le</div><div class="mv">[ 08/06/26 ]</div></div>
+      <div class="mrow"><div class="mk">Page</div><div class="mv">1 / 1</div></div>
+    </div>
+  </div>
+
+  <!-- ============ VALIDATION ============ -->
+  <div class="valid">
+    <div class="cell">
+      <div class="role">Rédigé par</div>
+      <div class="name ph">[ Prénom Nom ]</div>
+      <div class="sig">Date / Visa : ____________</div>
+    </div>
+    <div class="cell">
+      <div class="role">Vérifié par</div>
+      <div class="name ph">[ Prénom Nom ]</div>
+      <div class="sig">Date / Visa : ____________</div>
+    </div>
+    <div class="cell">
+      <div class="role">Approuvé par</div>
+      <div class="name ph">[ Prénom Nom ]</div>
+      <div class="sig">Date / Visa : ____________</div>
+    </div>
+  </div>
+
+  <!-- ============ OBJET ============ -->
+  <div class="section">
+    <div class="sec-head"><span class="sec-num">1</span><h2>Objet & domaine d'application</h2><span class="rule"></span></div>
+    <p style="margin:0;">[ Décrire le tube à fabriquer, le raccordement réalisé (de … vers …), les machines concernées et toute restriction. Ex. : Façonnage et brasage du tube reliant le refoulement compresseur au condenseur, pour les gammes G80 à G140. ]</p>
+  </div>
+
+  <!-- ============ EPI ============ -->
+  <div class="section">
+    <div class="sec-head"><span class="sec-num">2</span><h2>Équipements de protection individuelle</h2><span class="rule"></span></div>
+    <div class="epi-grid">
+      <div class="epi req"><span class="chk"></span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="#1a1f24" stroke-width="1.6"><path d="M2 11a4 4 0 0 1 4-4h12a4 4 0 0 1 4 4v1a3 3 0 0 1-3 3h-2.2a3 3 0 0 1-2.6-1.5L13 12h-2l-1.4 1.5A3 3 0 0 1 7 15H5a3 3 0 0 1-3-3z"/></svg>
+        <div class="lab">Lunettes</div></div>
+      <div class="epi req"><span class="chk"></span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="#1a1f24" stroke-width="1.6"><path d="M8 13V5a1.5 1.5 0 0 1 3 0v6m0 0V4a1.5 1.5 0 0 1 3 0v7m0 0V6a1.5 1.5 0 0 1 3 0v8a6 6 0 0 1-6 6h-1.5a4 4 0 0 1-3.2-1.6L5 16a1.6 1.6 0 0 1 2.4-2L8 14"/></svg>
+        <div class="lab">Gants cuir</div></div>
+      <div class="epi req"><span class="chk"></span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="#1a1f24" stroke-width="1.6"><path d="M6 5h12v4a6 6 0 0 1-6 6 6 6 0 0 1-6-6z"/><path d="M9 18h6m-3 0v2"/></svg>
+        <div class="lab">Masque brasage</div></div>
+      <div class="epi"><span class="chk"></span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="#1a1f24" stroke-width="1.6"><path d="M4 13a8 8 0 0 1 16 0v3a2 2 0 0 1-2 2h-1v-6m-10 6H6a2 2 0 0 1-2-2z"/></svg>
+        <div class="lab">Protection auditive</div></div>
+      <div class="epi req"><span class="chk"></span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="#1a1f24" stroke-width="1.6"><path d="M3 16v-3l5-1 2-3h3v7m-13 0h18a1 1 0 0 1 1 1v1H2v-1a1 1 0 0 1 1-1z"/></svg>
+        <div class="lab">Chaussures sécu.</div></div>
+      <div class="epi"><span class="chk"></span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="#1a1f24" stroke-width="1.6"><path d="M8 4l-4 3v5l3-1v9h10v-9l3 1V7l-4-3-2 2h-2z"/></svg>
+        <div class="lab">Vêtement travail</div></div>
+    </div>
+  </div>
+
+  <!-- ============ SÉCURITÉ ============ -->
+  <div class="section">
+    <div class="sec-head"><span class="sec-num">3</span><h2>Sécurité & risques</h2><span class="rule"></span></div>
+    <div class="risks">
+      <div class="rt">⚠ Points de vigilance</div>
+      <ul>
+        <li><b>Brasage :</b> flamme nue, points chauds, projections — éloigner produits inflammables, extincteur à portée.</li>
+        <li><b>Fumées de brasage :</b> travailler en zone ventilée / sous aspiration.</li>
+        <li><b>Azote sous pression</b> (balayage / mise sous pression) : ne jamais dépasser la pression d'épreuve, purger avant intervention.</li>
+        <li><b>Arêtes vives</b> après coupe : ébavurer systématiquement.</li>
+        <li>[ Ajouter tout risque spécifique à l'opération ]</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ============ OUTILLAGE ============ -->
+  <div class="section">
+    <div class="sec-head"><span class="sec-num">4</span><h2>Outillage & matière</h2><span class="rule"></span></div>
+    <ul class="checklist two-col">
+      <li>Tube cuivre [ Ø … ]</li>
+      <li>Cintreuse + galets adaptés</li>
+      <li>Coupe-tube / ébavureur</li>
+      <li>Poste de brasage + baguettes [ Argent 15 % ]</li>
+      <li>Décapant / flux</li>
+      <li>Bouteille azote + détendeur</li>
+      <li>Mètre / pied à coulisse</li>
+      <li>Raccords : [ réductions, coudes, Schrader, pressostat… ]</li>
+    </ul>
+  </div>
+
+  <!-- ============ MESURES PAR MACHINE ============ -->
+  <div class="section">
+    <div class="sec-head"><span class="sec-num">5</span><h2>Mesures par machine</h2><span class="rule"></span></div>
+    <table class="meas">
+      <thead>
+        <tr><th>Machine</th><th>É1 · L</th><th>É1 · diam</th><th>É2 · L</th><th>É3 · L</th><th>É5 · diam1</th><th>É5 · diam2</th><th>É5 · diam3</th></tr>
+      </thead>
+      <tbody>
+        <tr class="default-row"><td>Défaut</td><td>55</td><td>1/2</td><td>1</td><td>42</td><td>7/8</td><td>1/2</td><td>7/8</td></tr>
+        <tr><td>G80 Mono</td><td>55</td><td>1/2</td><td>1</td><td>42</td><td>7/8</td><td>1/2</td><td>7/8</td></tr>
+        <tr><td>G90 Mono</td><td>55</td><td>1/2</td><td>1</td><td>42</td><td>7/8</td><td>1/2</td><td>7/8</td></tr>
+        <tr><td>G100 Mono</td><td>55</td><td>1/2</td><td>1</td><td>42</td><td>7/8</td><td>1/2</td><td>7/8</td></tr>
+        <tr><td>G110 Mono</td><td>55</td><td>1/2</td><td>1</td><td>42</td><td>7/8</td><td>1/2</td><td>7/8</td></tr>
+        <tr><td>G130 Mono</td><td>55</td><td>1/2</td><td>1</td><td>42</td><td>7/8</td><td>1/2</td><td>7/8</td></tr>
+        <tr><td>[ … ]</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+      </tbody>
+    </table>
+    <p style="margin:5px 0 0;font-family:var(--mono);font-size:8.5px;color:#6b727a;">L = longueur (cm) · diam = diamètre (pouces) · É = étape concernée. La ligne « Défaut » s'applique si la machine n'est pas listée.</p>
+  </div>
+
+  <!-- ============ ÉTAPES ============ -->
+  <div class="section">
+    <div class="sec-head"><span class="sec-num">6</span><h2>Mode opératoire par défaut</h2><span class="rule"></span></div>
+    <div class="note">⚠ Cotes <b>par défaut</b> — celles-ci correspondent à la ligne « Défaut » et ne sont <b>pas forcément identiques pour toutes les machines</b>. Avant fabrication, vérifier impérativement le tableau « Mesures par machine » (§5) : les longueurs et diamètres peuvent varier selon la machine concernée.</div>
+    <ol class="steps">
+      <li>
+        <span class="num"></span>
+        <div class="txt">Couper <b>55 cm</b> de <b>1/2"</b>.</div>
+        <div class="shot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="6" width="18" height="13" rx="2"/><circle cx="12" cy="12.5" r="3.5"/><path d="M8 6l1.5-2h5L16 6"/></svg><span class="cap">Photo étape 1</span></div>
+      </li>
+      <li>
+        <span class="num"></span>
+        <div class="txt">Ergot, cintrer à <b>90°</b> puis recouper <b>1 cm</b>.</div>
+        <div class="shot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="6" width="18" height="13" rx="2"/><circle cx="12" cy="12.5" r="3.5"/><path d="M8 6l1.5-2h5L16 6"/></svg><span class="cap">Photo étape 2</span></div>
+      </li>
+      <li>
+        <span class="num"></span>
+        <div class="txt">Coter <b>42 cm</b> de l'axe du tube.</div>
+        <div class="shot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="6" width="18" height="13" rx="2"/><circle cx="12" cy="12.5" r="3.5"/><path d="M8 6l1.5-2h5L16 6"/></svg><span class="cap">Photo étape 3</span></div>
+      </li>
+      <li>
+        <span class="num"></span>
+        <div class="txt">Marque sur <b>« O »</b>, cintrer à <b>45°</b> dans le même sens.</div>
+        <div class="shot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="6" width="18" height="13" rx="2"/><circle cx="12" cy="12.5" r="3.5"/><path d="M8 6l1.5-2h5L16 6"/></svg><span class="cap">Photo étape 4</span></div>
+      </li>
+      <li>
+        <span class="num"></span>
+        <div class="txt">Réduction M-F <b>7/8"–1/2"</b> + Coude <b>90° M-F 7/8"</b> GR.</div>
+        <div class="shot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="6" width="18" height="13" rx="2"/><circle cx="12" cy="12.5" r="3.5"/><path d="M8 6l1.5-2h5L16 6"/></svg><span class="cap">Photo étape 5</span></div>
+      </li>
+      <li>
+        <span class="num"></span>
+        <div class="txt">Braser le tout.</div>
+        <div class="shot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="6" width="18" height="13" rx="2"/><circle cx="12" cy="12.5" r="3.5"/><path d="M8 6l1.5-2h5L16 6"/></svg><span class="cap">Photo étape 6</span></div>
+      </li>
+    </ol>
+  </div>
+
+  <!-- ============ PIED DE PAGE ============ -->
+  <div class="footer">
+    <div class="sec-head"><span class="sec-num">7</span><h2>Historique des révisions</h2><span class="rule"></span></div>
+    <table class="rev">
+      <thead><tr><th style="width:60px">Indice</th><th style="width:90px">Date</th><th>Modification</th><th style="width:120px">Auteur</th></tr></thead>
+      <tbody>
+        <tr><td>A</td><td>[ jj/mm/aa ]</td><td>Création du document</td><td>[ … ]</td></tr>
+        <tr><td>B</td><td>[ jj/mm/aa ]</td><td>[ … ]</td><td>[ … ]</td></tr>
+        <tr><td>C</td><td>[ jj/mm/aa ]</td><td>[ … ]</td><td>[ … ]</td></tr>
+      </tbody>
+    </table>
+    <div class="foot-bar">
+      <span>[ Société ] — Document interne</span>
+      <span>Réf. [ PRC-T01 ] · Ind. [ C ]</span>
+      <span>Page 1 / 1</span>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

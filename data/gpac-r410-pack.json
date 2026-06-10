@@ -1,0 +1,2712 @@
+{
+  "type": "oedip-gamme-pack",
+  "version": 4,
+  "date": "2026-06-03T18:17:52.322Z",
+  "source": "c:\\Users\\Pierre Raveleau\\OneDrive - ETAO\\Documents\\ENTHALPIE\\import json.xlsx",
+  "note": "machines[].general · machines[].composantsLiens (id catalogue) · performances · composants (bibliothèque partagée)",
+  "gamme": {
+    "nom": "G",
+    "code": 6,
+    "fonction": "geothermie",
+    "fluide": "R410A",
+    "sources": [
+      "0/-3",
+      "5/2",
+      "9/6"
+    ],
+    "departs": [
+      "30/35",
+      "40/45",
+      "47/55"
+    ],
+    "desc": "PAC géothermique R410A · G80 à G140"
+  },
+  "composants": {
+    "compresseur": [
+      {
+        "id": "cmp_zh04k1p_pfz_524_58ad62996d",
+        "type": "compresseur",
+        "ref": "ZH04K1P-PFZ-524",
+        "fabricant": "Copeland",
+        "modele": "ZH04K1P-PFZ-524",
+        "typeComp": "scroll",
+        "fluide": "R410A"
+      },
+      {
+        "id": "cmp_zh04k1p_tfm_524_d7df9ea438",
+        "type": "compresseur",
+        "ref": "ZH04K1P-TFM-524",
+        "fabricant": "Copeland",
+        "modele": "ZH04K1P-TFM-524",
+        "typeComp": "scroll",
+        "fluide": "R410A"
+      },
+      {
+        "id": "cmp_zh05k1p_pfz_524_464a729459",
+        "type": "compresseur",
+        "ref": "ZH05K1P-PFZ-524",
+        "fabricant": "Copeland",
+        "modele": "ZH05K1P-PFZ-524",
+        "typeComp": "scroll",
+        "fluide": "R410A"
+      },
+      {
+        "id": "cmp_zh05k1p_tfm_524_f45d468918",
+        "type": "compresseur",
+        "ref": "ZH05K1P-TFM-524",
+        "fabricant": "Copeland",
+        "modele": "ZH05K1P-TFM-524",
+        "typeComp": "scroll",
+        "fluide": "R410A"
+      },
+      {
+        "id": "cmp_zh06k1p_pfz_524_49b498c8d7",
+        "type": "compresseur",
+        "ref": "ZH06K1P-PFZ-524",
+        "fabricant": "Copeland",
+        "modele": "ZH06K1P-PFZ-524",
+        "typeComp": "scroll",
+        "fluide": "R410A"
+      },
+      {
+        "id": "cmp_zh06k1p_tfm_524_53f5081177",
+        "type": "compresseur",
+        "ref": "ZH06K1P-TFM-524",
+        "fabricant": "Copeland",
+        "modele": "ZH06K1P-TFM-524",
+        "typeComp": "scroll",
+        "fluide": "R410A"
+      },
+      {
+        "id": "cmp_zh09k1p_pfz_524_7c31afcded",
+        "type": "compresseur",
+        "ref": "ZH09K1P-PFZ-524",
+        "fabricant": "Copeland",
+        "modele": "ZH09K1P-PFZ-524",
+        "typeComp": "scroll",
+        "fluide": "R410A"
+      },
+      {
+        "id": "cmp_zh09k1p_tfm_524_33e301633c",
+        "type": "compresseur",
+        "ref": "ZH09K1P-TFM-524",
+        "fabricant": "Copeland",
+        "modele": "ZH09K1P-TFM-524",
+        "typeComp": "scroll",
+        "fluide": "R410A"
+      },
+      {
+        "id": "cmp_zh12k1p_pfz_524_cd4cdcde68",
+        "type": "compresseur",
+        "ref": "ZH12K1P-PFZ-524",
+        "fabricant": "Copeland",
+        "modele": "ZH12K1P-PFZ-524",
+        "typeComp": "scroll",
+        "fluide": "R410A"
+      },
+      {
+        "id": "cmp_zh12k1p_tfm_524_2a7cdfd11d",
+        "type": "compresseur",
+        "ref": "ZH12K1P-TFM-524",
+        "fabricant": "Copeland",
+        "modele": "ZH12K1P-TFM-524",
+        "typeComp": "scroll",
+        "fluide": "R410A"
+      },
+      {
+        "id": "cmp_zh15k1p_tfm_524_6d2ae9887d",
+        "type": "compresseur",
+        "ref": "ZH15K1P-TFM-524",
+        "fabricant": "Copeland",
+        "modele": "ZH15K1P-TFM-524",
+        "typeComp": "scroll",
+        "fluide": "R410A"
+      }
+    ],
+    "bouteille_anticoup": [
+      {
+        "id": "cmp_bouteille_aspiration_5_8_1_6l_2f24cc3a48",
+        "type": "bouteille_anticoup",
+        "ref": "Bouteille aspiration 5/8 1,6L",
+        "modele": "Bouteille aspiration 5/8 1,6L",
+        "fluide": "R410A"
+      },
+      {
+        "id": "cmp_bouteille_aspiration_3_4_avec_echang_151ffcb50f",
+        "type": "bouteille_anticoup",
+        "ref": "Bouteille aspiration 3/4 avec échangeur 3/8",
+        "modele": "Bouteille aspiration 3/4 avec échangeur 3/8",
+        "fluide": "R410A"
+      },
+      {
+        "id": "cmp_bouteille_aspiration_7_8_avec_echang_4bf8bf99bc",
+        "type": "bouteille_anticoup",
+        "ref": "Bouteille aspiration 7/8 avec échangeur 3/8",
+        "modele": "Bouteille aspiration 7/8 avec échangeur 3/8",
+        "fluide": "R410A"
+      }
+    ],
+    "reservoir_liquide": [
+      {
+        "id": "cmp_reservoir_liquide_100x230_1_5_ltr_3ebc482982",
+        "type": "reservoir_liquide",
+        "ref": "Réservoir liquide 100x230 1,5 ltr",
+        "modele": "Réservoir liquide 100x230 1,5 ltr",
+        "volumeL": 1.5,
+        "fluide": "R410A"
+      }
+    ],
+    "echangeur_plaques": [
+      {
+        "id": "cmp_b26hx30_029e03ea05",
+        "type": "echangeur_plaques",
+        "ref": "B26Hx30",
+        "fabricant": "SWEP",
+        "modele": "B26Hx30",
+        "materiau": "Cu brasé",
+        "courbesPdc": [
+          {
+            "regime": "50°C",
+            "points": [
+              {
+                "debit": 0.5,
+                "pdcKpa": 5.611
+              },
+              {
+                "debit": 1,
+                "pdcKpa": 19.89
+              },
+              {
+                "debit": 2,
+                "pdcKpa": 73.53
+              },
+              {
+                "debit": 5,
+                "pdcKpa": 419.7
+              },
+              {
+                "debit": 8,
+                "pdcKpa": 1026
+              },
+              {
+                "debit": 11,
+                "pdcKpa": 1879
+              },
+              {
+                "debit": 13,
+                "pdcKpa": 2582
+              }
+            ]
+          }
+        ],
+        "plaques": 30
+      },
+      {
+        "id": "cmp_b26hx40_c1a938dcf3",
+        "type": "echangeur_plaques",
+        "ref": "B26Hx40",
+        "fabricant": "SWEP",
+        "modele": "B26Hx40",
+        "materiau": "Cu brasé",
+        "courbesPdc": [
+          {
+            "regime": "50°C",
+            "points": [
+              {
+                "debit": 0.5,
+                "pdcKpa": 3.255
+              },
+              {
+                "debit": 1,
+                "pdcKpa": 11.56
+              },
+              {
+                "debit": 2,
+                "pdcKpa": 41.82
+              },
+              {
+                "debit": 5,
+                "pdcKpa": 239.1
+              },
+              {
+                "debit": 8,
+                "pdcKpa": 584.7
+              },
+              {
+                "debit": 11,
+                "pdcKpa": 1072
+              },
+              {
+                "debit": 13,
+                "pdcKpa": 1473
+              }
+            ]
+          }
+        ],
+        "plaques": 40
+      },
+      {
+        "id": "cmp_b26hx50_25114c55fc",
+        "type": "echangeur_plaques",
+        "ref": "B26Hx50",
+        "fabricant": "SWEP",
+        "modele": "B26Hx50",
+        "materiau": "Cu brasé",
+        "courbesPdc": [
+          {
+            "regime": "50°C",
+            "points": [
+              {
+                "debit": 0.5,
+                "pdcKpa": 2.158
+              },
+              {
+                "debit": 1,
+                "pdcKpa": 7.678
+              },
+              {
+                "debit": 2,
+                "pdcKpa": 27.37
+              },
+              {
+                "debit": 5,
+                "pdcKpa": 156.7
+              },
+              {
+                "debit": 8,
+                "pdcKpa": 383.7
+              },
+              {
+                "debit": 11,
+                "pdcKpa": 703.9
+              },
+              {
+                "debit": 13,
+                "pdcKpa": 967.7
+              }
+            ]
+          }
+        ],
+        "plaques": 50
+      },
+      {
+        "id": "cmp_b26hx60_aa995df18c",
+        "type": "echangeur_plaques",
+        "ref": "B26Hx60",
+        "fabricant": "SWEP",
+        "modele": "B26Hx60",
+        "materiau": "Cu brasé",
+        "courbesPdc": [
+          {
+            "regime": "50°C",
+            "points": [
+              {
+                "debit": 0.5,
+                "pdcKpa": 1.556
+              },
+              {
+                "debit": 1,
+                "pdcKpa": 5.546
+              },
+              {
+                "debit": 2,
+                "pdcKpa": 19.79
+              },
+              {
+                "debit": 5,
+                "pdcKpa": 112.2
+              },
+              {
+                "debit": 8,
+                "pdcKpa": 275
+              },
+              {
+                "debit": 11,
+                "pdcKpa": 504.9
+              },
+              {
+                "debit": 13,
+                "pdcKpa": 694.5
+              }
+            ]
+          }
+        ],
+        "plaques": 60
+      },
+      {
+        "id": "cmp_f80hx30_d456714691",
+        "type": "echangeur_plaques",
+        "ref": "F80Hx30",
+        "fabricant": "SWEP",
+        "modele": "F80Hx30",
+        "materiau": "Cu brasé",
+        "courbesPdc": [
+          {
+            "regime": "0°C/15% glycol",
+            "points": [
+              {
+                "debit": 0.5,
+                "pdcKpa": 1.296
+              },
+              {
+                "debit": 1,
+                "pdcKpa": 4.003
+              },
+              {
+                "debit": 2,
+                "pdcKpa": 13.96
+              },
+              {
+                "debit": 5,
+                "pdcKpa": 72.81
+              },
+              {
+                "debit": 8,
+                "pdcKpa": 169.9
+              },
+              {
+                "debit": 11,
+                "pdcKpa": 301.8
+              },
+              {
+                "debit": 13,
+                "pdcKpa": 408
+              }
+            ]
+          }
+        ],
+        "plaques": 30
+      },
+      {
+        "id": "cmp_f80hx40_d8d540d0ba",
+        "type": "echangeur_plaques",
+        "ref": "F80Hx40",
+        "fabricant": "SWEP",
+        "modele": "F80Hx40",
+        "materiau": "Cu brasé",
+        "courbesPdc": [
+          {
+            "regime": "0°C/15% glycol",
+            "points": [
+              {
+                "debit": 0.5,
+                "pdcKpa": 0.84
+              },
+              {
+                "debit": 1,
+                "pdcKpa": 2.333
+              },
+              {
+                "debit": 2,
+                "pdcKpa": 8.145
+              },
+              {
+                "debit": 5,
+                "pdcKpa": 42.57
+              },
+              {
+                "debit": 8,
+                "pdcKpa": 99.47
+              },
+              {
+                "debit": 11,
+                "pdcKpa": 176.8
+              },
+              {
+                "debit": 13,
+                "pdcKpa": 239.1
+              }
+            ]
+          }
+        ],
+        "plaques": 40
+      },
+      {
+        "id": "cmp_f80hx50_9b33cf3566",
+        "type": "echangeur_plaques",
+        "ref": "F80Hx50",
+        "fabricant": "SWEP",
+        "modele": "F80Hx50",
+        "materiau": "Cu brasé",
+        "courbesPdc": [
+          {
+            "regime": "0°C/15% glycol",
+            "points": [
+              {
+                "debit": 0.5,
+                "pdcKpa": 0.6039
+              },
+              {
+                "debit": 1,
+                "pdcKpa": 1.653
+              },
+              {
+                "debit": 2,
+                "pdcKpa": 5.42
+              },
+              {
+                "debit": 5,
+                "pdcKpa": 28.4
+              },
+              {
+                "debit": 8,
+                "pdcKpa": 66.46
+              },
+              {
+                "debit": 11,
+                "pdcKpa": 118.3
+              },
+              {
+                "debit": 13,
+                "pdcKpa": 160
+              }
+            ]
+          }
+        ],
+        "plaques": 50
+      },
+      {
+        "id": "cmp_f80hx60_a0f843a4e2",
+        "type": "echangeur_plaques",
+        "ref": "F80Hx60",
+        "fabricant": "SWEP",
+        "modele": "F80Hx60",
+        "materiau": "Cu brasé",
+        "courbesPdc": [
+          {
+            "regime": "0°C/15% glycol",
+            "points": [
+              {
+                "debit": 0.5,
+                "pdcKpa": 0.463
+              },
+              {
+                "debit": 1,
+                "pdcKpa": 1.272
+              },
+              {
+                "debit": 2,
+                "pdcKpa": 3.915
+              },
+              {
+                "debit": 5,
+                "pdcKpa": 20.57
+              },
+              {
+                "debit": 8,
+                "pdcKpa": 48.23
+              },
+              {
+                "debit": 11,
+                "pdcKpa": 85.92
+              },
+              {
+                "debit": 13,
+                "pdcKpa": 116.3
+              }
+            ]
+          }
+        ],
+        "plaques": 60
+      },
+      {
+        "id": "cmp_fi22asmx46_586e7789af",
+        "type": "echangeur_plaques",
+        "ref": "FI22ASMX46",
+        "fabricant": "SWEP",
+        "modele": "FI22ASMX46",
+        "materiau": "Cu brasé",
+        "courbesPdc": [
+          {
+            "regime": "0°C/15% glycol",
+            "points": [
+              {
+                "debit": 0.5,
+                "pdcKpa": 3.316
+              },
+              {
+                "debit": 1,
+                "pdcKpa": 8.859
+              },
+              {
+                "debit": 2,
+                "pdcKpa": 31.61
+              },
+              {
+                "debit": 5,
+                "pdcKpa": 170.4
+              },
+              {
+                "debit": 8,
+                "pdcKpa": 404.8
+              },
+              {
+                "debit": 11,
+                "pdcKpa": 729.8
+              },
+              {
+                "debit": 13,
+                "pdcKpa": 994.7
+              }
+            ]
+          },
+          {
+            "regime": "50°C",
+            "points": [
+              {
+                "debit": 0.5,
+                "pdcKpa": 1.806
+              },
+              {
+                "debit": 1,
+                "pdcKpa": 6.463
+              },
+              {
+                "debit": 2,
+                "pdcKpa": 23.24
+              },
+              {
+                "debit": 5,
+                "pdcKpa": 127.3
+              },
+              {
+                "debit": 8,
+                "pdcKpa": 304.9
+              },
+              {
+                "debit": 11,
+                "pdcKpa": 551.4
+              },
+              {
+                "debit": 13,
+                "pdcKpa": 752.6
+              }
+            ]
+          }
+        ],
+        "plaques": 46
+      },
+      {
+        "id": "cmp_fi22asmx56_fd3686f374",
+        "type": "echangeur_plaques",
+        "ref": "FI22ASMX56",
+        "fabricant": "SWEP",
+        "modele": "FI22ASMX56",
+        "materiau": "Cu brasé",
+        "courbesPdc": [
+          {
+            "regime": "0°C/15% glycol",
+            "points": [
+              {
+                "debit": 0.5,
+                "pdcKpa": 2.593
+              },
+              {
+                "debit": 1,
+                "pdcKpa": 6.715
+              },
+              {
+                "debit": 2,
+                "pdcKpa": 22.89
+              },
+              {
+                "debit": 5,
+                "pdcKpa": 124.3
+              },
+              {
+                "debit": 8,
+                "pdcKpa": 296.7
+              },
+              {
+                "debit": 11,
+                "pdcKpa": 535.4
+              },
+              {
+                "debit": 13,
+                "pdcKpa": 730.9
+              }
+            ]
+          },
+          {
+            "regime": "50°C",
+            "points": [
+              {
+                "debit": 0.5,
+                "pdcKpa": 1.311
+              },
+              {
+                "debit": 1,
+                "pdcKpa": 4.721
+              },
+              {
+                "debit": 2,
+                "pdcKpa": 17.06
+              },
+              {
+                "debit": 5,
+                "pdcKpa": 94.26
+              },
+              {
+                "debit": 8,
+                "pdcKpa": 227
+              },
+              {
+                "debit": 11,
+                "pdcKpa": 411.9
+              },
+              {
+                "debit": 13,
+                "pdcKpa": 563.3
+              }
+            ]
+          }
+        ],
+        "plaques": 56
+      },
+      {
+        "id": "cmp_fi22asmx68_5ff4cec030",
+        "type": "echangeur_plaques",
+        "ref": "FI22ASMX68",
+        "fabricant": "SWEP",
+        "modele": "FI22ASMX68",
+        "materiau": "Cu brasé",
+        "courbesPdc": [
+          {
+            "regime": "0°C/15% glycol",
+            "points": [
+              {
+                "debit": 0.5,
+                "pdcKpa": 2.049
+              },
+              {
+                "debit": 1,
+                "pdcKpa": 5.378
+              },
+              {
+                "debit": 2,
+                "pdcKpa": 16.99
+              },
+              {
+                "debit": 5,
+                "pdcKpa": 93.17
+              },
+              {
+                "debit": 8,
+                "pdcKpa": 223.6
+              },
+              {
+                "debit": 11,
+                "pdcKpa": 404.9
+              },
+              {
+                "debit": 13,
+                "pdcKpa": 553.1
+              }
+            ]
+          },
+          {
+            "regime": "50°C",
+            "points": [
+              {
+                "debit": 0.5,
+                "pdcKpa": 0.9765
+              },
+              {
+                "debit": 1,
+                "pdcKpa": 3.544
+              },
+              {
+                "debit": 2,
+                "pdcKpa": 12.9
+              },
+              {
+                "debit": 5,
+                "pdcKpa": 72.03
+              },
+              {
+                "debit": 8,
+                "pdcKpa": 174.5
+              },
+              {
+                "debit": 11,
+                "pdcKpa": 318.1
+              },
+              {
+                "debit": 13,
+                "pdcKpa": 436.1
+              }
+            ]
+          }
+        ],
+        "plaques": 68
+      },
+      {
+        "id": "cmp_fi22asmx78_f93dbbc1ac",
+        "type": "echangeur_plaques",
+        "ref": "FI22ASMX78",
+        "fabricant": "SWEP",
+        "modele": "FI22ASMX78",
+        "materiau": "Cu brasé",
+        "courbesPdc": [
+          {
+            "regime": "0°C/15% glycol",
+            "points": [
+              {
+                "debit": 0.5,
+                "pdcKpa": 1.743
+              },
+              {
+                "debit": 1,
+                "pdcKpa": 4.627
+              },
+              {
+                "debit": 2,
+                "pdcKpa": 13.96
+              },
+              {
+                "debit": 5,
+                "pdcKpa": 77.22
+              },
+              {
+                "debit": 8,
+                "pdcKpa": 186.2
+              },
+              {
+                "debit": 11,
+                "pdcKpa": 338.3
+              },
+              {
+                "debit": 13,
+                "pdcKpa": 462.9
+              }
+            ]
+          },
+          {
+            "regime": "50°C",
+            "points": [
+              {
+                "debit": 0.5,
+                "pdcKpa": 0.805
+              },
+              {
+                "debit": 1,
+                "pdcKpa": 2.941
+              },
+              {
+                "debit": 2,
+                "pdcKpa": 10.78
+              },
+              {
+                "debit": 5,
+                "pdcKpa": 60.7
+              },
+              {
+                "debit": 8,
+                "pdcKpa": 147.8
+              },
+              {
+                "debit": 11,
+                "pdcKpa": 270.5
+              },
+              {
+                "debit": 13,
+                "pdcKpa": 371.4
+              }
+            ]
+          }
+        ],
+        "plaques": 78
+      },
+      {
+        "id": "cmp_fi22asmx90_756a3aa377",
+        "type": "echangeur_plaques",
+        "ref": "FI22ASMX90",
+        "fabricant": "SWEP",
+        "modele": "FI22ASMX90",
+        "materiau": "Cu brasé",
+        "courbesPdc": [
+          {
+            "regime": "0°C/15% glycol",
+            "points": [
+              {
+                "debit": 0.5,
+                "pdcKpa": 1.479
+              },
+              {
+                "debit": 1,
+                "pdcKpa": 3.98
+              },
+              {
+                "debit": 2,
+                "pdcKpa": 11.55
+              },
+              {
+                "debit": 5,
+                "pdcKpa": 64.52
+              },
+              {
+                "debit": 8,
+                "pdcKpa": 156.4
+              },
+              {
+                "debit": 11,
+                "pdcKpa": 285.3
+              },
+              {
+                "debit": 13,
+                "pdcKpa": 391.2
+              }
+            ]
+          },
+          {
+            "regime": "50°C",
+            "points": [
+              {
+                "debit": 0.5,
+                "pdcKpa": 0.6684
+              },
+              {
+                "debit": 1,
+                "pdcKpa": 2.461
+              },
+              {
+                "debit": 2,
+                "pdcKpa": 9.096
+              },
+              {
+                "debit": 5,
+                "pdcKpa": 51.75
+              },
+              {
+                "debit": 8,
+                "pdcKpa": 126.8
+              },
+              {
+                "debit": 11,
+                "pdcKpa": 232.9
+              },
+              {
+                "debit": 13,
+                "pdcKpa": 320.5
+              }
+            ]
+          }
+        ],
+        "plaques": 90
+      },
+      {
+        "id": "cmp_fi22asmx116_e981342a68",
+        "type": "echangeur_plaques",
+        "ref": "FI22ASMX116",
+        "fabricant": "SWEP",
+        "modele": "FI22ASMX116",
+        "materiau": "Cu brasé",
+        "courbesPdc": [
+          {
+            "regime": "0°C/15% glycol",
+            "points": [
+              {
+                "debit": 0.5,
+                "pdcKpa": 1.12
+              },
+              {
+                "debit": 1,
+                "pdcKpa": 3.102
+              },
+              {
+                "debit": 2,
+                "pdcKpa": 9.049
+              },
+              {
+                "debit": 5,
+                "pdcKpa": 49.14
+              },
+              {
+                "debit": 8,
+                "pdcKpa": 120.5
+              },
+              {
+                "debit": 11,
+                "pdcKpa": 221.5
+              },
+              {
+                "debit": 13,
+                "pdcKpa": 305.1
+              }
+            ]
+          },
+          {
+            "regime": "50°C",
+            "points": [
+              {
+                "debit": 0.5,
+                "pdcKpa": 0.5023
+              },
+              {
+                "debit": 1,
+                "pdcKpa": 1.88
+              },
+              {
+                "debit": 2,
+                "pdcKpa": 7.068
+              },
+              {
+                "debit": 5,
+                "pdcKpa": 41.09
+              },
+              {
+                "debit": 8,
+                "pdcKpa": 101.9
+              },
+              {
+                "debit": 11,
+                "pdcKpa": 188.8
+              },
+              {
+                "debit": 13,
+                "pdcKpa": 261
+              }
+            ]
+          }
+        ],
+        "plaques": 116
+      }
+    ],
+    "detendeur": [
+      {
+        "id": "cmp_tuae_r410a_69f617e68d",
+        "type": "detendeur",
+        "ref": "TUAE-R410A",
+        "fabricant": "Danfoss",
+        "modele": "Détendeur sans orifice TUAE pour fluide R410A / 1 à 26 kW",
+        "typeDet": "tev",
+        "fluide": "R410A",
+        "notes": "Détendeur sans orifice TUAE pour fluide R410A / 1 à 26 kW"
+      },
+      {
+        "id": "cmp_orifice_n_5_avec_filtre_et_joint_pou_4e142b3a0a",
+        "type": "detendeur",
+        "ref": "Orifice n°5 avec filtre et joint pour élément TUAE",
+        "fabricant": "Danfoss",
+        "modele": "Orifice n°5 avec filtre et joint pour élément TUAE",
+        "typeDet": "tev",
+        "fluide": "R410A",
+        "notes": "Orifice TUAE"
+      },
+      {
+        "id": "cmp_orifice_n_6_avec_filtre_et_joint_pou_1cf9508139",
+        "type": "detendeur",
+        "ref": "Orifice n°6 avec filtre et joint pour élément TUAE",
+        "fabricant": "Danfoss",
+        "modele": "Orifice n°6 avec filtre et joint pour élément TUAE",
+        "typeDet": "tev",
+        "fluide": "R410A",
+        "notes": "Orifice TUAE"
+      },
+      {
+        "id": "cmp_orifice_n_7_avec_filtre_et_joint_pou_6f44ab28c8",
+        "type": "detendeur",
+        "ref": "Orifice n°7 avec filtre et joint pour élément TUAE",
+        "fabricant": "Danfoss",
+        "modele": "Orifice n°7 avec filtre et joint pour élément TUAE",
+        "typeDet": "tev",
+        "fluide": "R410A",
+        "notes": "Orifice TUAE"
+      },
+      {
+        "id": "cmp_orifice_n_8_avec_filtre_et_joint_pou_eaf475860f",
+        "type": "detendeur",
+        "ref": "Orifice n°8 avec filtre et joint pour élément TUAE",
+        "fabricant": "Danfoss",
+        "modele": "Orifice n°8 avec filtre et joint pour élément TUAE",
+        "typeDet": "tev",
+        "fluide": "R410A",
+        "notes": "Orifice TUAE"
+      }
+    ],
+    "circulateur": [
+      {
+        "id": "cmp_para_25_180_7_50_sc_12_wsf_f023311d30",
+        "type": "circulateur",
+        "ref": "Para 25-180/7-50/SC-12#WSF",
+        "fabricant": "Wilo/Para",
+        "modele": "Para 25-180/7-50/SC-12#WSF",
+        "fluide": "eau / glycolé"
+      },
+      {
+        "id": "cmp_star_z_25_6_3_entree_sortie_1_1_1_2_f9fe9d7f5a",
+        "type": "circulateur",
+        "ref": "Star-Z 25/6-3 entrée sortie  1\"_1\"1/2",
+        "fabricant": "Wilo/Star-Z",
+        "modele": "Star-Z 25/6-3 entrée sortie  1\"_1\"1/2",
+        "fluide": "eau / glycolé"
+      },
+      {
+        "id": "cmp_star_z_25_6_3_entree_sortie_1_1_1_3_8e74e822d1",
+        "type": "circulateur",
+        "ref": "Star-Z 25/6-3 entrée sortie  1\"_1\"1/3",
+        "fabricant": "Wilo/Star-Z",
+        "modele": "Star-Z 25/6-3 entrée sortie  1\"_1\"1/3",
+        "fluide": "eau / glycolé"
+      },
+      {
+        "id": "cmp_para_maxo_25_180_08_f01_i_entree_sor_e6110fe940",
+        "type": "circulateur",
+        "ref": "Para Maxo 25-180-08-F01 I entrée/sortie 2\"",
+        "fabricant": "Wilo/Para",
+        "modele": "Para Maxo 25-180-08-F01 I entrée/sortie 2\"",
+        "fluide": "eau / glycolé"
+      },
+      {
+        "id": "cmp_yonos_pico_z_25_0_5_8_180_28215118d0",
+        "type": "circulateur",
+        "ref": "Yonos PICO-Z 25/0,5-8 180",
+        "fabricant": "Wilo",
+        "modele": "Yonos PICO-Z 25/0,5-8 180",
+        "fluide": "eau / glycolé"
+      },
+      {
+        "id": "cmp_star_z_25_6_3_entree_sortie_1_1_1_7_6c417184d3",
+        "type": "circulateur",
+        "ref": "Star-Z 25/6-3 entrée sortie  1\"_1\"1/7",
+        "fabricant": "Wilo/Star-Z",
+        "modele": "Star-Z 25/6-3 entrée sortie  1\"_1\"1/7",
+        "fluide": "eau / glycolé"
+      },
+      {
+        "id": "cmp_top_z_30_7_1_230v_pn10_rg_entree_sor_f71aff5da7",
+        "type": "circulateur",
+        "ref": "TOP-Z 30/7 (1-230V,PN10,RG) entrée/sortie 2\"",
+        "fabricant": "Wilo",
+        "modele": "TOP-Z 30/7 (1-230V,PN10,RG) entrée/sortie 2\"",
+        "fluide": "eau / glycolé"
+      },
+      {
+        "id": "cmp_star_z_25_6_3_entree_sortie_1_1_1_4_4ba39990bc",
+        "type": "circulateur",
+        "ref": "Star-Z 25/6-3 entrée sortie  1\"_1\"1/4",
+        "fabricant": "Wilo/Star-Z",
+        "modele": "Star-Z 25/6-3 entrée sortie  1\"_1\"1/4",
+        "fluide": "eau / glycolé"
+      },
+      {
+        "id": "cmp_star_z_25_6_3_entree_sortie_1_1_1_8_4ecf46c7b7",
+        "type": "circulateur",
+        "ref": "Star-Z 25/6-3 entrée sortie  1\"_1\"1/8",
+        "fabricant": "Wilo/Star-Z",
+        "modele": "Star-Z 25/6-3 entrée sortie  1\"_1\"1/8",
+        "fluide": "eau / glycolé"
+      },
+      {
+        "id": "cmp_para_maxo_30_180_15_f01_i_entree_sor_21e8227b97",
+        "type": "circulateur",
+        "ref": "Para Maxo 30-180-15-F01 I entrée/sortie 2\"",
+        "fabricant": "Wilo/Para",
+        "modele": "Para Maxo 30-180-15-F01 I entrée/sortie 2\"",
+        "fluide": "eau / glycolé"
+      },
+      {
+        "id": "cmp_top_z_30_10_entree_sortie_2_122a18b922",
+        "type": "circulateur",
+        "ref": "TOP-Z 30/10 entrée/sortie 2\"",
+        "fabricant": "Wilo",
+        "modele": "TOP-Z 30/10 entrée/sortie 2\"",
+        "fluide": "eau / glycolé"
+      }
+    ]
+  },
+  "machines": [
+    {
+      "pac": "G80 Mono",
+      "gammeCode": 6,
+      "tension": 0,
+      "nbComp": 1,
+      "ref": 80,
+      "reversible": 1,
+      "chargeFluide": 3,
+      "general": {
+        "dimensions": {
+          "poidsKg": 100,
+          "hauteurMm": 1000,
+          "largeurMm": 500,
+          "profondeurMm": 335
+        },
+        "acoustique": {
+          "puissanceAcoustiqueDb": 45
+        },
+        "hydraulique": {
+          "connexion": "1\"",
+          "debitCaptageM3h": 1.25,
+          "pdcCaptageKpa": 17.1,
+          "circulateurFroid": "Para 25-180/7-50/SC-12#WSF",
+          "debitChauffageM3h": 0.85,
+          "pdcChauffageKpa": 5.8,
+          "circulateurChaud": "Para 25-180/7-50/SC-12#WSF"
+        },
+        "ecs": {
+          "ballonL": 270,
+          "ballon": "270L",
+          "circulateurEcs": "Star-Z 25/6-3 entrée sortie  1\"_1\"1/2"
+        },
+        "electrique": {
+          "tension": "240v",
+          "cableAlimentation": "3G2,5 mm²",
+          "protection": "16A Cb D",
+          "appointElectriqueKw": 2
+        }
+      },
+      "composantsLiens": {
+        "compresseur": "cmp_zh04k1p_pfz_524_58ad62996d",
+        "bouteilleAspiration": "cmp_bouteille_aspiration_5_8_1_6l_2f24cc3a48",
+        "reservoirLiquide": "cmp_reservoir_liquide_100x230_1_5_ltr_3ebc482982",
+        "echangeurB26": "cmp_b26hx30_029e03ea05",
+        "echangeurF80": "cmp_f80hx30_d456714691",
+        "detendeur": "cmp_tuae_r410a_69f617e68d",
+        "orificeDetendeur": "cmp_orifice_n_5_avec_filtre_et_joint_pou_4e142b3a0a",
+        "circulateurFroid": "cmp_para_25_180_7_50_sc_12_wsf_f023311d30",
+        "circulateurChaud": "cmp_para_25_180_7_50_sc_12_wsf_f023311d30",
+        "circulateurEcs": "cmp_star_z_25_6_3_entree_sortie_1_1_1_2_f9fe9d7f5a"
+      }
+    },
+    {
+      "pac": "G90 Mono",
+      "gammeCode": 6,
+      "tension": 0,
+      "nbComp": 1,
+      "ref": 90,
+      "reversible": 1,
+      "chargeFluide": 3,
+      "general": {
+        "dimensions": {
+          "poidsKg": 100,
+          "hauteurMm": 1000,
+          "largeurMm": 500,
+          "profondeurMm": 335
+        },
+        "acoustique": {
+          "puissanceAcoustiqueDb": 47
+        },
+        "hydraulique": {
+          "connexion": "1\"",
+          "debitCaptageM3h": 1.69,
+          "pdcCaptageKpa": 19.8,
+          "circulateurFroid": "Para 25-180/7-50/SC-12#WSF",
+          "debitChauffageM3h": 1.14,
+          "pdcChauffageKpa": 10.1,
+          "circulateurChaud": "Para 25-180/7-50/SC-12#WSF"
+        },
+        "ecs": {
+          "ballonL": 270,
+          "ballon": "270L",
+          "circulateurEcs": "Star-Z 25/6-3 entrée sortie  1\"_1\"1/3"
+        },
+        "electrique": {
+          "tension": "240v",
+          "cableAlimentation": "3G2,5 mm²",
+          "protection": "16A Cb D",
+          "appointElectriqueKw": 2
+        }
+      },
+      "composantsLiens": {
+        "compresseur": "cmp_zh05k1p_pfz_524_464a729459",
+        "bouteilleAspiration": "cmp_bouteille_aspiration_3_4_avec_echang_151ffcb50f",
+        "reservoirLiquide": "cmp_reservoir_liquide_100x230_1_5_ltr_3ebc482982",
+        "echangeurB26": "cmp_b26hx30_029e03ea05",
+        "echangeurF80": "cmp_f80hx30_d456714691",
+        "detendeur": "cmp_tuae_r410a_69f617e68d",
+        "orificeDetendeur": "cmp_orifice_n_5_avec_filtre_et_joint_pou_4e142b3a0a",
+        "circulateurFroid": "cmp_para_25_180_7_50_sc_12_wsf_f023311d30",
+        "circulateurChaud": "cmp_para_25_180_7_50_sc_12_wsf_f023311d30",
+        "circulateurEcs": "cmp_star_z_25_6_3_entree_sortie_1_1_1_3_8e74e822d1"
+      }
+    },
+    {
+      "pac": "G100 Mono",
+      "gammeCode": 6,
+      "tension": 0,
+      "nbComp": 1,
+      "ref": 100,
+      "reversible": 1,
+      "chargeFluide": 4,
+      "general": {
+        "dimensions": {
+          "poidsKg": 110,
+          "hauteurMm": 1000,
+          "largeurMm": 500,
+          "profondeurMm": 335
+        },
+        "acoustique": {
+          "puissanceAcoustiqueDb": 49
+        },
+        "hydraulique": {
+          "connexion": "1\"",
+          "debitCaptageM3h": 2.22,
+          "pdcCaptageKpa": 23.5,
+          "circulateurFroid": "Para 25-180/7-50/SC-12#WSF",
+          "debitChauffageM3h": 1.49,
+          "pdcChauffageKpa": 12.2,
+          "circulateurChaud": "Para 25-180/7-50/SC-12#WSF"
+        },
+        "ecs": {
+          "ballonL": 270,
+          "ballon": "270L",
+          "circulateurEcs": "Para 25-180/7-50/SC-12#WSF"
+        },
+        "electrique": {
+          "tension": "240v",
+          "cableAlimentation": "3G4  mm²",
+          "protection": "20A Cb D",
+          "appointElectriqueKw": 2
+        }
+      },
+      "composantsLiens": {
+        "compresseur": "cmp_zh06k1p_pfz_524_49b498c8d7",
+        "bouteilleAspiration": "cmp_bouteille_aspiration_7_8_avec_echang_4bf8bf99bc",
+        "reservoirLiquide": "cmp_reservoir_liquide_100x230_1_5_ltr_3ebc482982",
+        "echangeurB26": "cmp_b26hx40_c1a938dcf3",
+        "echangeurF80": "cmp_f80hx30_d456714691",
+        "detendeur": "cmp_tuae_r410a_69f617e68d",
+        "orificeDetendeur": "cmp_orifice_n_6_avec_filtre_et_joint_pou_1cf9508139",
+        "circulateurFroid": "cmp_para_25_180_7_50_sc_12_wsf_f023311d30",
+        "circulateurChaud": "cmp_para_25_180_7_50_sc_12_wsf_f023311d30",
+        "circulateurEcs": "cmp_para_25_180_7_50_sc_12_wsf_f023311d30"
+      }
+    },
+    {
+      "pac": "G110 Mono",
+      "gammeCode": 6,
+      "tension": 0,
+      "nbComp": 1,
+      "ref": 110,
+      "reversible": 1,
+      "chargeFluide": 4,
+      "general": {
+        "dimensions": {
+          "poidsKg": 110,
+          "hauteurMm": 1000,
+          "largeurMm": 500,
+          "profondeurMm": 335
+        },
+        "acoustique": {
+          "puissanceAcoustiqueDb": 51
+        },
+        "hydraulique": {
+          "connexion": "1\"",
+          "debitCaptageM3h": 3.05,
+          "pdcCaptageKpa": 28,
+          "circulateurFroid": "Para Maxo 25-180-08-F01 I entrée/sortie 2\"",
+          "debitChauffageM3h": 2.02,
+          "pdcChauffageKpa": 14.5,
+          "circulateurChaud": "Yonos PICO-Z 25/0,5-8 180"
+        },
+        "ecs": {
+          "ballonL": 270,
+          "ballon": "270L",
+          "circulateurEcs": "Star-Z 25/6-3 entrée sortie  1\"_1\"1/7"
+        },
+        "electrique": {
+          "tension": "240v",
+          "cableAlimentation": "3G6 mm²",
+          "protection": "25A Cb D",
+          "appointElectriqueKw": 2
+        }
+      },
+      "composantsLiens": {
+        "compresseur": "cmp_zh09k1p_pfz_524_7c31afcded",
+        "bouteilleAspiration": "cmp_bouteille_aspiration_7_8_avec_echang_4bf8bf99bc",
+        "reservoirLiquide": "cmp_reservoir_liquide_100x230_1_5_ltr_3ebc482982",
+        "echangeurB26": "cmp_b26hx50_25114c55fc",
+        "echangeurF80": "cmp_f80hx40_d8d540d0ba",
+        "detendeur": "cmp_tuae_r410a_69f617e68d",
+        "orificeDetendeur": "cmp_orifice_n_7_avec_filtre_et_joint_pou_6f44ab28c8",
+        "circulateurFroid": "cmp_para_maxo_25_180_08_f01_i_entree_sor_e6110fe940",
+        "circulateurChaud": "cmp_yonos_pico_z_25_0_5_8_180_28215118d0",
+        "circulateurEcs": "cmp_star_z_25_6_3_entree_sortie_1_1_1_7_6c417184d3"
+      }
+    },
+    {
+      "pac": "G130 Mono",
+      "gammeCode": 6,
+      "tension": 0,
+      "nbComp": 1,
+      "ref": 130,
+      "reversible": 1,
+      "chargeFluide": 5,
+      "general": {
+        "dimensions": {
+          "poidsKg": 120,
+          "hauteurMm": 1000,
+          "largeurMm": 500,
+          "profondeurMm": 335
+        },
+        "acoustique": {
+          "puissanceAcoustiqueDb": 51
+        },
+        "hydraulique": {
+          "connexion": "1\"",
+          "debitCaptageM3h": 3.99,
+          "pdcCaptageKpa": 27.5,
+          "circulateurFroid": "Para Maxo 25-180-08-F01 I entrée/sortie 2\"",
+          "debitChauffageM3h": 2.64,
+          "pdcChauffageKpa": 14.5,
+          "circulateurChaud": "Yonos PICO-Z 25/0,5-8 180"
+        },
+        "ecs": {
+          "ballonL": 270,
+          "ballon": "270L",
+          "circulateurEcs": "TOP-Z 30/7 (1-230V,PN10,RG) entrée/sortie 2\""
+        },
+        "electrique": {
+          "tension": "240v",
+          "cableAlimentation": "3G6  mm²",
+          "protection": "32A Cb D",
+          "appointElectriqueKw": 2
+        }
+      },
+      "composantsLiens": {
+        "compresseur": "cmp_zh12k1p_pfz_524_cd4cdcde68",
+        "bouteilleAspiration": "cmp_bouteille_aspiration_7_8_avec_echang_4bf8bf99bc",
+        "reservoirLiquide": "cmp_reservoir_liquide_100x230_1_5_ltr_3ebc482982",
+        "echangeurB26": "cmp_b26hx60_aa995df18c",
+        "echangeurF80": "cmp_f80hx50_9b33cf3566",
+        "detendeur": "cmp_tuae_r410a_69f617e68d",
+        "orificeDetendeur": "cmp_orifice_n_8_avec_filtre_et_joint_pou_eaf475860f",
+        "circulateurFroid": "cmp_para_maxo_25_180_08_f01_i_entree_sor_e6110fe940",
+        "circulateurChaud": "cmp_yonos_pico_z_25_0_5_8_180_28215118d0",
+        "circulateurEcs": "cmp_top_z_30_7_1_230v_pn10_rg_entree_sor_f71aff5da7"
+      }
+    },
+    {
+      "pac": "G90 Tri",
+      "gammeCode": 6,
+      "tension": 1,
+      "nbComp": 1,
+      "ref": 90,
+      "reversible": 1,
+      "chargeFluide": 3,
+      "general": {
+        "dimensions": {
+          "poidsKg": 100,
+          "hauteurMm": 1000,
+          "largeurMm": 500,
+          "profondeurMm": 335
+        },
+        "acoustique": {
+          "puissanceAcoustiqueDb": 47
+        },
+        "hydraulique": {
+          "connexion": "1\"",
+          "debitCaptageM3h": 1.69,
+          "pdcCaptageKpa": 19.8,
+          "circulateurFroid": "Para 25-180/7-50/SC-12#WSF",
+          "debitChauffageM3h": 1.14,
+          "pdcChauffageKpa": 10.1,
+          "circulateurChaud": "Para 25-180/7-50/SC-12#WSF"
+        },
+        "ecs": {
+          "ballonL": 270,
+          "ballon": "270L",
+          "circulateurEcs": "Star-Z 25/6-3 entrée sortie  1\"_1\"1/4"
+        },
+        "electrique": {
+          "tension": "400v",
+          "cableAlimentation": "5G2,5 mm²",
+          "protection": "10A Cb D",
+          "appointElectriqueKw": 2
+        }
+      },
+      "composantsLiens": {
+        "compresseur": "cmp_zh05k1p_tfm_524_f45d468918",
+        "bouteilleAspiration": "cmp_bouteille_aspiration_3_4_avec_echang_151ffcb50f",
+        "reservoirLiquide": "cmp_reservoir_liquide_100x230_1_5_ltr_3ebc482982",
+        "echangeurB26": "cmp_b26hx30_029e03ea05",
+        "echangeurF80": "cmp_f80hx30_d456714691",
+        "detendeur": "cmp_tuae_r410a_69f617e68d",
+        "orificeDetendeur": "cmp_orifice_n_5_avec_filtre_et_joint_pou_4e142b3a0a",
+        "circulateurFroid": "cmp_para_25_180_7_50_sc_12_wsf_f023311d30",
+        "circulateurChaud": "cmp_para_25_180_7_50_sc_12_wsf_f023311d30",
+        "circulateurEcs": "cmp_star_z_25_6_3_entree_sortie_1_1_1_4_4ba39990bc"
+      }
+    },
+    {
+      "pac": "G100 Tri",
+      "gammeCode": 6,
+      "tension": 1,
+      "nbComp": 1,
+      "ref": 100,
+      "reversible": 1,
+      "chargeFluide": 4,
+      "general": {
+        "dimensions": {
+          "poidsKg": 110,
+          "hauteurMm": 1000,
+          "largeurMm": 500,
+          "profondeurMm": 335
+        },
+        "acoustique": {
+          "puissanceAcoustiqueDb": 49
+        },
+        "hydraulique": {
+          "connexion": "1\"",
+          "debitCaptageM3h": 2.22,
+          "pdcCaptageKpa": 23.5,
+          "circulateurFroid": "Para 25-180/7-50/SC-12#WSF",
+          "debitChauffageM3h": 1.49,
+          "pdcChauffageKpa": 12.2,
+          "circulateurChaud": "Para 25-180/7-50/SC-12#WSF"
+        },
+        "ecs": {
+          "ballonL": 270,
+          "ballon": "270L",
+          "circulateurEcs": "Para 25-180/7-50/SC-12#WSF"
+        },
+        "electrique": {
+          "tension": "400v",
+          "cableAlimentation": "5G2,5 mm²",
+          "protection": "10A Cb D",
+          "appointElectriqueKw": 2
+        }
+      },
+      "composantsLiens": {
+        "compresseur": "cmp_zh06k1p_tfm_524_53f5081177",
+        "bouteilleAspiration": "cmp_bouteille_aspiration_7_8_avec_echang_4bf8bf99bc",
+        "reservoirLiquide": "cmp_reservoir_liquide_100x230_1_5_ltr_3ebc482982",
+        "echangeurB26": "cmp_b26hx40_c1a938dcf3",
+        "echangeurF80": "cmp_f80hx30_d456714691",
+        "detendeur": "cmp_tuae_r410a_69f617e68d",
+        "orificeDetendeur": "cmp_orifice_n_6_avec_filtre_et_joint_pou_1cf9508139",
+        "circulateurFroid": "cmp_para_25_180_7_50_sc_12_wsf_f023311d30",
+        "circulateurChaud": "cmp_para_25_180_7_50_sc_12_wsf_f023311d30",
+        "circulateurEcs": "cmp_para_25_180_7_50_sc_12_wsf_f023311d30"
+      }
+    },
+    {
+      "pac": "G110 Tri",
+      "gammeCode": 6,
+      "tension": 1,
+      "nbComp": 1,
+      "ref": 110,
+      "reversible": 1,
+      "chargeFluide": 4,
+      "general": {
+        "dimensions": {
+          "poidsKg": 110,
+          "hauteurMm": 1000,
+          "largeurMm": 500,
+          "profondeurMm": 335
+        },
+        "acoustique": {
+          "puissanceAcoustiqueDb": 51
+        },
+        "hydraulique": {
+          "connexion": "1\"",
+          "debitCaptageM3h": 3.05,
+          "pdcCaptageKpa": 28,
+          "circulateurFroid": "Para Maxo 25-180-08-F01 I entrée/sortie 2\"",
+          "debitChauffageM3h": 2.02,
+          "pdcChauffageKpa": 14.5,
+          "circulateurChaud": "Yonos PICO-Z 25/0,5-8 180"
+        },
+        "ecs": {
+          "ballonL": 270,
+          "ballon": "270L",
+          "circulateurEcs": "Star-Z 25/6-3 entrée sortie  1\"_1\"1/8"
+        },
+        "electrique": {
+          "tension": "400v",
+          "cableAlimentation": "5G2,5 mm²",
+          "protection": "10A Cb D",
+          "appointElectriqueKw": 2
+        }
+      },
+      "composantsLiens": {
+        "compresseur": "cmp_zh09k1p_tfm_524_33e301633c",
+        "bouteilleAspiration": "cmp_bouteille_aspiration_7_8_avec_echang_4bf8bf99bc",
+        "reservoirLiquide": "cmp_reservoir_liquide_100x230_1_5_ltr_3ebc482982",
+        "echangeurB26": "cmp_b26hx50_25114c55fc",
+        "echangeurF80": "cmp_f80hx40_d8d540d0ba",
+        "detendeur": "cmp_tuae_r410a_69f617e68d",
+        "orificeDetendeur": "cmp_orifice_n_7_avec_filtre_et_joint_pou_6f44ab28c8",
+        "circulateurFroid": "cmp_para_maxo_25_180_08_f01_i_entree_sor_e6110fe940",
+        "circulateurChaud": "cmp_yonos_pico_z_25_0_5_8_180_28215118d0",
+        "circulateurEcs": "cmp_star_z_25_6_3_entree_sortie_1_1_1_8_4ecf46c7b7"
+      }
+    },
+    {
+      "pac": "G130 Tri",
+      "gammeCode": 6,
+      "tension": 1,
+      "nbComp": 1,
+      "ref": 130,
+      "reversible": 1,
+      "chargeFluide": 5,
+      "general": {
+        "dimensions": {
+          "poidsKg": 120,
+          "hauteurMm": 1000,
+          "largeurMm": 500,
+          "profondeurMm": 335
+        },
+        "acoustique": {
+          "puissanceAcoustiqueDb": 51
+        },
+        "hydraulique": {
+          "connexion": "1\"",
+          "debitCaptageM3h": 3.99,
+          "pdcCaptageKpa": 27.5,
+          "circulateurFroid": "Para Maxo 25-180-08-F01 I entrée/sortie 2\"",
+          "debitChauffageM3h": 2.64,
+          "pdcChauffageKpa": 14.5,
+          "circulateurChaud": "Yonos PICO-Z 25/0,5-8 180"
+        },
+        "ecs": {
+          "ballonL": 270,
+          "ballon": "270L",
+          "circulateurEcs": "TOP-Z 30/7 (1-230V,PN10,RG) entrée/sortie 2\""
+        },
+        "electrique": {
+          "tension": "400v",
+          "cableAlimentation": "5G2,5 mm²",
+          "protection": "16A Cb D",
+          "appointElectriqueKw": 2
+        }
+      },
+      "composantsLiens": {
+        "compresseur": "cmp_zh12k1p_tfm_524_2a7cdfd11d",
+        "bouteilleAspiration": "cmp_bouteille_aspiration_7_8_avec_echang_4bf8bf99bc",
+        "reservoirLiquide": "cmp_reservoir_liquide_100x230_1_5_ltr_3ebc482982",
+        "echangeurB26": "cmp_b26hx60_aa995df18c",
+        "echangeurF80": "cmp_f80hx50_9b33cf3566",
+        "detendeur": "cmp_tuae_r410a_69f617e68d",
+        "orificeDetendeur": "cmp_orifice_n_8_avec_filtre_et_joint_pou_eaf475860f",
+        "circulateurFroid": "cmp_para_maxo_25_180_08_f01_i_entree_sor_e6110fe940",
+        "circulateurChaud": "cmp_yonos_pico_z_25_0_5_8_180_28215118d0",
+        "circulateurEcs": "cmp_top_z_30_7_1_230v_pn10_rg_entree_sor_f71aff5da7"
+      }
+    },
+    {
+      "pac": "G140 Tri",
+      "gammeCode": 6,
+      "tension": 1,
+      "nbComp": 1,
+      "ref": 140,
+      "reversible": 1,
+      "chargeFluide": 5,
+      "general": {
+        "dimensions": {
+          "poidsKg": 130,
+          "hauteurMm": 1200,
+          "largeurMm": 600,
+          "profondeurMm": 400
+        },
+        "acoustique": {
+          "puissanceAcoustiqueDb": 52
+        },
+        "hydraulique": {
+          "connexion": "1\"1/4 côté \r\névaporation",
+          "debitCaptageM3h": 5.1,
+          "pdcCaptageKpa": 29.1,
+          "circulateurFroid": "Para Maxo 30-180-15-F01 I entrée/sortie 2\"",
+          "debitChauffageM3h": 3.41,
+          "pdcChauffageKpa": 23.8,
+          "circulateurChaud": "Yonos PICO-Z 25/0,5-8 180"
+        },
+        "ecs": {
+          "ballonL": 270,
+          "ballon": "270L",
+          "circulateurEcs": "TOP-Z 30/10 entrée/sortie 2\""
+        },
+        "electrique": {
+          "tension": "240v",
+          "cableAlimentation": "5G2,5 mm²",
+          "protection": "16A Cb D",
+          "appointElectriqueKw": 2
+        }
+      },
+      "composantsLiens": {
+        "compresseur": "cmp_zh15k1p_tfm_524_6d2ae9887d",
+        "bouteilleAspiration": "cmp_bouteille_aspiration_7_8_avec_echang_4bf8bf99bc",
+        "reservoirLiquide": "cmp_reservoir_liquide_100x230_1_5_ltr_3ebc482982",
+        "echangeurB26": "cmp_b26hx60_aa995df18c",
+        "echangeurF80": "cmp_f80hx50_9b33cf3566",
+        "detendeur": "cmp_tuae_r410a_69f617e68d",
+        "orificeDetendeur": "cmp_orifice_n_8_avec_filtre_et_joint_pou_eaf475860f",
+        "circulateurFroid": "cmp_para_maxo_30_180_15_f01_i_entree_sor_21e8227b97",
+        "circulateurChaud": "cmp_yonos_pico_z_25_0_5_8_180_28215118d0",
+        "circulateurEcs": "cmp_top_z_30_10_entree_sortie_2_122a18b922"
+      }
+    }
+  ],
+  "performances": {
+    "G80 Mono": {
+      "5/2|30/35": {
+        "chaud": 4.88,
+        "froid": 3.59,
+        "absorbee": 1.29,
+        "cop": 3.78,
+        "intensite": 0,
+        "scop": 3.78,
+        "etasPct": 143,
+        "classeEnergie": "A++",
+        "consoAnnuelleKwh": 752.37,
+        "etaS30": 143
+      },
+      "5/2|40/45": {
+        "chaud": 4.62,
+        "froid": 3.2,
+        "absorbee": 1.43,
+        "cop": 3.23,
+        "intensite": 0,
+        "scop": 3.24,
+        "etasPct": 122,
+        "classeEnergie": "A+",
+        "consoAnnuelleKwh": 968.72
+      },
+      "5/2|47/55": {
+        "chaud": 4.36,
+        "froid": 2.83,
+        "absorbee": 1.53,
+        "cop": 2.85,
+        "intensite": 0,
+        "scop": 2.85,
+        "etasPct": 106,
+        "classeEnergie": "A+",
+        "consoAnnuelleKwh": 1177.26,
+        "etaS50": 106
+      },
+      "9/6|30/35": {
+        "chaud": 5.63,
+        "froid": 4.52,
+        "absorbee": 1.1,
+        "cop": 5.12,
+        "intensite": 0,
+        "scop": 5.1,
+        "etasPct": 196,
+        "classeEnergie": "A+++",
+        "consoAnnuelleKwh": 292.34,
+        "etaS30": 196
+      },
+      "9/6|40/45": {
+        "chaud": 5.33,
+        "froid": 4.12,
+        "absorbee": 1.22,
+        "cop": 4.37,
+        "intensite": 0,
+        "scop": 4.39,
+        "etasPct": 168,
+        "classeEnergie": "A+++",
+        "consoAnnuelleKwh": 373.9
+      },
+      "9/6|47/55": {
+        "chaud": 5.06,
+        "froid": 3.75,
+        "absorbee": 1.31,
+        "cop": 3.86,
+        "intensite": 0,
+        "scop": 3.86,
+        "etasPct": 146,
+        "classeEnergie": "A++",
+        "consoAnnuelleKwh": 459.44,
+        "etaS50": 146
+      },
+      "0/-3|30/35": {
+        "chaud": 4.88,
+        "froid": 3.59,
+        "absorbee": 1.29,
+        "cop": 3.78,
+        "intensite": 0,
+        "scop": 3.78,
+        "etasPct": 143,
+        "classeEnergie": "A++",
+        "consoAnnuelleKwh": 752.37,
+        "etaS30": 143
+      },
+      "0/-3|40/45": {
+        "chaud": 4.62,
+        "froid": 3.2,
+        "absorbee": 1.43,
+        "cop": 3.23,
+        "intensite": 0,
+        "scop": 3.24,
+        "etasPct": 122,
+        "classeEnergie": "A+",
+        "consoAnnuelleKwh": 968.72
+      },
+      "0/-3|47/55": {
+        "chaud": 4.36,
+        "froid": 2.83,
+        "absorbee": 1.53,
+        "cop": 2.85,
+        "intensite": 0,
+        "scop": 2.85,
+        "etasPct": 106,
+        "classeEnergie": "A+",
+        "consoAnnuelleKwh": 1177.26,
+        "etaS50": 106
+      }
+    },
+    "G90 Mono": {
+      "5/2|30/35": {
+        "chaud": 5.57,
+        "froid": 4.04,
+        "absorbee": 1.54,
+        "cop": 3.62,
+        "intensite": 0,
+        "scop": 3.63,
+        "etasPct": 137,
+        "classeEnergie": "A++",
+        "consoAnnuelleKwh": 932.65,
+        "etaS30": 137
+      },
+      "5/2|40/45": {
+        "chaud": 5.36,
+        "froid": 3.7,
+        "absorbee": 1.65,
+        "cop": 3.25,
+        "intensite": 0,
+        "scop": 3.24,
+        "etasPct": 122,
+        "classeEnergie": "A+",
+        "consoAnnuelleKwh": 1122.74
+      },
+      "5/2|47/55": {
+        "chaud": 5.03,
+        "froid": 3.3,
+        "absorbee": 1.73,
+        "cop": 2.91,
+        "intensite": 0,
+        "scop": 2.9,
+        "etasPct": 108,
+        "classeEnergie": "A+",
+        "consoAnnuelleKwh": 1313.96,
+        "etaS50": 108
+      },
+      "9/6|30/35": {
+        "chaud": 6.43,
+        "froid": 5.12,
+        "absorbee": 1.31,
+        "cop": 4.91,
+        "intensite": 0,
+        "scop": 4.9,
+        "etasPct": 188,
+        "classeEnergie": "A+++",
+        "consoAnnuelleKwh": 361.97,
+        "etaS30": 188
+      },
+      "9/6|40/45": {
+        "chaud": 6.15,
+        "froid": 4.73,
+        "absorbee": 1.42,
+        "cop": 4.33,
+        "intensite": 0,
+        "scop": 4.35,
+        "etasPct": 166,
+        "classeEnergie": "A+++",
+        "consoAnnuelleKwh": 439.66
+      },
+      "9/6|47/55": {
+        "chaud": 5.8,
+        "froid": 4.33,
+        "absorbee": 1.48,
+        "cop": 3.92,
+        "intensite": 0,
+        "scop": 3.93,
+        "etasPct": 149,
+        "classeEnergie": "A++",
+        "consoAnnuelleKwh": 507.77,
+        "etaS50": 149
+      },
+      "0/-3|30/35": {
+        "chaud": 5.57,
+        "froid": 4.04,
+        "absorbee": 1.54,
+        "cop": 3.62,
+        "intensite": 0,
+        "scop": 3.63,
+        "etasPct": 137,
+        "classeEnergie": "A++",
+        "consoAnnuelleKwh": 932.65,
+        "etaS30": 137
+      },
+      "0/-3|40/45": {
+        "chaud": 5.36,
+        "froid": 3.7,
+        "absorbee": 1.65,
+        "cop": 3.25,
+        "intensite": 0,
+        "scop": 3.24,
+        "etasPct": 122,
+        "classeEnergie": "A+",
+        "consoAnnuelleKwh": 1122.74
+      },
+      "0/-3|47/55": {
+        "chaud": 5.03,
+        "froid": 3.3,
+        "absorbee": 1.73,
+        "cop": 2.91,
+        "intensite": 0,
+        "scop": 2.9,
+        "etasPct": 108,
+        "classeEnergie": "A+",
+        "consoAnnuelleKwh": 1313.96,
+        "etaS50": 108
+      }
+    },
+    "G100 Mono": {
+      "5/2|30/35": {
+        "chaud": 7.14,
+        "froid": 5.2,
+        "absorbee": 1.95,
+        "cop": 3.66,
+        "intensite": 0,
+        "scop": 3.67,
+        "etasPct": 139,
+        "classeEnergie": "A++",
+        "consoAnnuelleKwh": 1165.15,
+        "etaS30": 139
+      },
+      "5/2|40/45": {
+        "chaud": 6.89,
+        "froid": 4.76,
+        "absorbee": 2.13,
+        "cop": 3.23,
+        "intensite": 0,
+        "scop": 3.23,
+        "etasPct": 121,
+        "classeEnergie": "A+",
+        "consoAnnuelleKwh": 1451.26
+      },
+      "5/2|47/55": {
+        "chaud": 6.45,
+        "froid": 4.24,
+        "absorbee": 2.21,
+        "cop": 2.92,
+        "intensite": 0,
+        "scop": 2.92,
+        "etasPct": 109,
+        "classeEnergie": "A+",
+        "consoAnnuelleKwh": 1666.52,
+        "etaS50": 109
+      },
+      "9/6|30/35": {
+        "chaud": 8.21,
+        "froid": 6.56,
+        "absorbee": 1.66,
+        "cop": 4.95,
+        "intensite": 0,
+        "scop": 4.96,
+        "etasPct": 190,
+        "classeEnergie": "A+++",
+        "consoAnnuelleKwh": 451.45,
+        "etaS30": 190
+      },
+      "9/6|40/45": {
+        "chaud": 7.97,
+        "froid": 6.16,
+        "absorbee": 1.81,
+        "cop": 4.4,
+        "intensite": 0,
+        "scop": 4.41,
+        "etasPct": 169,
+        "classeEnergie": "A+++",
+        "consoAnnuelleKwh": 552.24
+      },
+      "9/6|47/55": {
+        "chaud": 7.48,
+        "froid": 5.59,
+        "absorbee": 1.89,
+        "cop": 3.96,
+        "intensite": 0,
+        "scop": 3.95,
+        "etasPct": 150,
+        "classeEnergie": "A+++",
+        "consoAnnuelleKwh": 646.65,
+        "etaS50": 150
+      },
+      "0/-3|30/35": {
+        "chaud": 7.14,
+        "froid": 5.2,
+        "absorbee": 1.95,
+        "cop": 3.66,
+        "intensite": 0,
+        "scop": 3.67,
+        "etasPct": 139,
+        "classeEnergie": "A++",
+        "consoAnnuelleKwh": 1165.15,
+        "etaS30": 139
+      },
+      "0/-3|40/45": {
+        "chaud": 6.89,
+        "froid": 4.76,
+        "absorbee": 2.13,
+        "cop": 3.23,
+        "intensite": 0,
+        "scop": 3.23,
+        "etasPct": 121,
+        "classeEnergie": "A+",
+        "consoAnnuelleKwh": 1451.26
+      },
+      "0/-3|47/55": {
+        "chaud": 6.45,
+        "froid": 4.24,
+        "absorbee": 2.21,
+        "cop": 2.92,
+        "intensite": 0,
+        "scop": 2.92,
+        "etasPct": 109,
+        "classeEnergie": "A+",
+        "consoAnnuelleKwh": 1666.52,
+        "etaS50": 109
+      }
+    },
+    "G110 Mono": {
+      "5/2|30/35": {
+        "chaud": 9.76,
+        "froid": 7.14,
+        "absorbee": 2.62,
+        "cop": 3.73,
+        "intensite": 0,
+        "scop": 3.73,
+        "etasPct": 141,
+        "classeEnergie": "A++",
+        "consoAnnuelleKwh": 1542.77,
+        "etaS30": 141
+      },
+      "5/2|40/45": {
+        "chaud": 9.41,
+        "froid": 6.63,
+        "absorbee": 2.78,
+        "cop": 3.38,
+        "intensite": 0,
+        "scop": 3.38,
+        "etasPct": 127,
+        "classeEnergie": "A++",
+        "consoAnnuelleKwh": 1810.37
+      },
+      "5/2|47/55": {
+        "chaud": 8.77,
+        "froid": 5.85,
+        "absorbee": 2.92,
+        "cop": 3,
+        "intensite": 0,
+        "scop": 3.01,
+        "etasPct": 112,
+        "classeEnergie": "A+",
+        "consoAnnuelleKwh": 2135.17,
+        "etaS50": 112
+      },
+      "9/6|30/35": {
+        "chaud": 11.27,
+        "froid": 9.05,
+        "absorbee": 2.22,
+        "cop": 5.08,
+        "intensite": 0,
+        "scop": 5.07,
+        "etasPct": 195,
+        "classeEnergie": "A+++",
+        "consoAnnuelleKwh": 591.65,
+        "etaS30": 195
+      },
+      "9/6|40/45": {
+        "chaud": 10.89,
+        "froid": 8.52,
+        "absorbee": 2.38,
+        "cop": 4.58,
+        "intensite": 0,
+        "scop": 4.58,
+        "etasPct": 175,
+        "classeEnergie": "A+++",
+        "consoAnnuelleKwh": 699.84
+      },
+      "9/6|47/55": {
+        "chaud": 10.18,
+        "froid": 7.72,
+        "absorbee": 2.47,
+        "cop": 4.12,
+        "intensite": 0,
+        "scop": 4.13,
+        "etasPct": 157,
+        "classeEnergie": "A+++",
+        "consoAnnuelleKwh": 807.91,
+        "etaS50": 157
+      },
+      "0/-3|30/35": {
+        "chaud": 9.76,
+        "froid": 7.14,
+        "absorbee": 2.62,
+        "cop": 3.73,
+        "intensite": 0,
+        "scop": 3.73,
+        "etasPct": 141,
+        "classeEnergie": "A++",
+        "consoAnnuelleKwh": 1542.77,
+        "etaS30": 141
+      },
+      "0/-3|40/45": {
+        "chaud": 9.41,
+        "froid": 6.63,
+        "absorbee": 2.78,
+        "cop": 3.38,
+        "intensite": 0,
+        "scop": 3.38,
+        "etasPct": 127,
+        "classeEnergie": "A++",
+        "consoAnnuelleKwh": 1810.37
+      },
+      "0/-3|47/55": {
+        "chaud": 8.77,
+        "froid": 5.85,
+        "absorbee": 2.92,
+        "cop": 3,
+        "intensite": 0,
+        "scop": 3.01,
+        "etasPct": 112,
+        "classeEnergie": "A+",
+        "consoAnnuelleKwh": 2135.17,
+        "etaS50": 112
+      }
+    },
+    "G130 Mono": {
+      "5/2|30/35": {
+        "chaud": 12.31,
+        "froid": 9.1,
+        "absorbee": 3.21,
+        "cop": 3.83,
+        "intensite": 0,
+        "scop": 3.84,
+        "etasPct": 145,
+        "classeEnergie": "A++",
+        "consoAnnuelleKwh": 1840.91,
+        "etaS30": 145
+      },
+      "5/2|40/45": {
+        "chaud": 11.81,
+        "froid": 8.4,
+        "absorbee": 3.41,
+        "cop": 3.46,
+        "intensite": 0,
+        "scop": 3.46,
+        "etasPct": 130,
+        "classeEnergie": "A++",
+        "consoAnnuelleKwh": 2169.04
+      },
+      "5/2|47/55": {
+        "chaud": 11.4,
+        "froid": 7.69,
+        "absorbee": 3.72,
+        "cop": 3.06,
+        "intensite": 0,
+        "scop": 3.07,
+        "etasPct": 115,
+        "classeEnergie": "A+",
+        "consoAnnuelleKwh": 2666.08,
+        "etaS50": 115
+      },
+      "9/6|30/35": {
+        "chaud": 14.26,
+        "froid": 11.53,
+        "absorbee": 2.72,
+        "cop": 5.24,
+        "intensite": 0,
+        "scop": 5.23,
+        "etasPct": 201,
+        "classeEnergie": "A+++",
+        "consoAnnuelleKwh": 702.55,
+        "etaS30": 201
+      },
+      "9/6|40/45": {
+        "chaud": 13.55,
+        "froid": 10.64,
+        "absorbee": 2.91,
+        "cop": 4.66,
+        "intensite": 0,
+        "scop": 4.66,
+        "etasPct": 178,
+        "classeEnergie": "A+++",
+        "consoAnnuelleKwh": 842.75
+      },
+      "9/6|47/55": {
+        "chaud": 13.13,
+        "froid": 9.97,
+        "absorbee": 3.15,
+        "cop": 4.17,
+        "intensite": 0,
+        "scop": 4.16,
+        "etasPct": 159,
+        "classeEnergie": "A+++",
+        "consoAnnuelleKwh": 1022.01,
+        "etaS50": 159
+      },
+      "0/-3|30/35": {
+        "chaud": 12.31,
+        "froid": 9.1,
+        "absorbee": 3.21,
+        "cop": 3.83,
+        "intensite": 0,
+        "scop": 3.84,
+        "etasPct": 145,
+        "classeEnergie": "A++",
+        "consoAnnuelleKwh": 1840.91,
+        "etaS30": 145
+      },
+      "0/-3|40/45": {
+        "chaud": 11.81,
+        "froid": 8.4,
+        "absorbee": 3.41,
+        "cop": 3.46,
+        "intensite": 0,
+        "scop": 3.46,
+        "etasPct": 130,
+        "classeEnergie": "A++",
+        "consoAnnuelleKwh": 2169.04
+      },
+      "0/-3|47/55": {
+        "chaud": 11.4,
+        "froid": 7.69,
+        "absorbee": 3.72,
+        "cop": 3.06,
+        "intensite": 0,
+        "scop": 3.07,
+        "etasPct": 115,
+        "classeEnergie": "A+",
+        "consoAnnuelleKwh": 2666.08,
+        "etaS50": 115
+      }
+    },
+    "G90 Tri": {
+      "5/2|30/35": {
+        "chaud": 5.91,
+        "froid": 4.3,
+        "absorbee": 1.61,
+        "cop": 3.67,
+        "intensite": 0,
+        "scop": 3.66,
+        "etasPct": 139,
+        "classeEnergie": "A++",
+        "consoAnnuelleKwh": 969.29,
+        "etaS30": 139
+      },
+      "5/2|40/45": {
+        "chaud": 5.43,
+        "froid": 3.72,
+        "absorbee": 1.71,
+        "cop": 3.18,
+        "intensite": 0,
+        "scop": 3.18,
+        "etasPct": 119,
+        "classeEnergie": "A+",
+        "consoAnnuelleKwh": 1181.6
+      },
+      "5/2|47/55": {
+        "chaud": 5.28,
+        "froid": 3.36,
+        "absorbee": 1.92,
+        "cop": 2.75,
+        "intensite": 0,
+        "scop": 2.75,
+        "etasPct": 102,
+        "classeEnergie": "A+",
+        "consoAnnuelleKwh": 1533.17,
+        "etaS50": 102
+      },
+      "9/6|30/35": {
+        "chaud": 6.84,
+        "froid": 5.47,
+        "absorbee": 1.37,
+        "cop": 4.99,
+        "intensite": 0,
+        "scop": 4.99,
+        "etasPct": 192,
+        "classeEnergie": "A+++",
+        "consoAnnuelleKwh": 370.23,
+        "etaS30": 192
+      },
+      "9/6|40/45": {
+        "chaud": 6.26,
+        "froid": 4.8,
+        "absorbee": 1.46,
+        "cop": 4.29,
+        "intensite": 0,
+        "scop": 4.29,
+        "etasPct": 164,
+        "classeEnergie": "A+++",
+        "consoAnnuelleKwh": 458.75
+      },
+      "9/6|47/55": {
+        "chaud": 6.09,
+        "froid": 4.46,
+        "absorbee": 1.63,
+        "cop": 3.74,
+        "intensite": 0,
+        "scop": 3.73,
+        "etasPct": 141,
+        "classeEnergie": "A++",
+        "consoAnnuelleKwh": 590.41,
+        "etaS50": 141
+      },
+      "0/-3|30/35": {
+        "chaud": 5.91,
+        "froid": 4.3,
+        "absorbee": 1.61,
+        "cop": 3.67,
+        "intensite": 0,
+        "scop": 3.66,
+        "etasPct": 139,
+        "classeEnergie": "A++",
+        "consoAnnuelleKwh": 969.29,
+        "etaS30": 139
+      },
+      "0/-3|40/45": {
+        "chaud": 5.43,
+        "froid": 3.72,
+        "absorbee": 1.71,
+        "cop": 3.18,
+        "intensite": 0,
+        "scop": 3.18,
+        "etasPct": 119,
+        "classeEnergie": "A+",
+        "consoAnnuelleKwh": 1181.6
+      },
+      "0/-3|47/55": {
+        "chaud": 5.28,
+        "froid": 3.36,
+        "absorbee": 1.92,
+        "cop": 2.75,
+        "intensite": 0,
+        "scop": 2.75,
+        "etasPct": 102,
+        "classeEnergie": "A+",
+        "consoAnnuelleKwh": 1533.17,
+        "etaS50": 102
+      }
+    },
+    "G100 Tri": {
+      "5/2|30/35": {
+        "chaud": 7.41,
+        "froid": 5.4,
+        "absorbee": 2.01,
+        "cop": 3.69,
+        "intensite": 0,
+        "scop": 3.69,
+        "etasPct": 140,
+        "classeEnergie": "A++",
+        "consoAnnuelleKwh": 1194.07,
+        "etaS30": 140
+      },
+      "5/2|40/45": {
+        "chaud": 7.14,
+        "froid": 4.88,
+        "absorbee": 2.25,
+        "cop": 3.17,
+        "intensite": 0,
+        "scop": 3.17,
+        "etasPct": 119,
+        "classeEnergie": "A+",
+        "consoAnnuelleKwh": 1566.18
+      },
+      "5/2|47/55": {
+        "chaud": 6.72,
+        "froid": 4.3,
+        "absorbee": 2.42,
+        "cop": 2.78,
+        "intensite": 0,
+        "scop": 2.77,
+        "etasPct": 103,
+        "classeEnergie": "A+",
+        "consoAnnuelleKwh": 1924.24,
+        "etaS50": 103
+      },
+      "9/6|30/35": {
+        "chaud": 8.54,
+        "froid": 6.82,
+        "absorbee": 1.71,
+        "cop": 4.99,
+        "intensite": 0,
+        "scop": 4.98,
+        "etasPct": 191,
+        "classeEnergie": "A+++",
+        "consoAnnuelleKwh": 464.72,
+        "etaS30": 191
+      },
+      "9/6|40/45": {
+        "chaud": 8.23,
+        "froid": 6.32,
+        "absorbee": 1.91,
+        "cop": 4.31,
+        "intensite": 0,
+        "scop": 4.3,
+        "etasPct": 164,
+        "classeEnergie": "A+++",
+        "consoAnnuelleKwh": 600.49
+      },
+      "9/6|47/55": {
+        "chaud": 7.8,
+        "froid": 5.73,
+        "absorbee": 2.07,
+        "cop": 3.77,
+        "intensite": 0,
+        "scop": 3.77,
+        "etasPct": 143,
+        "classeEnergie": "A++",
+        "consoAnnuelleKwh": 740.46,
+        "etaS50": 143
+      },
+      "0/-3|30/35": {
+        "chaud": 7.41,
+        "froid": 5.4,
+        "absorbee": 2.01,
+        "cop": 3.69,
+        "intensite": 0,
+        "scop": 3.69,
+        "etasPct": 140,
+        "classeEnergie": "A++",
+        "consoAnnuelleKwh": 1194.07,
+        "etaS30": 140
+      },
+      "0/-3|40/45": {
+        "chaud": 7.14,
+        "froid": 4.88,
+        "absorbee": 2.25,
+        "cop": 3.17,
+        "intensite": 0,
+        "scop": 3.17,
+        "etasPct": 119,
+        "classeEnergie": "A+",
+        "consoAnnuelleKwh": 1566.18
+      },
+      "0/-3|47/55": {
+        "chaud": 6.72,
+        "froid": 4.3,
+        "absorbee": 2.42,
+        "cop": 2.78,
+        "intensite": 0,
+        "scop": 2.77,
+        "etasPct": 103,
+        "classeEnergie": "A+",
+        "consoAnnuelleKwh": 1924.24,
+        "etaS50": 103
+      }
+    },
+    "G110 Tri": {
+      "5/2|30/35": {
+        "chaud": 9.87,
+        "froid": 7.25,
+        "absorbee": 2.62,
+        "cop": 3.77,
+        "intensite": 0,
+        "scop": 3.77,
+        "etasPct": 143,
+        "classeEnergie": "A++",
+        "consoAnnuelleKwh": 1531.69,
+        "etaS30": 143
+      },
+      "5/2|40/45": {
+        "chaud": 9.55,
+        "froid": 6.59,
+        "absorbee": 2.96,
+        "cop": 3.23,
+        "intensite": 0,
+        "scop": 3.22,
+        "etasPct": 121,
+        "classeEnergie": "A+",
+        "consoAnnuelleKwh": 2019.24
+      },
+      "5/2|47/55": {
+        "chaud": 8.95,
+        "froid": 5.74,
+        "absorbee": 3.21,
+        "cop": 2.79,
+        "intensite": 0,
+        "scop": 2.79,
+        "etasPct": 104,
+        "classeEnergie": "A+",
+        "consoAnnuelleKwh": 2529.37,
+        "etaS50": 104
+      },
+      "9/6|30/35": {
+        "chaud": 11.39,
+        "froid": 9.16,
+        "absorbee": 2.24,
+        "cop": 5.08,
+        "intensite": 0,
+        "scop": 5.1,
+        "etasPct": 196,
+        "classeEnergie": "A+++",
+        "consoAnnuelleKwh": 592.45,
+        "etaS30": 196
+      },
+      "9/6|40/45": {
+        "chaud": 11.09,
+        "froid": 8.59,
+        "absorbee": 2.5,
+        "cop": 4.44,
+        "intensite": 0,
+        "scop": 4.43,
+        "etasPct": 169,
+        "classeEnergie": "A+++",
+        "consoAnnuelleKwh": 763.68
+      },
+      "9/6|47/55": {
+        "chaud": 10.29,
+        "froid": 7.55,
+        "absorbee": 2.74,
+        "cop": 3.76,
+        "intensite": 0,
+        "scop": 3.75,
+        "etasPct": 142,
+        "classeEnergie": "A++",
+        "consoAnnuelleKwh": 986.64,
+        "etaS50": 142
+      },
+      "0/-3|30/35": {
+        "chaud": 9.87,
+        "froid": 7.25,
+        "absorbee": 2.62,
+        "cop": 3.77,
+        "intensite": 0,
+        "scop": 3.77,
+        "etasPct": 143,
+        "classeEnergie": "A++",
+        "consoAnnuelleKwh": 1531.69,
+        "etaS30": 143
+      },
+      "0/-3|40/45": {
+        "chaud": 9.55,
+        "froid": 6.59,
+        "absorbee": 2.96,
+        "cop": 3.23,
+        "intensite": 0,
+        "scop": 3.22,
+        "etasPct": 121,
+        "classeEnergie": "A+",
+        "consoAnnuelleKwh": 2019.24
+      },
+      "0/-3|47/55": {
+        "chaud": 8.95,
+        "froid": 5.74,
+        "absorbee": 3.21,
+        "cop": 2.79,
+        "intensite": 0,
+        "scop": 2.79,
+        "etasPct": 104,
+        "classeEnergie": "A+",
+        "consoAnnuelleKwh": 2529.37,
+        "etaS50": 104
+      }
+    },
+    "G130 Tri": {
+      "5/2|30/35": {
+        "chaud": 12.76,
+        "froid": 9.39,
+        "absorbee": 3.36,
+        "cop": 3.8,
+        "intensite": 0,
+        "scop": 3.79,
+        "etasPct": 144,
+        "classeEnergie": "A++",
+        "consoAnnuelleKwh": 1952.76,
+        "etaS30": 144
+      },
+      "5/2|40/45": {
+        "chaud": 12.1,
+        "froid": 8.67,
+        "absorbee": 3.44,
+        "cop": 3.52,
+        "intensite": 0,
+        "scop": 3.52,
+        "etasPct": 133,
+        "classeEnergie": "A++",
+        "consoAnnuelleKwh": 2147.01
+      },
+      "5/2|47/55": {
+        "chaud": 11.46,
+        "froid": 7.44,
+        "absorbee": 4.02,
+        "cop": 2.85,
+        "intensite": 0,
+        "scop": 2.85,
+        "etasPct": 106,
+        "classeEnergie": "A+",
+        "consoAnnuelleKwh": 3101.54,
+        "etaS50": 106
+      },
+      "9/6|30/35": {
+        "chaud": 14.79,
+        "froid": 11.9,
+        "absorbee": 2.89,
+        "cop": 5.12,
+        "intensite": 0,
+        "scop": 5.12,
+        "etasPct": 197,
+        "classeEnergie": "A+++",
+        "consoAnnuelleKwh": 762.05,
+        "etaS30": 197
+      },
+      "9/6|40/45": {
+        "chaud": 14.06,
+        "froid": 11.15,
+        "absorbee": 2.91,
+        "cop": 4.83,
+        "intensite": 0,
+        "scop": 4.83,
+        "etasPct": 185,
+        "classeEnergie": "A+++",
+        "consoAnnuelleKwh": 812.85
+      },
+      "9/6|47/55": {
+        "chaud": 13.25,
+        "froid": 9.81,
+        "absorbee": 3.44,
+        "cop": 3.85,
+        "intensite": 0,
+        "scop": 3.85,
+        "etasPct": 146,
+        "classeEnergie": "A++",
+        "consoAnnuelleKwh": 1205.38,
+        "etaS50": 146
+      },
+      "0/-3|30/35": {
+        "chaud": 12.76,
+        "froid": 9.39,
+        "absorbee": 3.36,
+        "cop": 3.8,
+        "intensite": 0,
+        "scop": 3.79,
+        "etasPct": 144,
+        "classeEnergie": "A++",
+        "consoAnnuelleKwh": 1952.76,
+        "etaS30": 144
+      },
+      "0/-3|40/45": {
+        "chaud": 12.1,
+        "froid": 8.67,
+        "absorbee": 3.44,
+        "cop": 3.52,
+        "intensite": 0,
+        "scop": 3.52,
+        "etasPct": 133,
+        "classeEnergie": "A++",
+        "consoAnnuelleKwh": 2147.01
+      },
+      "0/-3|47/55": {
+        "chaud": 11.46,
+        "froid": 7.44,
+        "absorbee": 4.02,
+        "cop": 2.85,
+        "intensite": 0,
+        "scop": 2.85,
+        "etasPct": 106,
+        "classeEnergie": "A+",
+        "consoAnnuelleKwh": 3101.54,
+        "etaS50": 106
+      }
+    },
+    "G140 Tri": {
+      "5/2|30/35": {
+        "chaud": 16.58,
+        "froid": 12.27,
+        "absorbee": 4.31,
+        "cop": 3.85,
+        "intensite": 0,
+        "scop": 3.84,
+        "etasPct": 146,
+        "classeEnergie": "A++",
+        "consoAnnuelleKwh": 2468.7,
+        "etaS30": 146
+      },
+      "5/2|40/45": {
+        "chaud": 15.76,
+        "froid": 10.98,
+        "absorbee": 4.78,
+        "cop": 3.3,
+        "intensite": 0,
+        "scop": 3.29,
+        "etasPct": 124,
+        "classeEnergie": "A+",
+        "consoAnnuelleKwh": 3194.55
+      },
+      "5/2|47/55": {
+        "chaud": 14.85,
+        "froid": 9.46,
+        "absorbee": 5.39,
+        "cop": 2.76,
+        "intensite": 0,
+        "scop": 2.75,
+        "etasPct": 102,
+        "classeEnergie": "A+",
+        "consoAnnuelleKwh": 4311.56,
+        "etaS50": 102
+      },
+      "9/6|30/35": {
+        "chaud": 19.24,
+        "froid": 15.55,
+        "absorbee": 3.69,
+        "cop": 5.21,
+        "intensite": 0,
+        "scop": 5.22,
+        "etasPct": 201,
+        "classeEnergie": "A+++",
+        "consoAnnuelleKwh": 954.58,
+        "etaS30": 201
+      },
+      "9/6|40/45": {
+        "chaud": 18.08,
+        "froid": 14.03,
+        "absorbee": 4.06,
+        "cop": 4.45,
+        "intensite": 0,
+        "scop": 4.46,
+        "etasPct": 170,
+        "classeEnergie": "A+++",
+        "consoAnnuelleKwh": 1228.88
+      },
+      "9/6|47/55": {
+        "chaud": 17.29,
+        "froid": 12.72,
+        "absorbee": 4.57,
+        "cop": 3.78,
+        "intensite": 0,
+        "scop": 3.79,
+        "etasPct": 143,
+        "classeEnergie": "A++",
+        "consoAnnuelleKwh": 1629.13,
+        "etaS50": 143
+      },
+      "0/-3|30/35": {
+        "chaud": 16.58,
+        "froid": 12.27,
+        "absorbee": 4.31,
+        "cop": 3.85,
+        "intensite": 0,
+        "scop": 3.84,
+        "etasPct": 146,
+        "classeEnergie": "A++",
+        "consoAnnuelleKwh": 2468.7,
+        "etaS30": 146
+      },
+      "0/-3|40/45": {
+        "chaud": 15.76,
+        "froid": 10.98,
+        "absorbee": 4.78,
+        "cop": 3.3,
+        "intensite": 0,
+        "scop": 3.29,
+        "etasPct": 124,
+        "classeEnergie": "A+",
+        "consoAnnuelleKwh": 3194.55
+      },
+      "0/-3|47/55": {
+        "chaud": 14.85,
+        "froid": 9.46,
+        "absorbee": 5.39,
+        "cop": 2.76,
+        "intensite": 0,
+        "scop": 2.75,
+        "etasPct": 102,
+        "classeEnergie": "A+",
+        "consoAnnuelleKwh": 4311.56,
+        "etaS50": 102
+      }
+    }
+  }
+}
