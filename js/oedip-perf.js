@@ -1,4 +1,4 @@
-/* OEDIP — performances (mk, migration) — ne pas modifier l'ordre de chargement dans geoselect.html */
+/* OEDIP — performances (mk, migration) — ne pas modifier l'ordre de chargement dans oedip.html */
 function normSrc(s){
   if(!s) return "0/-3";
   s=String(s).replace(/°C/gi,"").trim();

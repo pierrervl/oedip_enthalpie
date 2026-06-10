@@ -1,4 +1,4 @@
-/* OEDIP — import / export CSV gammes — ne pas modifier l'ordre de chargement dans geoselect.html */
+/* OEDIP — import / export CSV gammes — ne pas modifier l'ordre de chargement dans oedip.html */
 /*
  * Format OEDIP-CSV v2 (séparateur ; recommandé pour Excel FR, virgule acceptée à l'import)
  *

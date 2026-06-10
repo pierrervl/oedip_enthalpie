@@ -1,4 +1,4 @@
-/* OEDIP — dossier & import/export — ne pas modifier l'ordre de chargement dans geoselect.html */
+/* OEDIP — dossier & import/export — ne pas modifier l'ordre de chargement dans oedip.html */
 /* ---------- DOSSIER DE TRAVAIL · IMPORT / EXPORT ---------- */
 const WS_PREFIX={project:"oedip_projet",machines:"oedip_machines"};
 const WS_IDB="oedip-workspace-v1";

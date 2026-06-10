@@ -1,4 +1,4 @@
-/* OEDIP — interface — ne pas modifier l'ordre de chargement dans geoselect.html */
+/* OEDIP — interface — ne pas modifier l'ordre de chargement dans oedip.html */
 /* ---------- 4. UI ---------- */
 const $=id=>document.getElementById(id);
 const fmt=(n,d=0)=> (n==null||isNaN(n)||n==='')?"—":Number(n).toLocaleString('fr-FR',{minimumFractionDigits:d,maximumFractionDigits:d});

@@ -1,4 +1,4 @@
-/* OEDIP — constantes & départements — ne pas modifier l'ordre de chargement dans geoselect.html */
+/* OEDIP — constantes & départements — ne pas modifier l'ordre de chargement dans oedip.html */
 
 /* ============================================================
    OEDIP · intégration DJU + modèle machine enrichi

@@ -1,4 +1,4 @@
-/* OEDIP — données initiales (catalogue) — ne pas modifier l'ordre de chargement dans geoselect.html */
+/* OEDIP — données initiales (catalogue) — ne pas modifier l'ordre de chargement dans oedip.html */
 const SEED = {
   meta:{ outil:"OEDIP", version:"v2.0 web", millesime:2025, utilisateur:"" },
   reglages:{ tnc:14.58, baseFactorDJU:0.702, baseFactorDJU15:0.93, pasMatrice:1, djuAnnee:"moyenne", djuBase:17 }, // DJU SDES · "moyenne" = 1990–2025 ou année précise

@@ -1,4 +1,4 @@
-/* OEDIP — moteur de calcul — ne pas modifier l'ordre de chargement dans geoselect.html */
+/* OEDIP — moteur de calcul — ne pas modifier l'ordre de chargement dans oedip.html */
 /* ---------- 2. MOTEUR (fonctions pures) ---------- */
 const Engine = {
   volumeRetenu(b, bs){
