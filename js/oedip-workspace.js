@@ -434,6 +434,7 @@ async function exportProject(opts){
       currentStudyName=studyName;
       updateStudyUI(); markSaved();
       cloudSaved=true;
+      try{ await sbSaveMachineLibrary(buildDbExport()); }catch(e2){ console.warn("Sync catalogue machines:", e2.message); }
       toast("Enregistré dans le cloud · "+saved.name);
       await refreshStudiesModal();
     }catch(e){
@@ -468,7 +469,8 @@ async function exportProject(opts){
 }
 async function exportDB(){
   const obj=buildDbExport();
-  if(sbCloudActive()){
+  const session=typeof sbEnsureSession==="function"?await sbEnsureSession():null;
+  if(session){
     try{
       await sbSaveMachineLibrary(obj);
       toast("Base machines enregistrée dans le cloud");

@@ -136,8 +136,25 @@ async function sbDeleteStudy(id) {
   if (error) throw error;
 }
 
+async function sbCloudDiagnostics() {
+  if (!(await sbEnsureSession())) return { ok: false, reason: "Session absente" };
+  const { count, error } = await _sbClient.from("studies").select("*", { count: "exact", head: true });
+  if (error) return { ok: false, reason: error.message, code: error.code };
+  return { ok: true, studiesCount: count ?? 0 };
+}
+
+async function sbReportCloudStatus() {
+  const diag = await sbCloudDiagnostics();
+  if (!diag.ok) {
+    toast("Cloud : accès refusé — " + diag.reason);
+    return diag;
+  }
+  toast("Cloud OK · " + diag.studiesCount + " étude(s) en ligne");
+  return diag;
+}
+
 async function sbSaveMachineLibrary(payload, name = "default") {
-  if (!sbIsReady() || !_sbSession) throw new Error("Non connecté");
+  if (!sbIsReady() || !(await sbEnsureSession())) throw new Error("Non connecté");
   const userId = _sbSession.user.id;
   const { data: existing, error: findErr } = await _sbClient
     .from("machine_libraries")
@@ -209,14 +226,20 @@ async function confirmSbAuth(mode) {
   }
   try {
     if (mode === "signup") {
-      await sbSignUp(email, password);
-      toast("Compte créé — vérifiez votre email si confirmation activée");
+      const { session } = await sbSignUp(email, password);
+      if (!session) {
+        toast("Compte créé — confirmez votre email puis connectez-vous");
+        closeSbAuthModal();
+        return;
+      }
+      toast("Compte créé · connecté");
     } else {
       await sbSignIn(email, password);
       toast("Connecté · " + email);
     }
     closeSbAuthModal();
     if (typeof onSbAuthChanged === "function") await onSbAuthChanged();
+    await sbReportCloudStatus();
   } catch (e) {
     if (errEl) errEl.textContent = e.message || String(e);
   }

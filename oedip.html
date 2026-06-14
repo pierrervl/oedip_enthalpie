@@ -392,7 +392,7 @@
     <button class="btn-soft" onclick="closeStudiesModal();newStudy();">+ Nouvelle</button>
     <button class="btn-ghost" onclick="closeStudiesModal()">Fermer</button></div>
   <div class="mbody">
-    <div class="hint" style="margin-bottom:12px">Sélectionnez une étude pour la rouvrir. <b>Enregistrer</b> synchronise le cloud (si connecté) et le dossier local.</div>
+    <div class="hint" style="margin-bottom:12px">Les études cloud sont dans la table <span class="mono">studies</span> (colonne <span class="mono">payload</span>). Le catalogue machines est copié dans <span class="mono">machine_libraries</span> à chaque enregistrement. Il n'y a pas de table <span class="mono">machines</span> séparée.</div>
     <div id="studiesList" class="studies-list"></div>
   </div>
 </div></div>
@@ -462,8 +462,8 @@
 <script src="js/oedip-ui.js"></script>
 <script src="js/oedip-csv.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-<script src="js/oedip-supabase-config.js?v=3"></script>
-<script src="js/oedip-supabase.js?v=3"></script>
-<script src="js/oedip-workspace.js?v=3"></script>
+<script src="js/oedip-supabase-config.js?v=4"></script>
+<script src="js/oedip-supabase.js?v=4"></script>
+<script src="js/oedip-workspace.js?v=4"></script>
 </body>
 </html>
