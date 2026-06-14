@@ -2,6 +2,7 @@
 let _sbClient = null;
 let _sbSession = null;
 let _sbReady = false;
+let _sbIsAdmin = false;
 
 function sbIsReady() {
   return _sbReady && !!_sbClient;
@@ -31,6 +32,7 @@ function sbInit() {
   _sbReady = true;
   _sbClient.auth.onAuthStateChange((_event, session) => {
     _sbSession = session;
+    if (!session) _sbIsAdmin = false;
     if (typeof updateSbAuthUI === "function") updateSbAuthUI();
   });
   return true;
@@ -41,7 +43,17 @@ async function sbBootstrapAuth() {
   const { data, error } = await _sbClient.auth.getSession();
   if (error) console.warn("Supabase session:", error.message);
   _sbSession = data?.session || null;
+  if (_sbSession) {
+    try {
+      await sbLoadProfile();
+    } catch (e) {
+      console.warn("Profil:", e.message);
+    }
+  } else {
+    _sbIsAdmin = false;
+  }
   if (typeof updateSbAuthUI === "function") updateSbAuthUI();
+  if (typeof updateProcedureAdminUI === "function") updateProcedureAdminUI();
   return _sbSession;
 }
 
@@ -50,7 +62,13 @@ async function sbSignIn(email, password) {
   const { data, error } = await _sbClient.auth.signInWithPassword({ email, password });
   if (error) throw error;
   _sbSession = data.session;
+  try {
+    await sbLoadProfile();
+  } catch (e) {
+    console.warn("Profil:", e.message);
+  }
   if (typeof updateSbAuthUI === "function") updateSbAuthUI();
+  if (typeof updateProcedureAdminUI === "function") updateProcedureAdminUI();
   return data;
 }
 
@@ -65,7 +83,9 @@ async function sbSignOut() {
   if (!_sbClient) return;
   await _sbClient.auth.signOut();
   _sbSession = null;
+  _sbIsAdmin = false;
   if (typeof updateSbAuthUI === "function") updateSbAuthUI();
+  if (typeof updateProcedureAdminUI === "function") updateProcedureAdminUI();
 }
 
 async function sbEnsureSession() {
@@ -207,19 +227,127 @@ async function sbSaveProfilePreferences(partial) {
   return merged;
 }
 
+async function sbLoadProfile() {
+  if (!sbIsReady() || !(await sbEnsureSession())) {
+    _sbIsAdmin = false;
+    return null;
+  }
+  const { data, error } = await _sbClient
+    .from("profiles")
+    .select("display_name,is_admin,preferences")
+    .eq("id", _sbSession.user.id)
+    .maybeSingle();
+  if (error) throw error;
+  _sbIsAdmin = !!data?.is_admin;
+  return data;
+}
+
+function sbIsAdmin() {
+  return !!_sbIsAdmin && !!_sbSession;
+}
+
+async function sbIsAdminAsync() {
+  if (!(await sbEnsureSession())) return false;
+  if (!_sbSession) return false;
+  try {
+    await sbLoadProfile();
+  } catch (e) {
+    console.warn("Profil admin:", e.message);
+    return false;
+  }
+  return _sbIsAdmin;
+}
+
+async function sbUpsertReferenceCatalog(key, { name, description, payload }) {
+  if (!(await sbIsAdminAsync())) throw new Error("Réservé aux administrateurs OEDIP");
+  const { error } = await _sbClient.from("reference_catalogs").upsert(
+    {
+      key,
+      name: name || key,
+      description: description || "",
+      payload,
+      version: 1,
+      published: true,
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: "key" }
+  );
+  if (error) throw error;
+}
+
+async function sbPublishProcedureCatalogsFromState(gammeCode) {
+  if (!(await sbIsAdminAsync())) throw new Error("Réservé aux administrateurs OEDIP");
+  if (typeof getProcedureCatalog !== "function" || !Array.isArray(state?.procedureCatalogs)) {
+    throw new Error("Catalogue procédures indisponible");
+  }
+  const cat = getProcedureCatalog(gammeCode);
+  if (!cat) throw new Error("Catalogue gamme introuvable");
+
+  const procPayload = JSON.parse(JSON.stringify(cat));
+  await sbUpsertReferenceCatalog("catalog_procedures_geo", {
+    name: "Procédures géothermie",
+    description: "Publié depuis OEDIP · admin · gamme " + gammeCode,
+    payload: procPayload,
+  });
+
+  const mergeProcedureCatalogs = (payload) => {
+    if (!payload || typeof payload !== "object") return payload;
+    const out = JSON.parse(JSON.stringify(payload));
+    const data = out.data || out;
+    data.procedureCatalogs = JSON.parse(JSON.stringify(state.procedureCatalogs));
+    if (out.data) out.data = data;
+    out.date = new Date().toISOString();
+    return out;
+  };
+
+  const { data: fullRow } = await _sbClient
+    .from("reference_catalogs")
+    .select("payload,description")
+    .eq("key", "catalog_full")
+    .maybeSingle();
+  if (fullRow?.payload) {
+    await sbUpsertReferenceCatalog("catalog_full", {
+      name: "Catalogue OEDIP complet",
+      description: fullRow.description || "Catalogue complet OEDIP",
+      payload: mergeProcedureCatalogs(fullRow.payload),
+    });
+  }
+
+  const { data: dbRow } = await _sbClient
+    .from("reference_catalogs")
+    .select("payload,description")
+    .eq("key", "catalog_db")
+    .maybeSingle();
+  if (dbRow?.payload) {
+    const dbPayload = JSON.parse(JSON.stringify(dbRow.payload));
+    dbPayload.procedureCatalogs = JSON.parse(JSON.stringify(state.procedureCatalogs));
+    dbPayload.date = new Date().toISOString();
+    await sbUpsertReferenceCatalog("catalog_db", {
+      name: "Base machines OEDIP",
+      description: dbRow.description || "Export oedip-db",
+      payload: dbPayload,
+    });
+  }
+
+  return true;
+}
+
 function updateSbAuthUI() {
   const btn = $("btnSbAuth");
   const label = $("sbAuthLabel");
   if (!btn || !label) return;
   if (_sbSession?.user) {
     const email = _sbSession.user.email || "Compte";
-    label.textContent = email.split("@")[0].slice(0, 12);
-    btn.title = "Connecté · " + email + "\nCliquer pour se déconnecter";
+    const adminHint = _sbIsAdmin ? "\nAdministrateur OEDIP · publication procédures" : "";
+    label.textContent = (_sbIsAdmin ? "★ " : "") + email.split("@")[0].slice(0, 12);
+    btn.title = "Connecté · " + email + adminHint + "\nCliquer pour se déconnecter";
     btn.classList.add("sb-on");
+    if (_sbIsAdmin) btn.classList.add("sb-admin");
+    else btn.classList.remove("sb-admin");
   } else {
     label.textContent = "Cloud";
     btn.title = "Se connecter à Supabase pour enregistrer vos études en ligne";
-    btn.classList.remove("sb-on");
+    btn.classList.remove("sb-on", "sb-admin");
   }
 }
 
@@ -260,6 +388,8 @@ async function confirmSbAuth(mode) {
     }
     closeSbAuthModal();
     if (typeof onSbAuthChanged === "function") await onSbAuthChanged();
+    if (typeof sbLoadProfile === "function") await sbLoadProfile();
+    if (typeof updateProcedureAdminUI === "function") updateProcedureAdminUI();
     await sbReportCloudStatus();
   } catch (e) {
     if (errEl) errEl.textContent = e.message || String(e);

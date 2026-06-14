@@ -967,6 +967,10 @@ if(typeof ensureProjetHydraulique==="function") ensureProjetHydraulique(projet);
 if(typeof ensureProjetInstallation==="function") ensureProjetInstallation(projet);
 async function onSbAuthChanged(){
   if(sbCloudActive()){
+    if(typeof sbLoadProfile==="function"){
+      try{ await sbLoadProfile(); }catch(e){ console.warn("Profil:", e.message); }
+    }
+    if(typeof updateProcedureAdminUI==="function") updateProcedureAdminUI();
     await loadNotePrintPresetsFromCloud();
     try{
       const remembered=localStorage.getItem("oedip_current_study_cloud_id");
@@ -982,6 +986,9 @@ async function onSbAuthChanged(){
 
 async function bootApp(){
   if(typeof sbBootstrapAuth==="function") await sbBootstrapAuth();
+  if(sbCloudActive()&&typeof sbLoadProfile==="function"){
+    try{ await sbLoadProfile(); }catch(e){}
+  }
   await ensureDefaultCatalogLoaded();
   if(sbCloudActive()) await loadNotePrintPresetsFromCloud();
   await bootstrapWorkspace();

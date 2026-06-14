@@ -478,6 +478,8 @@
   .studies-item-meta{font-size:11px;color:var(--ink-soft);margin-top:2px}
   .studies-section-label{font-family:var(--disp);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--geo);margin:4px 0 8px}
   header.bar .btn-ghost.sb-on{border-color:#3d7a86;color:#b8e4eb}
+  header.bar .btn-ghost.sb-admin{border-color:#c9a227;color:#f5e6a8}
+  #v-procedures:not(.proc-admin) .proc-gallery-actions .btn-heat{display:none}
   .new-study-card{max-width:440px}
   .new-study-card #newStudyName{width:100%;margin-top:6px;font-size:14px}
   .new-study-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}

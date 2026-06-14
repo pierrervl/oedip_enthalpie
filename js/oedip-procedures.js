@@ -27,9 +27,22 @@ function pickProcedureCatalog(candidate, gammeCode) {
   const bundled = bundledProcedureCatalogFor(gammeCode);
   if (!candidate) return bundled ? JSON.parse(JSON.stringify(bundled)) : null;
   if (!bundled) return candidate;
+  const candN = candidate.procedures?.length || 0;
+  const bundN = bundled.procedures?.length || 0;
+  if (candN >= bundN) return candidate;
   return procedureCatalogImageStepCount(candidate) >= procedureCatalogImageStepCount(bundled)
     ? candidate
     : JSON.parse(JSON.stringify(bundled));
+}
+
+function procedureEditAllowed() {
+  return typeof sbIsAdmin === "function" && sbIsAdmin();
+}
+
+function updateProcedureAdminUI() {
+  const host = $("v-procedures");
+  if (host) host.classList.toggle("proc-admin", procedureEditAllowed());
+  if ($("procList") && typeof renderProceduresTab === "function") renderProceduresTab();
 }
 
 function ensureProcedureCatalogPhotos() {
@@ -723,6 +736,10 @@ function renderProcedureEditor() {
 }
 
 function openProcedureEditor(gammeCode, procId) {
+  if (!procedureEditAllowed()) {
+    toast("Édition réservée aux administrateurs OEDIP");
+    return;
+  }
   const cat = getProcedureCatalog(gammeCode);
   const proc = cat?.procedures?.find((p) => p.id === procId);
   if (!proc) return;
@@ -740,16 +757,29 @@ function closeProcedureEditor() {
 
 function saveProcedureEditor() {
   if (!procedureEditDraft) return;
+  if (!procedureEditAllowed()) {
+    toast("Édition réservée aux administrateurs OEDIP");
+    return;
+  }
   gatherProcedureEditForm();
   const d = procedureEditDraft;
   const cat = getProcedureCatalog(d.gammeCode);
   const idx = cat?.procedures?.findIndex((p) => p.id === d.procId);
   if (idx < 0) return;
   cat.procedures[idx] = d.proc;
-  markDirty();
   closeProcedureEditor();
   renderProceduresTab();
-  toast("Procédure enregistrée — pensez à enregistrer le projet (⤒)");
+  if (typeof sbPublishProcedureCatalogsFromState === "function" && sbCloudActive()) {
+    sbPublishProcedureCatalogsFromState(d.gammeCode)
+      .then(() => toast("Procédure publiée · visible pour tous les utilisateurs"))
+      .catch((e) => {
+        markDirty();
+        toast("Enregistrée localement · publication cloud : " + (e.message || e));
+      });
+  } else {
+    markDirty();
+    toast("Procédure enregistrée localement — connectez-vous en admin pour publier");
+  }
 }
 
 function procedureEditAddStep() {
@@ -998,15 +1028,18 @@ function renderProceduresTab() {
   }
   const previewPac = machines[0]?.pac;
   const pacAttr = previewPac ? escAttr(previewPac) : "";
+  const canEdit = procedureEditAllowed();
   list.innerHTML = `<div class="proc-gallery">${procs.map((p) => {
     const idAttr = escAttr(p.id);
     const onPreview = previewPac
       ? `onclick="openProcedureViewer('${idAttr}','${pacAttr}')"`
-      : `onclick="openProcedureEditor(${code},'${idAttr}')" title="Aucune machine — ouverture en édition"`;
+      : canEdit
+        ? `onclick="openProcedureEditor(${code},'${idAttr}')" title="Aucune machine — ouverture en édition"`
+        : "";
     return `<article class="proc-gallery-card" ${onPreview}>
       <div class="proc-gallery-cover">${renderProcedureCoverHtml(p)}
         <div class="proc-gallery-actions noprint" onclick="event.stopPropagation()">
-          <button type="button" class="btn-heat" onclick="openProcedureEditor(${code},'${idAttr}')">Édition</button>
+          ${canEdit ? `<button type="button" class="btn-heat" onclick="openProcedureEditor(${code},'${idAttr}')">Édition</button>` : ""}
           <button type="button" class="btn-soft" onclick="printSingleProcedure(${code},'${idAttr}')">🖶</button>
           ${previewPac ? `<button type="button" class="btn-soft" onclick="openProcedureViewer('${idAttr}','${pacAttr}')">Aperçu</button>` : ""}
         </div>
@@ -1022,6 +1055,7 @@ function renderProceduresTab() {
 function initProceduresTab() {
   ensureProcedureCatalogPhotos();
   state.procedureCatalogs.forEach(migrateProcedureCatalogVariants);
+  updateProcedureAdminUI();
   renderProceduresTab();
 }
 
