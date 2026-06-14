@@ -224,6 +224,64 @@ function defaultComposantsCatalog() {
   return out;
 }
 
+function bundledComposantsData() {
+  const root = typeof OEDIP_DEFAULT_CATALOG !== "undefined" ? OEDIP_DEFAULT_CATALOG : null;
+  return root?.data?.composants || root?.composants || null;
+}
+
+function composantCount(comp) {
+  if (!comp || typeof comp !== "object") return 0;
+  return Object.keys(COMP_TYPES).reduce((n, k) => n + (comp[k]?.length || 0), 0);
+}
+
+function bundledComposantCount() {
+  return composantCount(bundledComposantsData());
+}
+
+function assignMissingCompIds() {
+  Object.keys(COMP_TYPES).forEach((k) => {
+    (state.composants[k] || []).forEach((c) => {
+      if (!c.id) c.id = nextCompId();
+    });
+  });
+}
+
+/** Réinjecte la bibliothèque embarquée si le cloud / un import n'a laissé qu'un catalogue partiel. */
+function ensureBundledComposants() {
+  ensureComposants();
+  const bc = bundledComposantsData();
+  if (!bc) {
+    assignMissingCompIds();
+    return;
+  }
+  const cur = composantCount(state.composants);
+  const exp = composantCount(bc);
+  if (cur < exp) {
+    Object.keys(COMP_TYPES).forEach((k) => {
+      const src = bc[k];
+      if (!Array.isArray(src) || !src.length) return;
+      if (!Array.isArray(state.composants[k])) state.composants[k] = [];
+      src.forEach((item) => {
+        const j = state.composants[k].findIndex(
+          (c) =>
+            (item.id && c.id === item.id) ||
+            (item.ref && c.ref === item.ref) ||
+            (item.modele && c.modele === item.modele)
+        );
+        if (j >= 0) {
+          state.composants[k][j] = {
+            ...item,
+            id: state.composants[k][j].id || item.id || nextCompId(),
+          };
+        } else {
+          state.composants[k].push({ ...item, id: item.id || nextCompId() });
+        }
+      });
+    });
+  }
+  assignMissingCompIds();
+}
+
 function ensureComposants() {
   if (!state.composants || typeof state.composants !== "object") state.composants = defaultComposantsCatalog();
   Object.keys(COMP_TYPES).forEach((k) => {
@@ -231,6 +289,7 @@ function ensureComposants() {
   });
   if (typeof OEDIP_CIRCULATEURS_WILO !== "undefined") mergeCirculateursCatalog(OEDIP_CIRCULATEURS_WILO);
   if (typeof mergeEchangeursPdcIntoComposants === "function") mergeEchangeursPdcIntoComposants(state.composants);
+  assignMissingCompIds();
 }
 
 /** Fusionne ou met à jour des circulateurs par référence (courbes débit/HMT). */
@@ -869,9 +928,10 @@ function bindCircChartResize() {
 }
 
 function renderComposants() {
-  ensureComposants();
+  ensureBundledComposants();
   const type = COMP_TYPE_ACTIVE;
   const def = COMP_TYPES[type];
+  if (!def) return;
   const list = state.composants[type] || [];
   const total = Object.keys(COMP_TYPES).reduce((n, k) => n + (state.composants[k]?.length || 0), 0);
   $("compTotalCount").textContent = total + " composant(s) au total";
@@ -1073,15 +1133,17 @@ if (typeof state !== "undefined") ensureComposants();
 if ($("modalComp")) $("modalComp").addEventListener("click", (e) => { if (e.target.id === "modalComp") closeCompModal(); });
 
 function initComposantsTab() {
-  ensureComposants();
-  if (!$("compTabs").dataset.ready) {
-    $("compTabs").innerHTML = Object.keys(COMP_TYPES)
+  ensureBundledComposants();
+  const tabs = $("compTabs");
+  if (!tabs) return;
+  if (!tabs.dataset.ready) {
+    tabs.innerHTML = Object.keys(COMP_TYPES)
       .map(
         (k) =>
           `<button type="button" class="comp-tab" data-comp="${k}" onclick="setCompType('${k}')">${COMP_TYPES[k].icon} ${COMP_TYPES[k].label}</button>`
       )
       .join("");
-    $("compTabs").dataset.ready = "1";
+    tabs.dataset.ready = "1";
     setCompType("circulateur");
   } else renderComposants();
 }

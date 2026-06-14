@@ -169,6 +169,7 @@ function finishCatalogLoad(opts) {
   opts = opts || {};
   ensureDepartements();
   ensureComposants();
+  if (typeof ensureBundledComposants === "function") ensureBundledComposants();
   if (typeof ensureProcedureCatalogPhotos === "function") ensureProcedureCatalogPhotos();
   if (typeof ensureOutils === "function") ensureOutils();
   migratePerformances();
@@ -570,6 +571,7 @@ async function hasDirPermission(handle,write){
   }catch(e){ return false; }
 }
 function catalogComposantCount(){
+  if(typeof composantCount==="function"&&state.composants) return composantCount(state.composants);
   if(!state.composants||typeof state.composants!=="object") return 0;
   return Object.keys(state.composants).reduce((n,k)=>n+(state.composants[k]?.length||0),0);
 }
@@ -578,11 +580,13 @@ async function ensureDefaultCatalogLoaded(){
   if(typeof loadReferenceCatalogFromCloud==="function"){
     try{ ok=await loadReferenceCatalogFromCloud(); }catch(e){ console.warn("Catalogue cloud:", e.message); }
   }
-  if(!ok||catalogComposantCount()===0){
+  const bundledN=typeof bundledComposantCount==="function"?bundledComposantCount():0;
+  if(!ok||catalogComposantCount()===0||(bundledN>0&&catalogComposantCount()<bundledN)){
     if(!applyBundledDefaultCatalogSync()) ok=await loadBundledDefaultCatalog();
     else ok=true;
   }
   if(typeof ensureComposants==="function") ensureComposants();
+  if(typeof ensureBundledComposants==="function") ensureBundledComposants();
   if(typeof ensureProcedureCatalogPhotos==="function") ensureProcedureCatalogPhotos();
   return ok||catalogComposantCount()>0;
 }
@@ -1003,7 +1007,7 @@ async function bootApp(){
   await bootstrapWorkspace();
   if(!currentStudyCloudId&&!currentStudyFile) applyBundledDemoStudySync();
   fillSelects(); fillDbPerfSelects(); writeForm(); recalc(); renderGammes(); syncDeptFromCp(true);
-  if(typeof initComposantsTab==="function"&&$("compTabs")?.dataset.ready) renderComposants();
+  if(typeof ensureBundledComposants==="function") ensureBundledComposants();
   $("verLabel").textContent=`${state.meta.outil} ${state.meta.version} · ${state.meta.millesime||""}`;
   updateWsStatus();
   updateStudyUI();

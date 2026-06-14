@@ -41,6 +41,7 @@ async function loadReferenceCatalogFromCloud() {
     }
 
     if (typeof ensureProcedureCatalogPhotos === "function") ensureProcedureCatalogPhotos();
+    if (typeof ensureBundledComposants === "function") ensureBundledComposants();
 
     ensureDepartements();
     if (typeof ensureComposants === "function") ensureComposants();
