@@ -89,20 +89,35 @@ async function upsertCatalog(key, name, description, payload) {
 }
 
 async function main() {
-  const projPath = path.join(root, "data/oedip-default-project.json");
+  const catalogPath = path.join(root, "data/oedip-catalog.json");
+  const legacyPath = path.join(root, "data/oedip-default-project.json");
+  const projPath = fs.existsSync(catalogPath) ? catalogPath : legacyPath;
   if (!fs.existsSync(projPath)) {
-    console.error("Projet par défaut introuvable — lancez npm run default:build");
+    console.error("Catalogue introuvable — lancez npm run default:build");
     process.exit(1);
   }
 
   const proj = JSON.parse(fs.readFileSync(projPath, "utf8"));
-  const dbExport = projectToDbExport(proj);
+  const catalogPayload = proj;
+  const dbSource =
+    catalogPayload.type === "oedip-catalog"
+      ? {
+          version: catalogPayload.version,
+          meta: catalogPayload.meta,
+          reglages: catalogPayload.reglages,
+          prix: catalogPayload.prix,
+          pci: catalogPayload.pci,
+          co2: catalogPayload.co2,
+          data: catalogPayload.data,
+        }
+      : catalogPayload;
+  const dbExport = projectToDbExport(dbSource);
 
   await upsertCatalog(
     "catalog_full",
     "Catalogue OEDIP complet",
-    "Gammes, machines, performances, composants, outils, procédures, réglages (source data/oedip-default-project.json)",
-    proj
+    "Gammes, machines, performances, composants, outils, procédures, réglages (source data/oedip-catalog.json)",
+    catalogPayload
   );
 
   await upsertCatalog(

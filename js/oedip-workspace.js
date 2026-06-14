@@ -64,30 +64,193 @@ async function wsNewStudyFilename(name,dir){
   return fname;
 }
 
-function buildProjectExport(){
-  readForm(); readPrix();
-  const obj={type:"oedip-project",version:2,date:new Date().toISOString(),meta:state.meta,reglages:state.reglages,prix:state.prix,pci:state.pci,co2:state.co2,
-    data:{isolationTypes:state.isolationTypes,emetteurs:state.emetteurs,captages:state.captages,departements:state.departements,gammes:state.gammes,machines:state.machines,performances:cleanPerformancesForExport(state.performances),composants:state.composants,outils:state.outils||{},frigoLayoutPresets:state.frigoLayoutPresets||[],hydroLayoutPresets:state.hydroLayoutPresets||[],notePrintPresets:state.notePrintPresets||[],procedureCatalogs:state.procedureCatalogs||[]},
-    projet};
-  if(currentStudyName) obj.etudeNom=currentStudyName;
+function buildStudyExport() {
+  readForm();
+  readPrix();
+  const obj = {
+    type: "oedip-study",
+    version: 3,
+    date: new Date().toISOString(),
+    reglages: state.reglages,
+    prix: state.prix,
+    pci: state.pci,
+    co2: state.co2,
+    projet,
+  };
+  if (currentStudyName) obj.etudeNom = currentStudyName;
   return obj;
 }
-function buildDbExport(){
-  return {type:"oedip-db",version:2,date:new Date().toISOString(),
-    gammes:state.gammes,machines:state.machines,performances:cleanPerformancesForExport(state.performances),
-    composants:state.composants,outils:state.outils||{},frigoLayoutPresets:state.frigoLayoutPresets||[],hydroLayoutPresets:state.hydroLayoutPresets||[],
-    procedureCatalogs:state.procedureCatalogs||[],
-    isolationTypes:state.isolationTypes,emetteurs:state.emetteurs,captages:state.captages,departements:state.departements};
+
+/** @deprecated Alias — les enregistrements d'étude utilisent buildStudyExport. */
+function buildProjectExport() {
+  return buildStudyExport();
 }
-function stateFingerprint(){ let h=5381; const s=JSON.stringify(buildProjectExport());
-  for(let i=0;i<s.length;i++) h=((h<<5)+h)^s.charCodeAt(i); return (h>>>0).toString(36); }
+
+function buildDbExport() {
+  return {
+    type: "oedip-db",
+    version: 2,
+    date: new Date().toISOString(),
+    gammes: state.gammes,
+    machines: state.machines,
+    performances: cleanPerformancesForExport(state.performances),
+    composants: state.composants,
+    outils: state.outils || {},
+    frigoLayoutPresets: state.frigoLayoutPresets || [],
+    hydroLayoutPresets: state.hydroLayoutPresets || [],
+    procedureCatalogs: state.procedureCatalogs || [],
+    isolationTypes: state.isolationTypes,
+    emetteurs: state.emetteurs,
+    captages: state.captages,
+    departements: state.departements,
+    meta: state.meta,
+    reglages: state.reglages,
+    prix: state.prix,
+    pci: state.pci,
+    co2: state.co2,
+  };
+}
+
+function isLegacyFullProjectExport(obj) {
+  if (!obj || typeof obj !== "object") return false;
+  if (obj.type === "oedip-study") return false;
+  if (obj.type === "oedip-db" || obj.type === "geoselect-db") return false;
+  return !!(
+    obj.data?.gammes?.length ||
+    obj.data?.machines?.length ||
+    obj.gammes?.length ||
+    obj.machines?.length
+  );
+}
+
+function studyPayloadFromImport(obj) {
+  if (!obj) return null;
+  return {
+    type: "oedip-study",
+    version: 3,
+    date: obj.date,
+    etudeNom: obj.etudeNom,
+    reglages: obj.reglages,
+    prix: obj.prix,
+    pci: obj.pci,
+    co2: obj.co2,
+    projet: obj.projet,
+  };
+}
+
+const CATALOG_STATE_KEYS = [
+  "isolationTypes",
+  "emetteurs",
+  "captages",
+  "gammes",
+  "machines",
+  "performances",
+  "composants",
+  "outils",
+  "frigoLayoutPresets",
+  "hydroLayoutPresets",
+  "notePrintPresets",
+  "procedureCatalogs",
+];
+
+function applyProjetPayload(p) {
+  if (!p) return;
+  projet = p;
+  if (projet.batiment) {
+    delete projet.batiment.tbaseMode;
+    delete projet.batiment.tbase;
+  }
+  if (typeof ensureProjetHydraulique === "function") ensureProjetHydraulique(projet);
+  if (typeof normalizeZonesChauffage === "function") normalizeZonesChauffage(projet);
+}
+
+function finishCatalogLoad(opts) {
+  opts = opts || {};
+  ensureDepartements();
+  ensureComposants();
+  if (typeof ensureOutils === "function") ensureOutils();
+  migratePerformances();
+  normalizeGammes();
+  normalizeEmetteurs();
+  fillSelects();
+  fillDbPerfSelects();
+  if (!opts.skipForm) writeForm();
+  renderGammes();
+  syncDeptFromCp(true);
+  if (state.meta) {
+    $("verLabel").textContent = `${state.meta.outil || "OEDIP"} ${state.meta.version} · ${state.meta.millesime || ""}`;
+  }
+  if (!opts.silent) toast(opts.toast || "Catalogue chargé");
+}
+
+function finishStudyLoad(opts) {
+  opts = opts || {};
+  fillSelects();
+  fillDbPerfSelects();
+  writeForm();
+  recalc();
+  renderGammes();
+  syncDeptFromCp(true);
+  updateStudyUI();
+  if (!opts.silent) toast(opts.toast || "Étude chargée");
+}
+
+function applyCatalogImport(obj, opts) {
+  opts = opts || {};
+  if (!obj) return;
+  const flat = obj.type === "oedip-db" || obj.type === "geoselect-db";
+  const data = flat ? obj : obj.data || {};
+
+  if (obj.meta) state.meta = obj.meta;
+  if (obj.reglages) state.reglages = { ...state.reglages, ...obj.reglages };
+  if (obj.prix) state.prix = obj.prix;
+  if (obj.pci) state.pci = obj.pci;
+  if (obj.co2) state.co2 = obj.co2;
+
+  CATALOG_STATE_KEYS.forEach((k) => {
+    const v = flat ? obj[k] : data[k];
+    if (v !== undefined) state[k] = v;
+  });
+
+  const dept = flat ? obj.departements : data.departements;
+  if (dept) state.departements = mergeDepartements(dept);
+  else ensureDepartements();
+
+  if (opts.includeDemoProjet && obj.projet) applyProjetPayload(obj.projet);
+
+  finishCatalogLoad({ ...opts, toast: opts.toast || (flat ? "Base machines importée" : "Catalogue chargé") });
+  if (opts.markDirty !== false && flat) markDirty();
+}
+
+function applyStudyImport(obj, opts) {
+  opts = opts || {};
+  const study = obj?.type === "oedip-study" ? obj : studyPayloadFromImport(obj);
+  if (!study?.projet) return false;
+
+  if (study.reglages) state.reglages = { ...state.reglages, ...study.reglages };
+  if (study.prix) state.prix = study.prix;
+  if (study.pci) state.pci = study.pci;
+  if (study.co2) state.co2 = study.co2;
+  applyProjetPayload(study.projet);
+  if (!opts.keepStudyName) currentStudyName = study.etudeNom || "";
+
+  finishStudyLoad(opts);
+  return true;
+}
+
+function stateFingerprint() {
+  let h = 5381;
+  const s = JSON.stringify(buildStudyExport());
+  for (let i = 0; i < s.length; i++) h = ((h << 5) + h) ^ s.charCodeAt(i);
+  return (h >>> 0).toString(36);
+}
 function isDirty(){ return lastExportHash===null||stateFingerprint()!==lastExportHash; }
 function markSaved(){ lastExportHash=stateFingerprint(); try{localStorage.setItem("oedip_last_export_hash",lastExportHash);}catch(e){} updateWsStatus(); }
 function markDirty(){
   if(workspaceBooting) return;
   updateWsStatus();
   clearTimeout(autosaveTimer);
-  autosaveTimer=setTimeout(()=>{ try{localStorage.setItem("oedip_autosave",JSON.stringify(buildProjectExport()));}catch(e){} },600);
+  autosaveTimer=setTimeout(()=>{ try{localStorage.setItem("oedip_autosave",JSON.stringify(buildStudyExport()));}catch(e){} },600);
 }
 function updateWsStatus(){
   const el=$("wsStatus"); if(!el) return;
@@ -153,7 +316,7 @@ async function loadStudyFromDir(dir,filename){
   try{
     const fh=await dir.getFileHandle(filename);
     const data=JSON.parse(await (await fh.getFile()).text());
-    applyImport(data,"project",{silent:true});
+    applyImport(data,"project",{silent:true,studyOnly:true});
     currentStudyFile=filename;
     currentStudyHandle=fh;
     currentStudyCloudId=""; persistCurrentStudyCloudId("");
@@ -166,7 +329,7 @@ async function loadStudyFromDir(dir,filename){
 }
 async function openStudyEntry(entry){
   const data=JSON.parse(await (await entry.handle.getFile()).text());
-  applyImport(data,"project",{silent:true});
+  applyImport(data,"project",{silent:true,studyOnly:true});
   currentStudyFile=entry.name;
   currentStudyHandle=entry.handle;
   currentStudyCloudId="";
@@ -180,7 +343,7 @@ async function openStudyEntry(entry){
 
 async function openStudyFromCloud(row){
   const data=await sbFetchStudy(row.id);
-  applyImport(data.payload,"project",{silent:true});
+  applyImport(data.payload,"project",{silent:true,studyOnly:true});
   currentStudyCloudId=row.id;
   persistCurrentStudyCloudId(row.id);
   currentStudyName=data.name||row.name||"";
@@ -193,7 +356,7 @@ async function openStudyFromCloud(row){
 async function loadStudyFromCloud(id){
   try{
     const data=await sbFetchStudy(id);
-    applyImport(data.payload,"project",{silent:true});
+    applyImport(data.payload,"project",{silent:true,studyOnly:true});
     currentStudyCloudId=id;
     persistCurrentStudyCloudId(id);
     currentStudyName=data.name||"";
@@ -344,7 +507,7 @@ function restoreAutosave(){
     const raw=localStorage.getItem("oedip_autosave");
     if(!raw) return false;
     const obj=JSON.parse(raw);
-    applyImport(obj,"project",{silent:true});
+    applyImport(obj,"project",{silent:true,studyOnly:true});
     currentStudyFile=""; currentStudyHandle=null;
     currentStudyName=obj.etudeNom||"";
     persistCurrentStudyFile("");
@@ -421,7 +584,7 @@ async function exportProject(opts){
     showNewStudyModal("save");
     return;
   }
-  const obj=buildProjectExport();
+  const obj=buildStudyExport();
   const studyName=currentStudyName||studyDisplayLabelFromProjet()||"Étude";
   let cloudSaved=false;
   const session=typeof sbEnsureSession==="function"?await sbEnsureSession():null;
@@ -522,7 +685,7 @@ async function importWorkspace(kind,opts){
         const label=kind==="db"?"base machines":"projet";
         if(!confirm(`Importer le ${label} le plus récent ?\n\n${latest.name}\n${wsFmtFileDate(latest.lastModified)}\n\n(${latest.files.length} versions dans le dossier)`)) return false;
       }
-      applyImport(latest.data,kind==="db"?"db":"project");
+      applyImport(latest.data,kind==="db"?"db":"project",{studyOnly:kind!=="db"});
       if(kind!=="db"){
         currentStudyFile=latest.name;
         currentStudyHandle=latest.files[0]?.handle||null;
@@ -616,49 +779,86 @@ function importGammePack(){
 
 function applyImport(obj,kind,opts){
   opts=opts||{};
+  if(!obj) return;
   if(obj.type==="oedip-gamme-pack"){ applyGammePackImport(obj); return; }
-  if(kind==="db"||obj.type==="oedip-db"||obj.type==="geoselect-db"){
-    ["gammes","machines","performances","composants","outils","frigoLayoutPresets","hydroLayoutPresets","isolationTypes","emetteurs","captages"].forEach(k=>{if(obj[k])state[k]=obj[k];});
-    if(obj.departements) state.departements=mergeDepartements(obj.departements);
-    else ensureDepartements();
-    ensureComposants(); if(typeof ensureOutils==="function") ensureOutils(); migratePerformances(); normalizeGammes(); normalizeEmetteurs(); fillSelects(); fillDbPerfSelects(); writeForm(); renderGammes(); syncDeptFromCp(true); markDirty(); toast("Base machines importée"); return;
+
+  if(kind==="db"||obj.type==="oedip-db"||obj.type==="geoselect-db"||obj.type==="oedip-catalog"){
+    applyCatalogImport(obj,{...opts,markDirty:kind==="db"&&!opts.silent});
+    return;
   }
-  if(obj.meta)state.meta=obj.meta; if(obj.reglages)state.reglages={...state.reglages,...obj.reglages}; if(obj.prix)state.prix=obj.prix;
-  if(obj.pci)state.pci=obj.pci; if(obj.co2)state.co2=obj.co2;
-  if(obj.data){
-    ["isolationTypes","emetteurs","captages","gammes","machines","performances","composants","outils","frigoLayoutPresets","hydroLayoutPresets","notePrintPresets","procedureCatalogs"].forEach(k=>{if(obj.data[k])state[k]=obj.data[k];});
+
+  if(obj.type==="oedip-study"||opts.studyOnly){
+    const legacy=obj.type!=="oedip-study"&&isLegacyFullProjectExport(obj);
+    applyStudyImport(obj,{...opts,toast:legacy&&!opts.silent?"Étude chargée (ancien format)":undefined});
+    return;
   }
-  if(obj.data&&obj.data.departements) state.departements=mergeDepartements(obj.data.departements);
-  if(obj.projet){
-    projet=obj.projet;
-    if(projet.batiment){ delete projet.batiment.tbaseMode; delete projet.batiment.tbase; }
-    if(typeof ensureProjetHydraulique==="function") ensureProjetHydraulique(projet);
-    if(typeof normalizeZonesChauffage==="function") normalizeZonesChauffage(projet);
+
+  if(isLegacyFullProjectExport(obj)){
+    applyCatalogImport(obj,{...opts,silent:true,skipForm:true,includeDemoProjet:false});
+    applyStudyImport(studyPayloadFromImport(obj),{...opts,silent:true,keepStudyName:opts.keepStudyName});
+    if(!opts.silent) toast("Projet importé (catalogue + étude)");
+    return;
   }
-  if(obj.meta&&obj.meta.outil) state.meta.outil=obj.meta.outil;
-  if(!opts.keepStudyName) currentStudyName=obj.etudeNom||"";
-  ensureDepartements(); ensureComposants(); if(typeof ensureOutils==="function") ensureOutils(); migratePerformances(); normalizeGammes(); normalizeEmetteurs(); fillSelects(); fillDbPerfSelects(); writeForm(); recalc(); renderGammes(); syncDeptFromCp(true);
-  $("verLabel").textContent=`${state.meta.outil||"OEDIP"} ${state.meta.version} · ${state.meta.millesime||""}`;
-  updateStudyUI();
-  if(!opts.silent) toast("Projet importé");
+
+  applyStudyImport(obj,opts);
 }
 
-async function loadBundledDefaultProject(){
-  if(typeof OEDIP_DEFAULT_PROJECT!=="undefined"){
-    applyImport(OEDIP_DEFAULT_PROJECT,"project",{silent:true});
+function catalogObjectFromBundled(){
+  if(typeof OEDIP_DEFAULT_CATALOG!=="undefined") return OEDIP_DEFAULT_CATALOG;
+  if(typeof OEDIP_DEFAULT_PROJECT!=="undefined") return OEDIP_DEFAULT_PROJECT;
+  return null;
+}
+
+async function loadBundledDefaultCatalog(){
+  const bundled=catalogObjectFromBundled();
+  if(bundled){
+    applyCatalogImport(bundled,{silent:true});
     return true;
   }
   try{
+    const r=await fetch("data/oedip-catalog.json",{cache:"no-cache"});
+    if(r.ok){
+      applyCatalogImport(await r.json(),{silent:true});
+      return true;
+    }
+  }catch(e){}
+  try{
     const r=await fetch("data/oedip-default-project.json",{cache:"no-cache"});
     if(!r.ok) return false;
-    applyImport(await r.json(),"project",{silent:true});
+    applyCatalogImport(await r.json(),{silent:true});
     return true;
   }catch(e){ return false; }
 }
 
+function applyBundledDefaultCatalogSync(){
+  const bundled=catalogObjectFromBundled();
+  if(!bundled) return false;
+  applyCatalogImport(bundled,{silent:true});
+  return true;
+}
+
+function applyBundledDemoStudySync(){
+  if(typeof OEDIP_DEMO_STUDY!=="undefined"){
+    applyStudyImport(OEDIP_DEMO_STUDY,{silent:true});
+    return true;
+  }
+  const bundled=catalogObjectFromBundled();
+  if(bundled?.projet){
+    applyStudyImport(studyPayloadFromImport(bundled),{silent:true});
+    return true;
+  }
+  return false;
+}
+
+async function loadBundledDefaultProject(){
+  const ok=await loadBundledDefaultCatalog();
+  if(ok) applyBundledDemoStudySync();
+  return ok;
+}
+
 function applyBundledDefaultProjectSync(){
-  if(typeof OEDIP_DEFAULT_PROJECT==="undefined") return false;
-  applyImport(OEDIP_DEFAULT_PROJECT,"project",{silent:true});
+  if(!applyBundledDefaultCatalogSync()) return false;
+  applyBundledDemoStudySync();
   return true;
 }
 
@@ -778,8 +978,9 @@ async function bootApp(){
   if(typeof loadReferenceCatalogFromCloud==="function"){
     catalogLoaded=await loadReferenceCatalogFromCloud();
   }
-  if(!catalogLoaded) applyBundledDefaultProjectSync();
+  if(!catalogLoaded) applyBundledDefaultCatalogSync();
   await bootstrapWorkspace();
+  if(!currentStudyCloudId&&!currentStudyFile) applyBundledDemoStudySync();
   fillSelects(); fillDbPerfSelects(); writeForm(); recalc(); renderGammes(); syncDeptFromCp(true);
   $("verLabel").textContent=`${state.meta.outil} ${state.meta.version} · ${state.meta.millesime||""}`;
   updateWsStatus();

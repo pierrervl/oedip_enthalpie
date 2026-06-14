@@ -13,9 +13,9 @@ async function loadReferenceCatalogFromCloud() {
     if (!map.catalog_full && !map.catalog_db) return false;
 
     if (map.catalog_full) {
-      applyImport(map.catalog_full, "project", { silent: true, keepStudyName: true });
+      applyCatalogImport(map.catalog_full, { silent: true, keepStudyName: true });
     } else {
-      applyImport(map.catalog_db, "db", { silent: true, keepStudyName: true });
+      applyCatalogImport(map.catalog_db, { silent: true, keepStudyName: true });
     }
 
     if (map.catalog_dju) applyDjuCatalogPayload(map.catalog_dju);
