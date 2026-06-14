@@ -385,7 +385,7 @@ function renderProcedureEditPhotosInner(step, stepIdx) {
     const scPct = Math.round((m.scale || 1) * 100);
     const innerStyle = procImgInnerStyle(m);
     const preview = m.src
-      ? `<span class="proc-step-img-inner"${innerStyle ? ` style="${escVal(innerStyle)}"` : ""}><img src="${escVal(m.src)}" alt=""></span>`
+      ? `<span class="proc-step-img-inner"${innerStyle ? ` style="${escVal(innerStyle)}"` : ""}><img src="${escVal(oedipMediaUrl(m.src))}" alt=""></span>`
       : `<span class="hint">Aucune image</span>`;
     return `<div class="proc-edit-photo-card" data-photo-idx="${pi}">
       <div class="proc-edit-photo-preview">${preview}</div>
@@ -815,8 +815,8 @@ function procedureStepImagesBlock(step) {
   const figures = list.map((item) => {
     const innerStyle = procImgInnerStyle(item);
     const inner = innerStyle
-      ? `<span class="proc-step-img-inner" style="${escVal(innerStyle)}"><img src="${escAttr(item.src)}" alt="" loading="lazy"></span>`
-      : `<img src="${escAttr(item.src)}" alt="" loading="lazy">`;
+      ? `<span class="proc-step-img-inner" style="${escVal(innerStyle)}"><img src="${escAttr(oedipMediaUrl(item.src))}" alt="" loading="lazy"></span>`
+      : `<img src="${escAttr(oedipMediaUrl(item.src))}" alt="" loading="lazy">`;
     return `<figure class="proc-step-img">${inner}</figure>`;
   }).join("");
   const multi = list.length > 1 ? " proc-step-imgs-multi" : "";
@@ -922,8 +922,8 @@ function renderProcedureCoverHtml(proc) {
   }
   const innerStyle = procImgInnerStyle(cover);
   const inner = innerStyle
-    ? `<span class="proc-gallery-img-inner" style="${escVal(innerStyle)}"><img src="${escVal(cover.src)}" alt=""></span>`
-    : `<img src="${escVal(cover.src)}" alt="">`;
+    ? `<span class="proc-gallery-img-inner" style="${escVal(innerStyle)}"><img src="${escVal(oedipMediaUrl(cover.src))}" alt=""></span>`
+    : `<img src="${escVal(oedipMediaUrl(cover.src))}" alt="">`;
   return inner;
 }
 

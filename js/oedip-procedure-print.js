@@ -97,7 +97,7 @@ function renderPrintStepShot(mediaItems) {
   if (!mediaItems?.length) return "";
   const renderOne = (m) => {
     const innerStyle = procImgInnerStyle(m);
-    const img = `<img src="${escAttr(m.src)}" alt="">`;
+    const img = `<img src="${escAttr(typeof oedipMediaUrl === "function" ? oedipMediaUrl(m.src) : m.src)}" alt="">`;
     return `<div class="shot-inner"${innerStyle ? ` style="${escVal(innerStyle)}"` : ""}>${img}</div>`;
   };
   if (mediaItems.length === 1) return `<div class="shot">${renderOne(mediaItems[0])}</div>`;

@@ -10,7 +10,8 @@
     "supabase:login": "supabase login",
     "supabase:link": "supabase link --project-ref lgpckxeyorsnizetpmuz",
     "supabase:push": "supabase db push --linked",
-    "catalog:push": "node scripts/push-catalog-to-supabase.mjs"
+    "catalog:push": "node scripts/push-catalog-to-supabase.mjs",
+    "photos:push": "node scripts/push-procedure-photos.mjs"
   },
   "devDependencies": {
     "@supabase/supabase-js": "^2.49.8",
