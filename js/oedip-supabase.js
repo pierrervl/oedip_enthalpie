@@ -68,11 +68,29 @@ async function sbSignOut() {
   if (typeof updateSbAuthUI === "function") updateSbAuthUI();
 }
 
+async function sbEnsureSession() {
+  if (!sbIsReady()) return null;
+  if (_sbSession) return _sbSession;
+  const { data, error } = await _sbClient.auth.getSession();
+  if (error) console.warn("Supabase session:", error.message);
+  _sbSession = data?.session || null;
+  if (typeof updateSbAuthUI === "function") updateSbAuthUI();
+  return _sbSession;
+}
+
+function sbCloudActive() {
+  return sbIsReady() && !!_sbSession;
+}
+
+async function sbCloudActiveAsync() {
+  return sbIsReady() && !!(await sbEnsureSession());
+}
+
 async function sbListStudies(limit = 80) {
-  if (!sbIsReady() || !_sbSession) return [];
+  if (!sbIsReady() || !(await sbEnsureSession())) return [];
   const { data, error } = await _sbClient
     .from("studies")
-    .select("id,name,updated_at,created_at,payload")
+    .select("id,name,updated_at,created_at")
     .order("updated_at", { ascending: false })
     .limit(limit);
   if (error) throw error;
@@ -88,7 +106,7 @@ async function sbFetchStudy(id) {
 }
 
 async function sbSaveStudy({ id, name, payload }) {
-  if (!sbIsReady() || !_sbSession) throw new Error("Non connecté");
+  if (!sbIsReady() || !(await sbEnsureSession())) throw new Error("Non connecté");
   const userId = _sbSession.user.id;
   const row = {
     user_id: userId,

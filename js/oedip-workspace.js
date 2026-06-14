@@ -207,18 +207,15 @@ async function renderStudiesList(){
   const list=$("studiesList"); if(!list) return;
   list.innerHTML='<div class="hint">Chargement…</div>';
   let cloudHtml="", localHtml="";
-  if(sbCloudActive()){
+  if(await sbCloudActiveAsync()){
     try{
       _studiesCloudCache=await sbListStudies(80);
       if(_studiesCloudCache.length){
-        cloudHtml=`<div class="studies-section-label">☁ Cloud Supabase</div>`+_studiesCloudCache.map((row,i)=>{
-          const c=row.payload?.projet?.client||{};
-          const label=row.name||studyDisplayLabelFromClient(c)||"Étude";
-          const sub=[c.ville,c.ref&&c.nom?null:c.nom].filter(Boolean).join(" · ");
+        cloudHtml=`<div class="studies-section-label">☁ Cloud Supabase (${_studiesCloudCache.length})</div>`+_studiesCloudCache.map((row,i)=>{
+          const label=row.name||"Étude";
           const active=row.id===currentStudyCloudId?" studies-item-active":"";
           return `<button type="button" class="studies-item${active}" data-cloud-idx="${i}">
             <span class="studies-item-title">${escHtml(label)}</span>
-            ${sub?`<span class="studies-item-sub">${escHtml(sub)}</span>`:""}
             <span class="studies-item-meta mono">${wsFmtFileDate(new Date(row.updated_at).getTime())}</span>
           </button>`;
         }).join("");
@@ -297,7 +294,10 @@ function bindStudiesCloudClicks(){
 }
 function showStudiesModal(){
   $("modalStudies")?.classList.add("show");
-  renderStudiesList();
+  void renderStudiesList();
+}
+async function refreshStudiesModal(){
+  if($("modalStudies")?.classList.contains("show")) await renderStudiesList();
 }
 function closeStudiesModal(){ $("modalStudies")?.classList.remove("show"); }
 
@@ -423,7 +423,7 @@ async function exportProject(opts){
   }
   const obj=buildProjectExport();
   const studyName=currentStudyName||studyDisplayLabelFromProjet()||"Étude";
-  if(sbCloudActive()){
+  if(await sbCloudActiveAsync()){
     try{
       const saved=await sbSaveStudy({ id:currentStudyCloudId||undefined, name:studyName, payload:obj });
       currentStudyCloudId=saved.id;
@@ -431,6 +431,7 @@ async function exportProject(opts){
       currentStudyName=studyName;
       updateStudyUI(); markSaved();
       toast("Enregistré dans le cloud · "+saved.name);
+      await refreshStudiesModal();
     }catch(e){
       wsCloudSaveError(e);
       return;
