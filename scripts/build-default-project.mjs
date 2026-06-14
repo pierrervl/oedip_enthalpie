@@ -1,5 +1,5 @@
 /**
- * Génère data/oedip-default-project.{json,js} à partir de oedip_projet-défaut.json.
+ * Régénère data/oedip-default-project.{json,js}
  * Fusionne les courbes Pdc échangeurs depuis data/oedip-echangeurs-pdc.json.
  *
  * Usage: node scripts/build-default-project.mjs [chemin/projet-source.json]
@@ -9,9 +9,9 @@ import path from "path";
 import { fileURLToPath } from "url";
 
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
-const defaultSource = process.argv[2] || path.join(root, "oedip_projet-défaut.json");
-const pdcPath = path.join(root, "data/oedip-echangeurs-pdc.json");
 const outPath = path.join(root, "data/oedip-default-project.json");
+const defaultSource = process.argv[2] || outPath;
+const pdcPath = path.join(root, "data/oedip-echangeurs-pdc.json");
 
 if (!fs.existsSync(defaultSource)) {
   console.error("Fichier source introuvable :", defaultSource);
@@ -49,12 +49,11 @@ list.forEach((item) => {
   n++;
 });
 
-fs.writeFileSync(defaultSource, JSON.stringify(proj, null, 2) + "\n", "utf8");
 fs.writeFileSync(outPath, JSON.stringify(proj, null, 2) + "\n", "utf8");
 
 const jsPath = path.join(root, "data/oedip-default-project.js");
 const js = `/* OEDIP — projet par défaut (généré automatiquement)
-   Source : oedip_projet-défaut.json
+   Source : data/oedip-default-project.json
    Régénérer : npm run default:build
 */
 const OEDIP_DEFAULT_PROJECT = ${JSON.stringify(proj)};

@@ -89,9 +89,7 @@ async function upsertCatalog(key, name, description, payload) {
 }
 
 async function main() {
-  const defaultPath = path.join(root, "oedip_projet-défaut.json");
-  const bundledPath = path.join(root, "data/oedip-default-project.json");
-  const projPath = fs.existsSync(defaultPath) ? defaultPath : bundledPath;
+  const projPath = path.join(root, "data/oedip-default-project.json");
   if (!fs.existsSync(projPath)) {
     console.error("Projet par défaut introuvable — lancez npm run default:build");
     process.exit(1);
@@ -103,7 +101,7 @@ async function main() {
   await upsertCatalog(
     "catalog_full",
     "Catalogue OEDIP complet",
-    "Gammes, machines, performances, composants, outils, procédures, réglages (source oedip_projet-défaut.json)",
+    "Gammes, machines, performances, composants, outils, procédures, réglages (source data/oedip-default-project.json)",
     proj
   );
 

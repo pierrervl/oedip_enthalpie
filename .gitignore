@@ -1,6 +1,18 @@
 node_modules/
 data/_xlsx_unzip/
 data/_xlsx.zip
+data/*.xlsx
+data/procedure-photos-manifest.json
+data/procedure-photos-orphans.json
+
+# Photos procédures → Supabase Storage (npm run photos:sync)
+img/procedures/geo/*.jpg
+img/procedures/geo/*.jpeg
+!img/procedures/geo/.gitkeep
+
+# IDE / Supabase CLI local
+.cursor/
+supabase/.temp/
 
 .env
 .env.local
