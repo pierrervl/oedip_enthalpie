@@ -17,6 +17,7 @@
   <span class="ver mono noprint" id="wsStatus" title="État d'enregistrement">● …</span>
   <div class="grow"></div>
   <div class="iobtns noprint">
+    <button class="btn-ghost" id="btnSbAuth" onclick="showSbAuthModal()" title="Connexion OEDIP Cloud">☁ <span id="sbAuthLabel">Cloud</span></button>
     <button class="btn-ghost" id="btnFolder" onclick="pickWorkspaceFolder()" title="Dossier de travail fixe">📁 <span id="wsFolderShort">Dossier</span></button>
     <button class="btn-ghost" onclick="showStudiesModal()" title="Ouvrir une étude enregistrée">📋 Mes études</button>
     <button class="btn-ghost" onclick="newStudy()" title="Nouvelle étude vierge">+ Nouvelle</button>
@@ -391,8 +392,24 @@
     <button class="btn-soft" onclick="closeStudiesModal();newStudy();">+ Nouvelle</button>
     <button class="btn-ghost" onclick="closeStudiesModal()">Fermer</button></div>
   <div class="mbody">
-    <div class="hint" style="margin-bottom:12px">Sélectionnez une étude pour la rouvrir. <b>Enregistrer</b> met à jour le fichier de l'étude courante.</div>
+    <div class="hint" style="margin-bottom:12px">Sélectionnez une étude pour la rouvrir. <b>Enregistrer</b> synchronise le cloud (si connecté) et le dossier local.</div>
     <div id="studiesList" class="studies-list"></div>
+  </div>
+</div></div>
+<div class="modal" id="modalSbAuth"><div class="card new-study-card">
+  <div class="mhead"><h3>OEDIP Cloud</h3></div>
+  <div class="mbody">
+    <div class="hint" style="margin-bottom:12px">Connectez-vous pour enregistrer vos études et votre base machines sur Supabase.</div>
+    <label class="subhead" for="sbAuthEmail">Email</label>
+    <input id="sbAuthEmail" type="email" autocomplete="username" placeholder="vous@exemple.fr">
+    <label class="subhead" for="sbAuthPassword" style="margin-top:10px">Mot de passe</label>
+    <input id="sbAuthPassword" type="password" autocomplete="current-password" placeholder="••••••••">
+    <div id="sbAuthError" class="hint" style="color:var(--bad);margin-top:10px;min-height:1.2em"></div>
+    <div class="new-study-actions">
+      <button type="button" class="btn-ghost" onclick="closeSbAuthModal()">Annuler</button>
+      <button type="button" class="btn-soft" onclick="confirmSbAuth('signup')">Créer un compte</button>
+      <button type="button" class="btn-heat" onclick="confirmSbAuth('signin')">Se connecter</button>
+    </div>
   </div>
 </div></div>
 <div class="modal startup" id="modalStartup"><div class="card">
@@ -444,6 +461,9 @@
 <script src="js/oedip-procedure-print.js"></script>
 <script src="js/oedip-ui.js"></script>
 <script src="js/oedip-csv.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="js/oedip-supabase-config.js"></script>
+<script src="js/oedip-supabase.js"></script>
 <script src="js/oedip-workspace.js"></script>
 </body>
 </html>

@@ -5,7 +5,7 @@ const WS_IDB="oedip-workspace-v1";
 const FS_SUPPORTED=typeof window.showDirectoryPicker==="function";
 let workspaceDirHandle=null, workspaceDirName="", lastExportHash=null, workspaceBooting=true;
 let autosaveTimer=null, lastSavedFile="", currentStudyFile="", currentStudyHandle=null, currentStudyName="";
-let _studiesCache=[], _newStudyModalMode="create";
+let currentStudyCloudId="", _studiesCache=[], _studiesCloudCache=[], _newStudyModalMode="create";
 
 function wsPad2(n){ return String(n).padStart(2,"0"); }
 function wsTimestampFilename(kind,d){
@@ -94,8 +94,12 @@ function updateWsStatus(){
   const dirty=isDirty();
   el.textContent=dirty?"● Non enregistré":"● Enregistré";
   el.className="ver mono noprint "+(dirty?"ws-warn":"ws-ok");
-  const savedHint=lastSavedFile?"\nDernier fichier : "+lastSavedFile:"";
-  el.title=dirty?"Modifications non exportées vers le dossier":("Synchronisé avec le dernier enregistrement"+savedHint);
+  const savedHint=currentStudyCloudId
+    ?("\nCloud : "+(currentStudyName||"étude"))
+    :(lastSavedFile?"\nDernier fichier : "+lastSavedFile:"");
+  el.title=dirty
+    ?("Modifications non enregistrées"+(sbCloudActive()?" — Enregistrer (⤒) pour synchroniser le cloud":""))
+    :("Synchronisé"+savedHint);
 }
 function studyDisplayLabelFromClient(c){
   if(!c) return "";
@@ -111,6 +115,13 @@ function persistCurrentStudyFile(name){
     else localStorage.removeItem("oedip_current_study_file");
   }catch(e){}
 }
+function persistCurrentStudyCloudId(id){
+  try{
+    if(id) localStorage.setItem("oedip_current_study_cloud_id",id);
+    else localStorage.removeItem("oedip_current_study_cloud_id");
+  }catch(e){}
+}
+function sbCloudActive(){ return typeof sbIsReady==="function"&&sbIsReady()&&sbGetSession(); }
 function autosaveAvailable(){
   try{ return !!localStorage.getItem("oedip_autosave"); }catch(e){ return false; }
 }
@@ -127,7 +138,9 @@ function updateStudyUI(){
   const el=$("wsStudyLabel"); if(!el) return;
   const label=currentStudyName||studyDisplayLabelFromProjet()||(currentStudyFile?currentStudyFile.replace(/^oedip_projet_?/,"").replace(/\.json$/,"").replace(/-/g," "):"Nouvelle étude");
   el.textContent=label;
-  el.title=currentStudyFile?`Étude : ${label}\nFichier : ${currentStudyFile}`:`Étude : ${label}\n(non enregistrée dans le dossier)`;
+  if(currentStudyCloudId) el.title=`Étude : ${label}\nCloud Supabase`;
+  else if(currentStudyFile) el.title=`Étude : ${label}\nFichier : ${currentStudyFile}`;
+  else el.title=`Étude : ${label}\n(non enregistrée)`;
 }
 
 async function loadStudyFromDir(dir,filename){
@@ -137,6 +150,7 @@ async function loadStudyFromDir(dir,filename){
     applyImport(data,"project",{silent:true});
     currentStudyFile=filename;
     currentStudyHandle=fh;
+    currentStudyCloudId=""; persistCurrentStudyCloudId("");
     lastSavedFile=filename;
     try{localStorage.setItem("oedip_last_saved_file",filename);}catch(e){}
     persistCurrentStudyFile(filename);
@@ -149,6 +163,8 @@ async function openStudyEntry(entry){
   applyImport(data,"project",{silent:true});
   currentStudyFile=entry.name;
   currentStudyHandle=entry.handle;
+  currentStudyCloudId="";
+  persistCurrentStudyCloudId("");
   lastSavedFile=entry.name;
   try{localStorage.setItem("oedip_last_saved_file",entry.name);}catch(e){}
   persistCurrentStudyFile(entry.name);
@@ -156,18 +172,79 @@ async function openStudyEntry(entry){
   toast("Ouvert · "+(studyDisplayLabelFromProjet()||entry.name));
 }
 
+async function openStudyFromCloud(row){
+  const data=await sbFetchStudy(row.id);
+  applyImport(data.payload,"project",{silent:true});
+  currentStudyCloudId=row.id;
+  persistCurrentStudyCloudId(row.id);
+  currentStudyName=data.name||row.name||"";
+  currentStudyFile=""; currentStudyHandle=null;
+  persistCurrentStudyFile("");
+  markSaved(); updateStudyUI(); updateFolderUI();
+  toast("Ouvert · "+(currentStudyName||data.name));
+}
+
+async function loadStudyFromCloud(id){
+  try{
+    const data=await sbFetchStudy(id);
+    applyImport(data.payload,"project",{silent:true});
+    currentStudyCloudId=id;
+    persistCurrentStudyCloudId(id);
+    currentStudyName=data.name||"";
+    currentStudyFile=""; currentStudyHandle=null;
+    updateFolderUI(); updateStudyUI();
+    return true;
+  }catch(e){ return false; }
+}
+
 async function renderStudiesList(){
   const list=$("studiesList"); if(!list) return;
   list.innerHTML='<div class="hint">Chargement…</div>';
+  let cloudHtml="", localHtml="";
+  if(sbCloudActive()){
+    try{
+      _studiesCloudCache=await sbListStudies(80);
+      if(_studiesCloudCache.length){
+        cloudHtml=`<div class="studies-section-label">☁ Cloud Supabase</div>`+_studiesCloudCache.map((row,i)=>{
+          const c=row.payload?.projet?.client||{};
+          const label=row.name||studyDisplayLabelFromClient(c)||"Étude";
+          const sub=[c.ville,c.ref&&c.nom?null:c.nom].filter(Boolean).join(" · ");
+          const active=row.id===currentStudyCloudId?" studies-item-active":"";
+          return `<button type="button" class="studies-item${active}" data-cloud-idx="${i}">
+            <span class="studies-item-title">${escHtml(label)}</span>
+            ${sub?`<span class="studies-item-sub">${escHtml(sub)}</span>`:""}
+            <span class="studies-item-meta mono">${wsFmtFileDate(new Date(row.updated_at).getTime())}</span>
+          </button>`;
+        }).join("");
+      } else {
+        cloudHtml='<div class="hint">Aucune étude dans le cloud. Enregistrez (⤒) pour créer la première.</div>';
+      }
+    }catch(e){
+      cloudHtml=`<div class="hint">Cloud indisponible : ${escHtml(e.message||String(e))}</div>`;
+    }
+  } else {
+    cloudHtml=`<div class="hint">Connectez-vous (☁ Cloud) pour enregistrer et retrouver vos études en ligne.</div>`;
+  }
   if(!workspaceDirHandle||!await ensureDirPermission(workspaceDirHandle,false)){
-    list.innerHTML=`<div class="hint">Liez un dossier de travail (📁) pour lister vos études, ou choisissez un fichier JSON.</div>
+    list.innerHTML=cloudHtml+`<div class="studies-section-label" style="margin-top:14px">📁 Fichiers locaux</div>
+      <div class="hint">Liez un dossier de travail (📁) pour lister vos études JSON, ou choisissez un fichier.</div>
       <button type="button" class="btn-soft" style="margin-top:10px" id="studiesPickFile">⤓ Choisir un fichier…</button>`;
     $("studiesPickFile").onclick=()=>{ fileImport("project"); closeStudiesModal(); };
+    list.querySelectorAll("[data-cloud-idx]").forEach(btn=>{
+      btn.onclick=async()=>{
+        const row=_studiesCloudCache[+btn.dataset.cloudIdx];
+        if(!row) return;
+        if(isDirty()&&!confirm("Modifications non enregistrées. Ouvrir une autre étude ?")) return;
+        await openStudyFromCloud(row);
+        closeStudiesModal();
+      };
+    });
     return;
   }
   const files=await listWsFiles(workspaceDirHandle,"project");
-  if(!files.length){
-    list.innerHTML='<div class="hint">Aucune étude dans ce dossier. Renseignez votre projet puis cliquez <b>Enregistrer</b>.</div>';
+  if(!files.length&&!cloudHtml.includes("studies-item")){
+    list.innerHTML=cloudHtml+'<div class="hint" style="margin-top:12px">Aucune étude locale. Renseignez votre projet puis cliquez <b>Enregistrer</b>.</div>';
+    bindStudiesCloudClicks();
     return;
   }
   _studiesCache=files.slice(0,80);
@@ -181,7 +258,7 @@ async function renderStudiesList(){
     }catch(e){ label=f.name; }
     return {f,label,sub};
   }));
-  list.innerHTML=items.map(({f,label,sub},i)=>{
+  localHtml=`<div class="studies-section-label" style="margin-top:14px">📁 Dossier local</div>`+items.map(({f,label,sub},i)=>{
     const active=f.name===currentStudyFile?" studies-item-active":"";
     return `<button type="button" class="studies-item${active}" data-idx="${i}">
       <span class="studies-item-title">${escHtml(label)}</span>
@@ -189,12 +266,25 @@ async function renderStudiesList(){
       <span class="studies-item-meta mono">${escHtml(f.name)} · ${wsFmtFileDate(f.lastModified)}</span>
     </button>`;
   }).join("");
-  list.querySelectorAll(".studies-item").forEach(btn=>{
+  list.innerHTML=cloudHtml+localHtml;
+  bindStudiesCloudClicks();
+  list.querySelectorAll(".studies-item[data-idx]").forEach(btn=>{
     btn.onclick=async()=>{
       const entry=_studiesCache[+btn.dataset.idx];
       if(!entry) return;
       if(isDirty()&&!confirm("Modifications non enregistrées. Ouvrir une autre étude ?")) return;
       await openStudyEntry(entry);
+      closeStudiesModal();
+    };
+  });
+}
+function bindStudiesCloudClicks(){
+  $("studiesList")?.querySelectorAll("[data-cloud-idx]").forEach(btn=>{
+    btn.onclick=async()=>{
+      const row=_studiesCloudCache[+btn.dataset.cloudIdx];
+      if(!row) return;
+      if(isDirty()&&!confirm("Modifications non enregistrées. Ouvrir une autre étude ?")) return;
+      await openStudyFromCloud(row);
       closeStudiesModal();
     };
   });
@@ -220,6 +310,7 @@ function closeNewStudyModal(){ $("modalNewStudy")?.classList.remove("show"); }
 function startNewStudyWithName(name){
   applyBundledDefaultProjectSync();
   currentStudyFile=""; currentStudyHandle=null;
+  currentStudyCloudId=""; persistCurrentStudyCloudId("");
   currentStudyName=name;
   persistCurrentStudyFile("");
   fillSelects(); fillDbPerfSelects(); writeForm(); recalc(); renderGammes(); syncDeptFromCp(true);
@@ -320,11 +411,25 @@ function download(obj,name){
 
 async function exportProject(opts){
   opts=opts||{};
-  if(!opts.skipNamePrompt&&!currentStudyFile&&!currentStudyName){
+  if(!opts.skipNamePrompt&&!currentStudyFile&&!currentStudyCloudId&&!currentStudyName){
     showNewStudyModal("save");
     return;
   }
   const obj=buildProjectExport();
+  const studyName=currentStudyName||studyDisplayLabelFromProjet()||"Étude";
+  if(sbCloudActive()){
+    try{
+      const saved=await sbSaveStudy({ id:currentStudyCloudId||undefined, name:studyName, payload:obj });
+      currentStudyCloudId=saved.id;
+      persistCurrentStudyCloudId(saved.id);
+      currentStudyName=studyName;
+      updateStudyUI(); markSaved();
+      toast("Enregistré dans le cloud · "+saved.name);
+    }catch(e){
+      alert("Enregistrement cloud impossible.\n"+e.message);
+      return;
+    }
+  }
   const fname=currentStudyFile||await wsNewStudyFilename(currentStudyName,workspaceDirHandle);
   if(workspaceDirHandle&&await ensureDirPermission(workspaceDirHandle,true)){
     await writeFileToDir(workspaceDirHandle,fname,obj);
@@ -333,10 +438,12 @@ async function exportProject(opts){
     lastSavedFile=fname;
     try{localStorage.setItem("oedip_last_saved_file",fname);}catch(e){}
     persistCurrentStudyFile(fname);
-    updateFolderUI(); updateStudyUI(); markSaved();
-    toast(currentStudyName?"Enregistré · "+currentStudyName:"Enregistré · "+fname);
+    updateFolderUI(); updateStudyUI();
+    if(!sbCloudActive()) markSaved();
+    toast(sbCloudActive()?"Copie locale · "+fname:(currentStudyName?"Enregistré · "+currentStudyName:"Enregistré · "+fname));
     return;
   }
+  if(sbCloudActive()) return;
   download(obj,fname);
   currentStudyFile=fname; currentStudyHandle=null;
   lastSavedFile=fname;
@@ -346,11 +453,22 @@ async function exportProject(opts){
 }
 async function exportDB(){
   const obj=buildDbExport();
+  if(sbCloudActive()){
+    try{
+      await sbSaveMachineLibrary(obj);
+      toast("Base machines enregistrée dans le cloud");
+    }catch(e){
+      alert("Enregistrement cloud impossible.\n"+e.message);
+      return;
+    }
+  }
   const fname=wsTimestampFilename("db");
   if(workspaceDirHandle&&await ensureDirPermission(workspaceDirHandle,true)){
     await writeFileToDir(workspaceDirHandle,fname,obj);
-    toast("Base enregistrée · "+fname); return;
+    toast(sbCloudActive()?"Copie locale · "+fname:"Base enregistrée · "+fname);
+    return;
   }
+  if(sbCloudActive()) return;
   download(obj,fname);
   toast("Base machines téléchargée · "+fname);
 }
@@ -360,6 +478,16 @@ async function importWorkspace(kind,opts){
   if(kind==="project"&&!opts.silent){
     showStudiesModal();
     return false;
+  }
+  if(kind==="db"&&sbCloudActive()&&!opts.silent){
+    try{
+      const row=await sbLoadDefaultMachineLibrary();
+      if(row?.payload){
+        applyImport(row.payload,"db");
+        toast("Base machines importée depuis le cloud · "+wsFmtFileDate(new Date(row.updated_at).getTime()));
+        return true;
+      }
+    }catch(e){}
   }
   if(workspaceDirHandle&&await ensureDirPermission(workspaceDirHandle,false)){
     try{
@@ -406,6 +534,7 @@ function fileImport(kind){
       applyImport(JSON.parse(rd.result),kind);
       if(kind==="project"){
         currentStudyFile=f.name; currentStudyHandle=null;
+        currentStudyCloudId=""; persistCurrentStudyCloudId("");
         persistCurrentStudyFile(f.name);
         lastSavedFile=f.name;
         updateStudyUI();
@@ -553,8 +682,15 @@ async function bootstrapWorkspace(){
   workspaceBooting=true;
   try{ lastSavedFile=localStorage.getItem("oedip_last_saved_file")||""; }catch(e){}
   try{ currentStudyFile=localStorage.getItem("oedip_current_study_file")||""; }catch(e){}
+  try{ currentStudyCloudId=localStorage.getItem("oedip_current_study_cloud_id")||""; }catch(e){}
   applyBundledDefaultProjectSync();
   currentStudyFile=""; currentStudyHandle=null;
+  if(sbCloudActive()&&currentStudyCloudId){
+    if(await loadStudyFromCloud(currentStudyCloudId)){
+      markSaved(); workspaceBooting=false; return true;
+    }
+    persistCurrentStudyCloudId(""); currentStudyCloudId="";
+  }
   const handle=await loadDirHandle();
   if(handle&&FS_SUPPORTED){
     workspaceDirHandle=handle; workspaceDirName=handle.name; updateFolderUI();
@@ -606,7 +742,22 @@ document.body.addEventListener("input",markDirty,true);
 document.body.addEventListener("change",markDirty,true);
 
 if(typeof ensureProjetHydraulique==="function") ensureProjetHydraulique(projet);
+async function onSbAuthChanged(){
+  if(sbCloudActive()){
+    try{
+      const remembered=localStorage.getItem("oedip_current_study_cloud_id");
+      if(remembered&&await loadStudyFromCloud(remembered)){
+        markSaved(); updateStudyUI();
+        toast("Étude cloud rechargée");
+        return;
+      }
+    }catch(e){}
+  }
+  updateWsStatus();
+}
+
 async function bootApp(){
+  if(typeof sbBootstrapAuth==="function") await sbBootstrapAuth();
   await bootstrapWorkspace();
   fillSelects(); fillDbPerfSelects(); writeForm(); recalc(); renderGammes(); syncDeptFromCp(true);
   $("verLabel").textContent=`${state.meta.outil} ${state.meta.version} · ${state.meta.millesime||""}`;
