@@ -10,6 +10,8 @@
     "supabase:login": "supabase login",
     "supabase:link": "supabase link --project-ref lgpckxeyorsnizetpmuz",
     "supabase:push": "supabase db push --linked",
+    "supabase:migrate": "node scripts/supabase-migrate.mjs",
+    "supabase:version": "supabase --version",
     "catalog:push": "node scripts/push-catalog-to-supabase.mjs",
     "catalog:pull": "node scripts/pull-catalog-from-supabase.mjs",
     "photos:push": "node scripts/push-procedure-photos.mjs",
