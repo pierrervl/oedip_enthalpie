@@ -1,0 +1,2 @@
+-- Placeholder (migration vide appliquée via GitHub avant nettoyage local).
+-- Conservée pour aligner l'historique remote ↔ repo.
