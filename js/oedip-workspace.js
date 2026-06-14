@@ -121,7 +121,13 @@ function persistCurrentStudyCloudId(id){
     else localStorage.removeItem("oedip_current_study_cloud_id");
   }catch(e){}
 }
-function sbCloudActive(){ return typeof sbIsReady==="function"&&sbIsReady()&&sbGetSession(); }
+function wsCloudSaveError(e){
+  const msg=e.message||String(e);
+  const hint=msg.includes("studies")||msg.includes("schema cache")
+    ? "\n\n→ Tables cloud absentes : npm run supabase:push\n   ou Dashboard Supabase → SQL Editor → supabase/migrations/"
+    : "";
+  alert("Enregistrement cloud impossible.\n"+msg+hint);
+}
 function autosaveAvailable(){
   try{ return !!localStorage.getItem("oedip_autosave"); }catch(e){ return false; }
 }
@@ -426,7 +432,7 @@ async function exportProject(opts){
       updateStudyUI(); markSaved();
       toast("Enregistré dans le cloud · "+saved.name);
     }catch(e){
-      alert("Enregistrement cloud impossible.\n"+e.message);
+      wsCloudSaveError(e);
       return;
     }
   }
