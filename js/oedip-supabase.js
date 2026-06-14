@@ -186,6 +186,27 @@ async function sbLoadDefaultMachineLibrary() {
   return data;
 }
 
+async function sbLoadProfilePreferences() {
+  if (!sbIsReady() || !(await sbEnsureSession())) return null;
+  const { data, error } = await _sbClient
+    .from("profiles")
+    .select("preferences")
+    .eq("id", _sbSession.user.id)
+    .maybeSingle();
+  if (error) throw error;
+  return data?.preferences && typeof data.preferences === "object" ? data.preferences : {};
+}
+
+async function sbSaveProfilePreferences(partial) {
+  if (!sbIsReady() || !(await sbEnsureSession())) throw new Error("Non connecté");
+  const userId = _sbSession.user.id;
+  const current = (await sbLoadProfilePreferences()) || {};
+  const merged = { ...current, ...partial };
+  const { error } = await _sbClient.from("profiles").update({ preferences: merged }).eq("id", userId);
+  if (error) throw error;
+  return merged;
+}
+
 function updateSbAuthUI() {
   const btn = $("btnSbAuth");
   const label = $("sbAuthLabel");

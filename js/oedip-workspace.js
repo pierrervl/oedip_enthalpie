@@ -108,7 +108,36 @@ function buildDbExport() {
     prix: state.prix,
     pci: state.pci,
     co2: state.co2,
+    notePrintPresets: state.notePrintPresets || [],
   };
+}
+
+async function loadNotePrintPresetsFromCloud() {
+  if (typeof sbLoadProfilePreferences !== "function") return false;
+  if (!(await sbCloudActiveAsync())) return false;
+  try {
+    const prefs = await sbLoadProfilePreferences();
+    if (!Array.isArray(prefs?.notePrintPresets)) return false;
+    state.notePrintPresets = prefs.notePrintPresets;
+    if (typeof fillNotePrintPresetSelect === "function") fillNotePrintPresetSelect();
+    return true;
+  } catch (e) {
+    console.warn("Chargement configs impression:", e.message);
+    return false;
+  }
+}
+
+async function syncNotePrintPresetsToCloud() {
+  if (typeof sbSaveProfilePreferences !== "function") return false;
+  if (!(await sbCloudActiveAsync())) return false;
+  try {
+    if (typeof ensureNotePrintPresets === "function") ensureNotePrintPresets();
+    await sbSaveProfilePreferences({ notePrintPresets: state.notePrintPresets || [] });
+    return true;
+  } catch (e) {
+    console.warn("Sync configs impression:", e.message);
+    return false;
+  }
 }
 
 function isLegacyFullProjectExport(obj) {
@@ -989,6 +1018,7 @@ if(typeof ensureProjetHydraulique==="function") ensureProjetHydraulique(projet);
 if(typeof ensureProjetInstallation==="function") ensureProjetInstallation(projet);
 async function onSbAuthChanged(){
   if(sbCloudActive()){
+    await loadNotePrintPresetsFromCloud();
     try{
       const remembered=localStorage.getItem("oedip_current_study_cloud_id");
       if(remembered&&await loadStudyFromCloud(remembered)){
@@ -1004,6 +1034,7 @@ async function onSbAuthChanged(){
 async function bootApp(){
   if(typeof sbBootstrapAuth==="function") await sbBootstrapAuth();
   await ensureDefaultCatalogLoaded();
+  if(sbCloudActive()) await loadNotePrintPresetsFromCloud();
   await bootstrapWorkspace();
   if(!currentStudyCloudId&&!currentStudyFile) applyBundledDemoStudySync();
   fillSelects(); fillDbPerfSelects(); writeForm(); recalc(); renderGammes(); syncDeptFromCp(true);

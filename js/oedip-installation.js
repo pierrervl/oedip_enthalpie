@@ -54,6 +54,7 @@ function defaultProjetInstallation() {
       ]
     },
     vase: { temp1: 0, temp2: 65, volumeL: 440, hStatic: 6, pSoupape: 3 },
+    glycol: { volumeTotalL: 440, volumeExtraL: 400, targetPct: 33, productPct: 100, tMinC: -10 },
     circ: { debitM3h: 2.8, hmtM: 5, useHydro: false, pdcExtraM: 0 }
   };
 }
@@ -65,6 +66,7 @@ function ensureProjetInstallation(p) {
   const ins = p.installation;
   ins.pdc = { ...d.pdc, ...(ins.pdc || {}) };
   ins.vase = { ...d.vase, ...(ins.vase || {}) };
+  ins.glycol = { ...d.glycol, ...(ins.glycol || {}) };
   ins.circ = { ...d.circ, ...(ins.circ || {}) };
   if (!Array.isArray(ins.volume?.segments) || !ins.volume.segments.length) {
     ins.volume = { segments: d.volume.segments.map((s) => ({ ...s })) };
@@ -105,6 +107,34 @@ function calcPipeVolumeLiters(segments) {
     return { ...s, volL };
   });
   return { rows, totalL: total };
+}
+
+/** Dosage glycol — remplissage à vide : % vol. cible sur volume total installation. */
+function calcGlycolDose({ volumeTotalL, targetPct, productPct }) {
+  const v = Math.max(0, +volumeTotalL || 0);
+  const target = Math.max(0, Math.min(100, +targetPct || 0));
+  const prod = Math.max(1, Math.min(100, +productPct || 100));
+  const pureGlycolL = v * target / 100;
+  const waterL = v - pureGlycolL;
+  const productL = (v * target) / prod;
+  const waterAddL = Math.max(0, v - productL);
+  return { volumeTotalL: v, targetPct: target, productPct: prod, pureGlycolL, waterL, productL, waterAddL };
+}
+
+function installVolumeTotalLiters(ins) {
+  const pipeL = calcPipeVolumeLiters(ins.volume?.segments).totalL;
+  const extraL = Math.max(0, +ins.glycol?.volumeExtraL || 0);
+  return pipeL + extraL;
+}
+
+function glycolProtectionHint(tMinC) {
+  const t = +tMinC;
+  if (isNaN(t)) return "";
+  if (t >= -5) return "Eau ou faible concentration souvent suffisante (≥ −5 °C).";
+  if (t >= -10) return "Indicatif propylène glycol : environ 22 à 28 % vol.";
+  if (t >= -15) return "Indicatif propylène glycol : environ 28 à 33 % vol.";
+  if (t >= -20) return "Indicatif propylène glycol : environ 33 à 40 % vol.";
+  return "Indicatif propylène glycol : vérifier la courbe fabricant (≤ −20 °C).";
 }
 
 function calcExpansionVessel({ temp1, temp2, volumeL, hStatic, pSoupape }) {
@@ -203,7 +233,40 @@ function renderInstallVolumePanel(ins) {
     </table>
     <div class="inst-actions">
       <button type="button" class="btn-soft" onclick="addInstallVolumeRow()">+ Tronçon</button>
+      <button type="button" class="btn-ghost" onclick="applyVolumeToGlycol()">→ Reprendre volume tuyauterie pour le glycol</button>
       <button type="button" class="btn-ghost" onclick="applyVolumeToVase()">→ Reprendre volume total pour le vase</button>
+    </div>
+  </div>`;
+}
+
+function renderInstallGlycolPanel(ins) {
+  const g = ins.glycol;
+  const pipeL = calcPipeVolumeLiters(ins.volume.segments).totalL;
+  const totalL = Math.max(0, +g.volumeTotalL || 0) || installVolumeTotalLiters(ins);
+  const r = calcGlycolDose({ volumeTotalL: totalL, targetPct: g.targetPct, productPct: g.productPct });
+  const hint = glycolProtectionHint(g.tMinC);
+  return `<div class="inst-panel">
+    <p class="hint">Calcul du taux de glycol en fonction du volume d'installation — remplissage à vide (% vol.). Volume total = tuyauterie + appoint (émetteurs, buffer, échangeurs…).</p>
+    <table class="inst-calc-tbl">
+      <tbody>
+        <tr class="inst-row-calc"><td>Volume tuyauterie (calculé)</td><td class="mono">${fmt(pipeL, 1)}</td><td>L</td></tr>
+        <tr class="inst-row-in"><td>Volume appoint</td><td>${instNumInput("instGlyExtra", g.volumeExtraL, "1", 0, "onInstallField()")}</td><td>L · émetteurs, buffer, PAC…</td></tr>
+        <tr class="inst-row-in"><td>Volume total installation</td><td>${instNumInput("instGlyVol", totalL, "1", 0, "onInstallField()")}</td><td>L</td></tr>
+        <tr class="inst-row-in"><td>Taux de glycol cible</td><td>${instNumInput("instGlyPct", g.targetPct, "1", 0, "onInstallField()")}</td><td>% vol.</td></tr>
+        <tr class="inst-row-in"><td>Concentration produit</td><td>${instNumInput("instGlyProd", g.productPct, "1", 1, "onInstallField()")}</td><td>% vol. · 100 = glycol pur</td></tr>
+        <tr class="inst-row-in"><td>Température protection min.</td><td>${instNumInput("instGlyTmin", g.tMinC, "1", -40, "onInstallField()")}</td><td>°C</td></tr>
+        ${hint ? `<tr><td colspan="3" class="hint" style="padding:8px 10px;font-size:12px">${hint}</td></tr>` : ""}
+        ${instResultRow("Volume glycol pur", fmt(r.pureGlycolL, 1), "L", true)}
+        ${instResultRow("Volume eau", fmt(r.waterL, 1), "L")}
+        ${instResultRow("Produit commercial à verser", fmt(r.productL, 1), "L", true)}
+        ${instResultRow("Eau à compléter", fmt(r.waterAddL, 1), "L")}
+        ${instResultRow("Taux obtenu", fmt(r.targetPct, 1), "% vol.")}
+      </tbody>
+    </table>
+    <div class="inst-actions">
+      <button type="button" class="btn-soft" onclick="syncInstallVolumeToGlycol()">↺ Recalculer depuis tuyauterie + appoint</button>
+      <button type="button" class="btn-ghost" onclick="applyGlycolToPdc()">→ Reprendre le taux pour PDC linéaires</button>
+      <button type="button" class="btn-ghost" onclick="applyGlycolVolumeToVase()">→ Reprendre volume total pour le vase</button>
     </div>
   </div>`;
 }
@@ -290,6 +353,13 @@ function readInstallForm() {
     ins.vase.hStatic = +(g("instVaseH").value || 0);
     ins.vase.pSoupape = +(g("instVaseP").value || 0);
   }
+  if (g("instGlyVol")) {
+    ins.glycol.volumeExtraL = +(g("instGlyExtra")?.value || 0);
+    ins.glycol.volumeTotalL = +(g("instGlyVol").value || 0);
+    ins.glycol.targetPct = +(g("instGlyPct")?.value || 0);
+    ins.glycol.productPct = +(g("instGlyProd")?.value || 100);
+    ins.glycol.tMinC = +(g("instGlyTmin")?.value || 0);
+  }
   if (g("instCircQ")) {
     ins.circ.useHydro = !!g("instCircHydro")?.checked;
     if (!ins.circ.useHydro) {
@@ -355,6 +425,46 @@ function applyVolumeToVase() {
   INSTALL_TOOL = "vase";
   installState().tool = "vase";
   toast(`Volume système ${fmt(totalL, 1)} L → vase d'expansion`);
+  renderInstallationTab(false);
+}
+
+function syncInstallVolumeToGlycol() {
+  readInstallForm();
+  const ins = installState();
+  ins.glycol.volumeTotalL = Math.round(installVolumeTotalLiters(ins) * 10) / 10;
+  toast(`Volume installation ${fmt(ins.glycol.volumeTotalL, 1)} L`);
+  renderInstallationTab(false);
+}
+
+function applyVolumeToGlycol() {
+  readInstallForm();
+  const ins = installState();
+  const pipeL = calcPipeVolumeLiters(ins.volume.segments).totalL;
+  ins.glycol.volumeTotalL = Math.round((pipeL + (+ins.glycol.volumeExtraL || 0)) * 10) / 10;
+  INSTALL_TOOL = "glycol";
+  ins.tool = "glycol";
+  toast(`Volume tuyauterie ${fmt(pipeL, 1)} L → dosage glycol`);
+  renderInstallationTab(false);
+}
+
+function applyGlycolToPdc() {
+  readInstallForm();
+  const ins = installState();
+  ins.pdc.glycolPct = +ins.glycol.targetPct || 0;
+  INSTALL_TOOL = "pdc";
+  ins.tool = "pdc";
+  toast(`Taux glycol ${fmt(ins.pdc.glycolPct, 1)} % → PDC linéaires`);
+  renderInstallationTab(false);
+}
+
+function applyGlycolVolumeToVase() {
+  readInstallForm();
+  const ins = installState();
+  const totalL = Math.max(0, +ins.glycol.volumeTotalL || 0) || installVolumeTotalLiters(ins);
+  ins.vase.volumeL = Math.round(totalL * 10) / 10;
+  INSTALL_TOOL = "vase";
+  ins.tool = "vase";
+  toast(`Volume ${fmt(totalL, 1)} L → vase d'expansion`);
   renderInstallationTab(false);
 }
 
@@ -459,6 +569,7 @@ function renderInstallationTab(scrollTop) {
     ["pdc", "PDC linéaires"],
     ["circ", "Circulateurs"],
     ["volume", "Volume tuyauterie"],
+    ["glycol", "Taux glycol"],
     ["vase", "Vase d'expansion"]
   ];
   const tabs = tools.map(([id, lbl]) =>
@@ -468,12 +579,13 @@ function renderInstallationTab(scrollTop) {
   if (INSTALL_TOOL === "pdc") panel = renderInstallPdcPanel(ins);
   else if (INSTALL_TOOL === "circ") panel = renderInstallCircPanel(ins);
   else if (INSTALL_TOOL === "volume") panel = renderInstallVolumePanel(ins);
+  else if (INSTALL_TOOL === "glycol") panel = renderInstallGlycolPanel(ins);
   else if (INSTALL_TOOL === "vase") panel = renderInstallVasePanel(ins);
 
   root.innerHTML = `<div class="panel blk-geo" style="margin-bottom:18px">
     <div class="head"><h3>Installation</h3><span class="tag">Calculs hydrauliques &amp; dimensionnement</span></div>
     <div class="body">
-      <div class="hint">Outils autonomes pour le chantier : pertes de charge linéaires, sélection de circulateurs (catalogue Composants), volume de tuyauterie et vase d'expansion. Les valeurs sont enregistrées avec l'étude.</div>
+      <div class="hint">Outils autonomes pour le chantier : pertes de charge linéaires, circulateurs, volumes, dosage glycol et vase d'expansion. Les valeurs sont enregistrées avec l'étude.</div>
       <div class="comp-tabs inst-tabs">${tabs}</div>
     </div>
   </div>

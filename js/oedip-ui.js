@@ -914,7 +914,7 @@ function fillNotePrintPresetSelect(){
   sel.innerHTML='<option value="">Config d\'impression…</option>'
     +state.notePrintPresets.map(p=>`<option value="${escAttr(p.id)}"${p.id===cur?" selected":""}>${escHtml(p.name)}</option>`).join("");
 }
-function saveNotePrintPreset(){
+async function saveNotePrintPreset(){
   const name=prompt("Nom de la configuration d'impression :");
   if(!name||!name.trim()) return;
   ensureNotePrintPresets();
@@ -928,7 +928,8 @@ function saveNotePrintPreset(){
   projet.notePrintPresetId=cfg.id;
   fillNotePrintPresetSelect();
   markDirty();
-  toast("Config enregistrée · "+cfg.name);
+  const cloudOk=typeof syncNotePrintPresetsToCloud==="function"?await syncNotePrintPresetsToCloud():false;
+  toast("Config enregistrée · "+cfg.name+(cloudOk?" · profil cloud":""));
 }
 function loadNotePrintPreset(id){
   if(!id){
@@ -943,7 +944,7 @@ function loadNotePrintPreset(id){
   applyNotePrintConfig(p,{skipDirty:false});
   fillNotePrintPresetSelect();
 }
-function deleteNotePrintPreset(){
+async function deleteNotePrintPreset(){
   const sel=$('notePrintPresetSel');
   const id=sel?.value;
   if(!id){ alert("Sélectionnez une config à supprimer."); return; }
@@ -954,7 +955,8 @@ function deleteNotePrintPreset(){
   if(projet.notePrintPresetId===id) projet.notePrintPresetId="";
   fillNotePrintPresetSelect();
   markDirty();
-  toast("Config supprimée");
+  const cloudOk=typeof syncNotePrintPresetsToCloud==="function"?await syncNotePrintPresetsToCloud():false;
+  toast("Config supprimée"+(cloudOk?" · profil cloud":""));
 }
 
 function renderNote(){
