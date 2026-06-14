@@ -464,7 +464,7 @@ async function exportDB(){
       await sbSaveMachineLibrary(obj);
       toast("Base machines enregistrée dans le cloud");
     }catch(e){
-      alert("Enregistrement cloud impossible.\n"+e.message);
+      wsCloudSaveError(e);
       return;
     }
   }
