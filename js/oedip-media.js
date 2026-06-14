@@ -31,10 +31,12 @@ function oedipLocalPathToStorageKey(localPath) {
 function oedipMediaUrl(src) {
   if (!src) return "";
   if (/^(https?:|data:|blob:)/i.test(src)) return src;
-  if (!oedipMediaEnabled()) return src;
   const key = oedipLocalPathToStorageKey(src);
-  if (!key) return src;
-  const base = window.OEDIP_SUPABASE.url.replace(/\/$/, "");
-  const enc = key.split("/").map((part) => encodeURIComponent(part)).join("/");
-  return `${base}/storage/v1/object/public/${oedipMediaBucket()}/${enc}`;
+  const base = window.OEDIP_SUPABASE?.url?.replace(/\/$/, "");
+  const useCloud = base && key && (oedipMediaEnabled() || /^img\/procedures\//i.test(String(src)));
+  if (useCloud) {
+    const enc = key.split("/").map((part) => encodeURIComponent(part)).join("/");
+    return `${base}/storage/v1/object/public/${oedipMediaBucket()}/${enc}`;
+  }
+  return src;
 }

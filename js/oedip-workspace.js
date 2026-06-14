@@ -169,6 +169,7 @@ function finishCatalogLoad(opts) {
   opts = opts || {};
   ensureDepartements();
   ensureComposants();
+  if (typeof ensureProcedureCatalogPhotos === "function") ensureProcedureCatalogPhotos();
   if (typeof ensureOutils === "function") ensureOutils();
   migratePerformances();
   normalizeGammes();
@@ -582,6 +583,7 @@ async function ensureDefaultCatalogLoaded(){
     else ok=true;
   }
   if(typeof ensureComposants==="function") ensureComposants();
+  if(typeof ensureProcedureCatalogPhotos==="function") ensureProcedureCatalogPhotos();
   return ok||catalogComposantCount()>0;
 }
 async function readFileFromDir(dir,name){

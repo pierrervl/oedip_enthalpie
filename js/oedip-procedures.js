@@ -6,6 +6,47 @@ function ensureProcedureCatalogs() {
   if (!Array.isArray(state.procedureCatalogs)) state.procedureCatalogs = [];
 }
 
+function procedureCatalogImageStepCount(cat) {
+  if (!cat?.procedures) return 0;
+  let n = 0;
+  cat.procedures.forEach((p) => (p.steps || []).forEach((s) => {
+    if (s.image || (s.images && s.images.length)) n++;
+  }));
+  return n;
+}
+
+function bundledProcedureCatalogFor(gammeCode) {
+  const root = typeof OEDIP_DEFAULT_CATALOG !== "undefined" ? OEDIP_DEFAULT_CATALOG : null;
+  if (!root) return null;
+  const list = root.data?.procedureCatalogs || root.procedureCatalogs || [];
+  return list.find((c) => +c.gammeCode === +gammeCode) || null;
+}
+
+/** Conserve la version la plus riche en photos (catalogue embarqué vs cloud / import). */
+function pickProcedureCatalog(candidate, gammeCode) {
+  const bundled = bundledProcedureCatalogFor(gammeCode);
+  if (!candidate) return bundled ? JSON.parse(JSON.stringify(bundled)) : null;
+  if (!bundled) return candidate;
+  return procedureCatalogImageStepCount(candidate) >= procedureCatalogImageStepCount(bundled)
+    ? candidate
+    : JSON.parse(JSON.stringify(bundled));
+}
+
+function ensureProcedureCatalogPhotos() {
+  ensureProcedureCatalogs();
+  const bundledList = (typeof OEDIP_DEFAULT_CATALOG !== "undefined" && OEDIP_DEFAULT_CATALOG?.data?.procedureCatalogs) || [];
+  bundledList.forEach((bundled) => {
+    const picked = pickProcedureCatalog(
+      state.procedureCatalogs.find((c) => +c.gammeCode === +bundled.gammeCode),
+      bundled.gammeCode
+    );
+    if (!picked) return;
+    const idx = state.procedureCatalogs.findIndex((c) => +c.gammeCode === +bundled.gammeCode);
+    if (idx >= 0) state.procedureCatalogs[idx] = picked;
+    else state.procedureCatalogs.push(picked);
+  });
+}
+
 function getProcedureCatalog(gammeCode) {
   ensureProcedureCatalogs();
   return state.procedureCatalogs.find((c) => +c.gammeCode === +gammeCode) || null;
@@ -935,7 +976,11 @@ function fillProcGammeSelect() {
     `<option value="${g.code}">${escHtml(g.nom)} (code ${g.code})</option>`
   ).join("");
   if (cur && [...sel.options].some((o) => o.value === cur)) sel.value = cur;
-  else if (state.gammes[0]) sel.value = state.gammes[0].code;
+  else {
+    const withProc = state.procedureCatalogs.find((c) => procedureCatalogImageStepCount(c) > 0);
+    if (withProc && [...sel.options].some((o) => o.value === String(withProc.gammeCode))) sel.value = String(withProc.gammeCode);
+    else if (state.gammes[0]) sel.value = state.gammes[0].code;
+  }
 }
 
 function renderProceduresTab() {
@@ -975,7 +1020,7 @@ function renderProceduresTab() {
 }
 
 function initProceduresTab() {
-  ensureProcedureCatalogs();
+  ensureProcedureCatalogPhotos();
   state.procedureCatalogs.forEach(migrateProcedureCatalogVariants);
   renderProceduresTab();
 }
