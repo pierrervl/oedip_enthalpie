@@ -784,16 +784,37 @@ function buildCompareData(r){
   ];
   return {sol, besoin, scop:r.scop, p, maxC:Math.max(...sol.map(s=>s.kwhUtileToCost)), maxCo2:Math.max(...sol.map(s=>s.co2))};
 }
+const COMPARE_BAR_NARROW_PCT=30;
+function compareBarRow(lbl,pct,barText,costText,isPac,bg){
+  const w=Math.max(8,pct);
+  const narrow=w<COMPARE_BAR_NARROW_PCT;
+  return `<div class="barrow"><span class="lbl">${lbl}</span>
+    <div class="bar-cell">
+      <div class="bar ${isPac?"pac":""}${narrow?" bar-narrow":""}" style="width:${w}%;background:${bg}">${narrow?"":barText}</div>
+      ${narrow?`<span class="bar-val-out">${barText}</span>`:""}
+    </div>
+    <span class="cost">${costText}</span></div>`;
+}
 function renderCompareBarsHtml(sol,maxC){
-  return sol.map(s=>`<div class="barrow"><span class="lbl">${s.nom}</span>
-    <div class="bar ${s.pac?'pac':''}" style="width:${Math.max(8,s.kwhUtileToCost/maxC*100)}%;background:${s.pac?OEDIP_BAR_GEO:OEDIP_BAR_HEAT}">${fmt(s.kwhUtileToCost,0)} €</div>
-    <span class="cost">${fmt(s.kwhUtileToCost,0)} €/an</span></div>`).join('')
+  return sol.map(s=>compareBarRow(
+    s.nom,
+    s.kwhUtileToCost/maxC*100,
+    `${fmt(s.kwhUtileToCost,0)} €`,
+    `${fmt(s.kwhUtileToCost,0)} €/an`,
+    !!s.pac,
+    s.pac?OEDIP_BAR_GEO:OEDIP_BAR_HEAT
+  )).join("")
     +`<div class="hint" style="margin-top:10px">La PAC est prise comme référence : économie de <b>${fmt((1-sol[0].kwhUtileToCost/sol[2].kwhUtileToCost)*100,0)} %</b> vs fioul, <b>${fmt((1-sol[0].kwhUtileToCost/sol[3].kwhUtileToCost)*100,0)} %</b> vs gaz, <b>${fmt((1-sol[0].kwhUtileToCost/sol[1].kwhUtileToCost)*100,0)} %</b> vs convecteurs.</div>`;
 }
 function renderCompareCo2Html(sol,maxCo2){
-  return sol.map(s=>`<div class="barrow"><span class="lbl">${s.nom}</span>
-    <div class="bar ${s.pac?'pac':''}" style="width:${Math.max(8,s.co2/maxCo2*100)}%;background:${s.pac?OEDIP_BAR_GEO:OEDIP_BAR_GRAY}">${fmt(s.co2/1000,0)} kg</div>
-    <span class="cost">${fmt(s.co2/1000,0)} kg/an</span></div>`).join('');
+  return sol.map(s=>compareBarRow(
+    s.nom,
+    s.co2/maxCo2*100,
+    `${fmt(s.co2/1000,0)} kg`,
+    `${fmt(s.co2/1000,0)} kg/an`,
+    !!s.pac,
+    s.pac?OEDIP_BAR_GEO:OEDIP_BAR_GRAY
+  )).join("");
 }
 function renderCompareInto(targets,r){
   readPrix();
@@ -871,11 +892,51 @@ function setAllNoteLines(on){
 function ensureNotePrintPresets(){
   if(!state.notePrintPresets||!Array.isArray(state.notePrintPresets)) state.notePrintPresets=[];
 }
+function ensureProjetNoteInstaller(){
+  const ip=typeof getInstallerProfile==="function"?getInstallerProfile():{};
+  if(!projet.noteInstaller||typeof projet.noteInstaller!=="object") projet.noteInstaller={};
+  const ni=projet.noteInstaller;
+  if(ni.showLogo==null) ni.showLogo=ip.showLogoOnNote!==false;
+  if(ni.showCompany==null) ni.showCompany=ip.showCompanyOnNote!==false;
+  return ni;
+}
+function syncNoteInstallerToolbar(){
+  const ni=ensureProjetNoteInstaller();
+  const lg=$("noteShowInstallerLogo");
+  const co=$("noteShowInstallerCo");
+  if(lg) lg.checked=!!ni.showLogo;
+  if(co) co.checked=!!ni.showCompany;
+}
+function toggleNoteInstallerDisplay(){
+  const ni=ensureProjetNoteInstaller();
+  ni.showLogo=!!$("noteShowInstallerLogo")?.checked;
+  ni.showCompany=!!$("noteShowInstallerCo")?.checked;
+  if($("doc")?.innerHTML) renderNote();
+  else markDirty();
+}
+function noteInstallerSectionHtml(c){
+  const ip=typeof getInstallerProfile==="function"?getInstallerProfile():{};
+  const ni=ensureProjetNoteInstaller();
+  if(!ni.showCompany) return "";
+  const addr=[ip.adr,ip.cp,ip.ville].filter(Boolean).join(" ");
+  let h=`<section><h3 class="dt">Installateur</h3>`;
+  if(ip.company) h+=noteRow("install.company","Raison sociale","",ip.company);
+  if(addr) h+=noteRow("install.adresse","Adresse","",addr);
+  if(ip.tel) h+=noteRow("install.tel","Téléphone","",ip.tel);
+  if(ip.email) h+=noteRow("install.email","E-mail","",ip.email);
+  if(ip.web) h+=noteRow("install.web","Site web","",ip.web);
+  if(ip.siret) h+=noteRow("install.siret","SIRET","",ip.siret);
+  if(c.referent) h+=noteRow("install.referent","Référent chantier","",c.referent);
+  if(h.indexOf("note-row")<0) return "";
+  return h+"</section>";
+}
 function captureNotePrintConfig(){
   ensureNoteLines();
+  ensureProjetNoteInstaller();
   return {
     noteLines:{...projet.noteLines},
-    includeAnnex:!!$('notePrintCharts')?.checked
+    includeAnnex:!!$('notePrintCharts')?.checked,
+    noteInstaller:{...projet.noteInstaller}
   };
 }
 function applyNotePrintConfig(cfg,opts){
@@ -889,6 +950,8 @@ function applyNotePrintConfig(cfg,opts){
     if(cb) cb.checked=!!cfg.includeAnnex;
     $('docPrintCharts')?.classList.toggle('print-include',!!cfg.includeAnnex);
   }
+  if(cfg.noteInstaller) projet.noteInstaller={...cfg.noteInstaller};
+  syncNoteInstallerToolbar();
   if($('doc')?.innerHTML) applyNoteLinesToDom();
   else if(opts.rerender!==false) renderNote();
   if(cfg.includeAnnex) syncNotePrintAnnex();
@@ -970,11 +1033,23 @@ function renderNote(){
     return noteRow("zone."+i,nom,"-",lbl);
   }).join('');
   const fnGam=r.gamme.fonction?fonctionLabel(r.gamme.fonction):"géothermie";
-  let h=`<div class="dhead"><div class="spark"></div><div><h2>Note de dimensionnement</h2><div class="note">OEDIP — ${fnGam}${r.gamme.desc?(' · '+r.gamme.desc):''}</div></div>
+  const ip=typeof getInstallerProfile==="function"?getInstallerProfile():{};
+  const ni=ensureProjetNoteInstaller();
+  const showLogo=!!ni.showLogo&&!!ip.logoUrl;
+  const headIcon=showLogo
+    ? `<div class="dhead-logo"><img src="${escAttr(ip.logoUrl)}" alt=""></div>`
+    : `<div class="spark"></div>`;
+  const installSec=noteInstallerSectionHtml(c);
+  const installClientLine=!installSec
+    ? noteRow("client.installateur","Installateur","",c.installateur||'—')+noteRow("client.referent","Référent","",c.referent||'—')
+    : noteRow("client.installateur","Installateur","",ip.company||c.installateur||'—');
+  const noteSubtitle=ip.company||c.installateur||"—";
+  let h=`<div class="dhead${showLogo?" dhead-installer":""}">${headIcon}<div><h2>Note de dimensionnement</h2><div class="note dhead-company">${escHtml(noteSubtitle)}</div></div>
     <div class="meta">${state.meta.outil} ${state.meta.version}<br>Réf : ${c.ref||'—'}<br>${new Date().toLocaleDateString('fr-FR')}</div></div>
   <section><h3 class="dt">Opération &amp; client</h3>
     ${noteRow("client.ref","Référence chantier","",c.ref||'—')}${noteRow("client.type","Type de chantier","",c.type||'—')}${noteRow("client.nom","Client","",c.nom||'—')}
-    ${noteRow("client.adresse","Adresse","",(c.adr||'')+' '+(c.cp||'')+' '+(c.ville||''))}${noteRow("client.installateur","Installateur","",c.installateur||'—')}${noteRow("client.referent","Référent","",c.referent||'—')}</section>
+    ${noteRow("client.adresse","Adresse","",(c.adr||'')+' '+(c.cp||'')+' '+(c.ville||''))}${installClientLine}</section>
+  ${installSec}
   <section><h3 class="dt">Données d'entrée de l'étude</h3>
     ${noteRow("input.cp","Code postal","",c.cp||"—")}${noteRow("input.dept","Département","-",d.code+" · "+d.nom)}${noteRow("input.alt","Altitude","m",fmt(b.alt,0))}${noteRow("input.tbaseRef","T° base département (réf.)","°C",fmt(r.TbaseRef,0))}${noteRow("input.tbase","Température de base retenue","°C",fmt(r.Tbase,0))}
     ${noteRow("input.vol","Volume chauffé","m³",fmt(r.V,0))}${noteRow("input.tint","Température intérieure","°C",fmt(b.tint,0))}${noteRow("input.g","Coefficient G","W/m³.°C",fmt(r.G,2))}
@@ -1016,6 +1091,7 @@ function renderNote(){
     $('docPrintCharts')?.classList.toggle('print-include',annexCb.checked);
   }
   fillNotePrintPresetSelect();
+  syncNoteInstallerToolbar();
   const chartMeta=$('noteChartDocMeta');
   if(chartMeta) chartMeta.innerHTML=`Réf : ${c.ref||'—'}<br>${new Date().toLocaleDateString('fr-FR')}`;
   if($('notePrintCharts')?.checked) syncNotePrintAnnex();
@@ -1038,6 +1114,129 @@ function printNote(){
   window.print();
 }
 
+/* ---------- TAB : Mon entreprise ---------- */
+function renderEntrepriseTab(){
+  const root=$('v-entreprise');
+  if(!root) return;
+  const ip=typeof getInstallerProfile==="function"?getInstallerProfile():{};
+  const logoPreview=ip.logoUrl
+    ? `<img src="${escAttr(ip.logoUrl)}" alt="">`
+    : `<span class="hint">Aucun logo</span>`;
+  root.innerHTML=`<div class="panel inst-company-panel" style="max-width:720px;margin:0 auto">
+    <div class="head"><h3>Mon entreprise</h3><span class="tag">Commercial · note de dimensionnement</span></div>
+    <div class="body">
+      <div class="hint">Logo et coordonnées de votre société — enregistrés sur ce poste et sur votre profil ☁ Cloud si connecté. Affichés sur la note de dimensionnement (onglet Note).</div>
+      <div class="inst-company-grid">
+        <div class="full"><label class="subhead">Raison sociale</label><input type="text" id="instCoName" value="${escHtml(ip.company||"")}" placeholder="SARL Chauffage Plus"></div>
+        <div class="full"><label class="subhead">Adresse</label><input type="text" id="instCoAdr" value="${escHtml(ip.adr||"")}" placeholder="12 rue des Artisans"></div>
+        <div><label class="subhead">Code postal</label><input type="text" id="instCoCp" value="${escHtml(ip.cp||"")}" maxlength="5"></div>
+        <div><label class="subhead">Ville</label><input type="text" id="instCoVille" value="${escHtml(ip.ville||"")}"></div>
+        <div><label class="subhead">Téléphone</label><input type="text" id="instCoTel" value="${escHtml(ip.tel||"")}" placeholder="03 26 …"></div>
+        <div><label class="subhead">E-mail</label><input type="email" id="instCoEmail" value="${escHtml(ip.email||"")}"></div>
+        <div><label class="subhead">Site web</label><input type="text" id="instCoWeb" value="${escHtml(ip.web||"")}" placeholder="www.…"></div>
+        <div><label class="subhead">SIRET</label><input type="text" id="instCoSiret" value="${escHtml(ip.siret||"")}"></div>
+      </div>
+      <div class="inst-logo-row">
+        <div class="inst-logo-preview" id="instLogoPreview">${logoPreview}</div>
+        <div>
+          <label class="subhead">Logo</label>
+          <div class="row-inline" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+            <button type="button" class="btn-soft" onclick="$('instLogoFile')?.click()">Choisir une image</button>
+            <button type="button" class="btn-ghost" onclick="clearInstallerLogo()">Retirer</button>
+          </div>
+          <input type="file" id="instLogoFile" accept="image/*" hidden onchange="onInstallerLogoFile(event)">
+          <div class="full" style="margin-top:8px"><label class="subhead">ou URL</label><input type="text" id="instCoLogoUrl" class="mono" value="${escHtml(ip.logoUrl&&!String(ip.logoUrl).startsWith("data:")?ip.logoUrl:"")}" placeholder="img/logo.png ou https://…" oninput="previewInstallerLogoUrl()"></div>
+          <p class="hint" style="margin:6px 0 0">PNG ou JPG · max. 400 Ko si import fichier.</p>
+        </div>
+      </div>
+      <div class="inst-company-actions">
+        <label class="inst-check"><input type="checkbox" id="instCoShowLogo" ${ip.showLogoOnNote!==false?"checked":""}> Afficher le logo sur la note</label>
+        <label class="inst-check"><input type="checkbox" id="instCoShowCo" ${ip.showCompanyOnNote!==false?"checked":""}> Afficher les coordonnées sur la note</label>
+      </div>
+      <div class="inst-company-actions">
+        <button type="button" class="btn-heat" onclick="saveInstallerProfileForm()">Enregistrer mon entreprise</button>
+        <button type="button" class="btn-soft" onclick="applyInstallerToProject()">→ Reprendre la raison sociale dans le projet</button>
+      </div>
+    </div>
+  </div>`;
+}
+function readInstallerProfileForm(){
+  const ip=typeof getInstallerProfile==="function"?getInstallerProfile():{};
+  const g=(id)=>$(id);
+  ip.company=g("instCoName")?.value?.trim()||"";
+  ip.adr=g("instCoAdr")?.value?.trim()||"";
+  ip.cp=g("instCoCp")?.value?.trim()||"";
+  ip.ville=g("instCoVille")?.value?.trim()||"";
+  ip.tel=g("instCoTel")?.value?.trim()||"";
+  ip.email=g("instCoEmail")?.value?.trim()||"";
+  ip.web=g("instCoWeb")?.value?.trim()||"";
+  ip.siret=g("instCoSiret")?.value?.trim()||"";
+  ip.showLogoOnNote=!!g("instCoShowLogo")?.checked;
+  ip.showCompanyOnNote=!!g("instCoShowCo")?.checked;
+  const urlIn=g("instCoLogoUrl")?.value?.trim();
+  if(urlIn) ip.logoUrl=urlIn;
+  return ip;
+}
+function previewInstallerLogoUrl(){
+  const url=$("instCoLogoUrl")?.value?.trim();
+  const prev=$("instLogoPreview");
+  if(!prev) return;
+  if(url) prev.innerHTML=`<img src="${escAttr(url)}" alt="">`;
+  else prev.innerHTML=`<span class="hint">Aucun logo</span>`;
+}
+function onInstallerLogoFile(ev){
+  const file=ev.target?.files?.[0];
+  if(!file) return;
+  if(file.size>400*1024){
+    alert("Image trop volumineuse (max. 400 Ko).");
+    ev.target.value="";
+    return;
+  }
+  const reader=new FileReader();
+  reader.onload=()=>{
+    const ip=typeof getInstallerProfile==="function"?getInstallerProfile():{};
+    ip.logoUrl=reader.result;
+    const prev=$("instLogoPreview");
+    if(prev) prev.innerHTML=`<img src="${escAttr(ip.logoUrl)}" alt="">`;
+    const urlIn=$("instCoLogoUrl");
+    if(urlIn) urlIn.value="";
+    toast("Logo chargé — pensez à enregistrer");
+  };
+  reader.readAsDataURL(file);
+  ev.target.value="";
+}
+function clearInstallerLogo(){
+  const ip=typeof getInstallerProfile==="function"?getInstallerProfile():{};
+  ip.logoUrl="";
+  const prev=$("instLogoPreview");
+  if(prev) prev.innerHTML=`<span class="hint">Aucun logo</span>`;
+  const urlIn=$("instCoLogoUrl");
+  if(urlIn) urlIn.value="";
+}
+async function saveInstallerProfileForm(){
+  readInstallerProfileForm();
+  if(typeof saveInstallerProfileLocal==="function") saveInstallerProfileLocal();
+  const cloudOk=typeof syncInstallerProfileToCloud==="function"?await syncInstallerProfileToCloud():false;
+  syncNoteInstallerToolbar();
+  if(document.querySelector("#v-note.active")) renderNote();
+  toast("Entreprise enregistrée"+(cloudOk?" · profil cloud":""));
+}
+function applyInstallerToProject(){
+  readInstallerProfileForm();
+  const ip=typeof getInstallerProfile==="function"?getInstallerProfile():{};
+  if(!ip.company){ toast("Renseignez la raison sociale"); return; }
+  if(typeof projet!=="undefined"&&projet.client){
+    projet.client.installateur=ip.company;
+    writeForm();
+    markDirty();
+  }
+  toast(`Installateur : ${ip.company}`);
+}
+function initEntrepriseTab(){
+  if(typeof ensureInstallerProfile==="function") ensureInstallerProfile();
+  renderEntrepriseTab();
+}
+
 /* ---------- NAV ---------- */
 function goTab(t){ document.querySelectorAll('nav.tabs button').forEach(b=>b.classList.toggle('active',b.dataset.tab===t));
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active')); $('v-'+t).classList.add('active');
@@ -1045,6 +1244,7 @@ function goTab(t){ document.querySelectorAll('nav.tabs button').forEach(b=>b.cla
   if(t==='composants') initComposantsTab();
   if(t==='outils'&&typeof initOutilsTab==='function') initOutilsTab();
   if(t==='installation'&&typeof initInstallationTab==='function') initInstallationTab();
+  if(t==='entreprise') initEntrepriseTab();
   if(t==='procedures'&&typeof initProceduresTab==='function') initProceduresTab();
   if(t==='projet') setTimeout(()=>renderDjuChart(LAST), 50);
   window.scrollTo(0,0); }

@@ -140,6 +140,87 @@ async function syncNotePrintPresetsToCloud() {
   }
 }
 
+const INSTALLER_PROFILE_LS = "oedip_installer_profile";
+
+function defaultInstallerProfile() {
+  return {
+    company: "",
+    adr: "",
+    cp: "",
+    ville: "",
+    tel: "",
+    email: "",
+    web: "",
+    siret: "",
+    logoUrl: "",
+    showLogoOnNote: true,
+    showCompanyOnNote: true,
+  };
+}
+
+function ensureInstallerProfile() {
+  if (!state.installerProfile || typeof state.installerProfile !== "object") {
+    state.installerProfile = defaultInstallerProfile();
+  }
+  return state.installerProfile;
+}
+
+function loadInstallerProfileFromLocal() {
+  try {
+    const raw = localStorage.getItem(INSTALLER_PROFILE_LS);
+    if (!raw) return false;
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== "object") return false;
+    state.installerProfile = { ...defaultInstallerProfile(), ...parsed };
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+function saveInstallerProfileLocal() {
+  ensureInstallerProfile();
+  try {
+    localStorage.setItem(INSTALLER_PROFILE_LS, JSON.stringify(state.installerProfile));
+    return true;
+  } catch (e) {
+    console.warn("Profil installateur local:", e.message);
+    return false;
+  }
+}
+
+async function loadInstallerProfileFromCloud() {
+  if (typeof sbLoadProfilePreferences !== "function") return false;
+  if (!(await sbCloudActiveAsync())) return false;
+  try {
+    const prefs = await sbLoadProfilePreferences();
+    if (!prefs?.installerProfile || typeof prefs.installerProfile !== "object") return false;
+    state.installerProfile = { ...defaultInstallerProfile(), ...prefs.installerProfile };
+    saveInstallerProfileLocal();
+    return true;
+  } catch (e) {
+    console.warn("Chargement profil installateur:", e.message);
+    return false;
+  }
+}
+
+async function syncInstallerProfileToCloud() {
+  if (typeof sbSaveProfilePreferences !== "function") return false;
+  if (!(await sbCloudActiveAsync())) return false;
+  try {
+    ensureInstallerProfile();
+    await sbSaveProfilePreferences({ installerProfile: state.installerProfile });
+    return true;
+  } catch (e) {
+    console.warn("Sync profil installateur:", e.message);
+    return false;
+  }
+}
+
+function getInstallerProfile() {
+  return ensureInstallerProfile();
+}
+
 function isLegacyFullProjectExport(obj) {
   if (!obj || typeof obj !== "object") return false;
   if (obj.type === "oedip-study") return false;
@@ -972,6 +1053,7 @@ async function onSbAuthChanged(){
     }
     if(typeof updateProcedureAdminUI==="function") updateProcedureAdminUI();
     await loadNotePrintPresetsFromCloud();
+    await loadInstallerProfileFromCloud();
     try{
       const remembered=localStorage.getItem("oedip_current_study_cloud_id");
       if(remembered&&await loadStudyFromCloud(remembered)){
@@ -990,7 +1072,9 @@ async function bootApp(){
     try{ await sbLoadProfile(); }catch(e){}
   }
   await ensureDefaultCatalogLoaded();
+  loadInstallerProfileFromLocal();
   if(sbCloudActive()) await loadNotePrintPresetsFromCloud();
+  if(sbCloudActive()) await loadInstallerProfileFromCloud();
   await bootstrapWorkspace();
   if(!currentStudyCloudId&&!currentStudyFile) applyBundledDemoStudySync();
   fillSelects(); fillDbPerfSelects(); writeForm(); recalc(); renderGammes(); syncDeptFromCp(true);

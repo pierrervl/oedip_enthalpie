@@ -583,9 +583,9 @@ function renderInstallationTab(scrollTop) {
   else if (INSTALL_TOOL === "vase") panel = renderInstallVasePanel(ins);
 
   root.innerHTML = `<div class="panel blk-geo" style="margin-bottom:18px">
-    <div class="head"><h3>Installation</h3><span class="tag">Calculs hydrauliques &amp; dimensionnement</span></div>
+    <div class="head"><h3>Outils chantier</h3><span class="tag">Hydraulique &amp; dimensionnement</span></div>
     <div class="body">
-      <div class="hint">Outils autonomes pour le chantier : pertes de charge linéaires, circulateurs, volumes, dosage glycol et vase d'expansion. Les valeurs sont enregistrées avec l'étude.</div>
+      <div class="hint">Calculs pour l'installateur : pertes de charge linéaires, circulateurs, volumes, dosage glycol et vase d'expansion. Les valeurs sont enregistrées avec l'étude.</div>
       <div class="comp-tabs inst-tabs">${tabs}</div>
     </div>
   </div>

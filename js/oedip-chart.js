@@ -21,9 +21,9 @@ function renderDjuChart(r, opts){
     wrap.innerHTML='<svg role="img" aria-label="Besoin et consommation par jour sur l\'année"></svg>';
     svg=wrap.querySelector("svg");
   }
-  const W=Math.max(720, wrap.clientWidth||900);
-  const H=320;
-  const pad={l:58,r:58,t:28,b:52};
+  const W=Math.max(opts.minWidth||(opts.annex?680:opts.compact?640:720), wrap.clientWidth||(opts.annex?760:opts.compact?700:900));
+  const H=opts.height||(opts.annex?285:opts.compact?175:320);
+  const pad=opts.annex?{l:54,r:54,t:22,b:48}:opts.compact?{l:50,r:50,t:16,b:40}:{l:58,r:58,t:28,b:52};
   const plotW=W-pad.l-pad.r, plotH=H-pad.t-pad.b;
   const n=days.length;
   const maxDay=Math.max(...days.map(d=>Math.max(d.kwhBesoin||0,d.kwhElec||0)),0.1);
@@ -87,7 +87,9 @@ function renderDjuChart(r, opts){
   const hasApp=(r.appoint||0)>0;
   if(legApp) legApp.style.display=hasApp?"inline-flex":"none";
   if(hint){
-    hint.textContent=`Répartition sur 365 jours à partir des totaux annuels intégrés (${fmt(r.dju,0)} DJU, ${typeof djuRefLabel==="function"?djuRefLabel(djuY):djuY}, base ${djuB}°C). `
+    const shortHint=`365 j · totaux ${fmt(totalB,0)} kWh besoin · ${fmt(totalE,0)} kWh élec · SCOP ${fmt(r.scop,2)}.`;
+    hint.textContent=(opts.compact&&!opts.annex)?shortHint:
+      `Répartition sur 365 jours à partir des totaux annuels intégrés (${fmt(r.dju,0)} DJU, ${typeof djuRefLabel==="function"?djuRefLabel(djuY):djuY}, base ${djuB}°C). `
       +`La somme des barres journalières = ${fmt(totalB,0)} kWh de besoin chauffage et ${fmt(totalE,0)} kWh de consommation électrique PAC sur l'année (SCOP ${fmt(r.scop,2)}). `
       +(hasApp?`Appoint annuel : ${fmt(r.appoint,0)} kWh. `:"")
       +`Courbes pleines : énergie du jour ; pointillés : cumul depuis le 1ᵉʳ janvier.`;
@@ -112,6 +114,8 @@ function syncNotePrintCharts(){
     wrap,
     meta: $("noteChartMeta"),
     hint: $("noteChartHint"),
-    legApp: $("noteChartAppointLeg")
+    legApp: $("noteChartAppointLeg"),
+    annex: true,
+    height: 285
   });
 }
