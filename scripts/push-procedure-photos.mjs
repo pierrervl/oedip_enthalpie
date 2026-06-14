@@ -27,6 +27,16 @@ if (!serviceKey) {
 
 const supabase = createClient(url, serviceKey, { auth: { persistSession: false } });
 
+function storageSafeName(name) {
+  return String(name)
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+}
+
+function storageKeyForFile(name) {
+  return `geo/${storageSafeName(name)}`;
+}
+
 async function upsertManifest(files) {
   const payload = {
     bucket: BUCKET,
@@ -94,7 +104,7 @@ async function main() {
 
   await runPool(jpgFiles, 4, async (name) => {
     const filePath = path.join(IMG_DIR, name);
-    const storageKey = `geo/${name}`;
+    const storageKey = storageKeyForFile(name);
     const bytes = await uploadOne(filePath, storageKey);
     done++;
     totalBytes += bytes;
@@ -111,8 +121,13 @@ async function main() {
   });
 
   console.log("\nIndex manifest…");
-  await upsertManifest(manifest);
-  console.log(`✓ ${done} photos · ${(totalBytes / 1024 / 1024).toFixed(1)} Mo · manifest catalog_procedure_photos`);
+  try {
+    await upsertManifest(manifest);
+    console.log(`✓ ${done} photos · ${(totalBytes / 1024 / 1024).toFixed(1)} Mo · manifest catalog_procedure_photos`);
+  } catch (e) {
+    console.warn(`✓ ${done} photos · ${(totalBytes / 1024 / 1024).toFixed(1)} Mo uploadés`);
+    console.warn(`⚠ Manifest non enregistré (${e.message || e}) — appliquez la migration reference_catalogs_service_role puis relancez photos:push`);
+  }
 }
 
 main().catch((e) => {
