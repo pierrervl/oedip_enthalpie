@@ -126,6 +126,7 @@ async function sbSaveStudy({ id, name, payload }) {
   }
   const { data, error } = await _sbClient.from("studies").insert(row).select("id,name,updated_at").single();
   if (error) throw error;
+  if (!data?.id) throw new Error("Insert cloud sans identifiant retourné");
   return data;
 }
 

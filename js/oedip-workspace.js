@@ -423,19 +423,27 @@ async function exportProject(opts){
   }
   const obj=buildProjectExport();
   const studyName=currentStudyName||studyDisplayLabelFromProjet()||"Étude";
-  if(await sbCloudActiveAsync()){
+  let cloudSaved=false;
+  const session=typeof sbEnsureSession==="function"?await sbEnsureSession():null;
+  if(session){
     try{
       const saved=await sbSaveStudy({ id:currentStudyCloudId||undefined, name:studyName, payload:obj });
+      if(!saved?.id) throw new Error("Réponse cloud invalide");
       currentStudyCloudId=saved.id;
       persistCurrentStudyCloudId(saved.id);
       currentStudyName=studyName;
       updateStudyUI(); markSaved();
+      cloudSaved=true;
       toast("Enregistré dans le cloud · "+saved.name);
       await refreshStudiesModal();
     }catch(e){
       wsCloudSaveError(e);
       return;
     }
+  }else if($("btnSbAuth")?.classList.contains("sb-on")){
+    toast("Session cloud expirée — reconnectez-vous via ☁ Cloud");
+    showSbAuthModal();
+    return;
   }
   const fname=currentStudyFile||await wsNewStudyFilename(currentStudyName,workspaceDirHandle);
   if(workspaceDirHandle&&await ensureDirPermission(workspaceDirHandle,true)){
@@ -446,17 +454,17 @@ async function exportProject(opts){
     try{localStorage.setItem("oedip_last_saved_file",fname);}catch(e){}
     persistCurrentStudyFile(fname);
     updateFolderUI(); updateStudyUI();
-    if(!sbCloudActive()) markSaved();
-    toast(sbCloudActive()?"Copie locale · "+fname:(currentStudyName?"Enregistré · "+currentStudyName:"Enregistré · "+fname));
+    if(!cloudSaved) markSaved();
+    toast(cloudSaved?"Copie locale · "+fname:(session?"Enregistré · "+studyName:"Enregistré localement · "+studyName+" (☁ Cloud déconnecté)"));
     return;
   }
-  if(sbCloudActive()) return;
+  if(cloudSaved) return;
   download(obj,fname);
   currentStudyFile=fname; currentStudyHandle=null;
   lastSavedFile=fname;
   persistCurrentStudyFile(fname);
   markSaved(); updateStudyUI();
-  toast(FS_SUPPORTED?"Téléchargé · "+fname+" — liez un dossier 📁 pour retrouver vos études":"Projet téléchargé · "+fname);
+  toast(session?"Téléchargé · "+fname:"Téléchargé · "+fname+" — connectez ☁ Cloud pour sync en ligne");
 }
 async function exportDB(){
   const obj=buildDbExport();
