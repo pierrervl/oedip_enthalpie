@@ -9,9 +9,11 @@
     "gpac:build": "node scripts/build-gpac-pack.mjs",
     "supabase:login": "supabase login",
     "supabase:link": "supabase link --project-ref lgpckxeyorsnizetpmuz",
-    "supabase:push": "supabase db push --linked"
+    "supabase:push": "supabase db push --linked",
+    "catalog:push": "node scripts/push-catalog-to-supabase.mjs"
   },
   "devDependencies": {
+    "@supabase/supabase-js": "^2.49.8",
     "supabase": "^2.106.0",
     "xlsx": "^0.18.5"
   }

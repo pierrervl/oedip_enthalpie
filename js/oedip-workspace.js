@@ -700,7 +700,6 @@ async function bootstrapWorkspace(){
   try{ lastSavedFile=localStorage.getItem("oedip_last_saved_file")||""; }catch(e){}
   try{ currentStudyFile=localStorage.getItem("oedip_current_study_file")||""; }catch(e){}
   try{ currentStudyCloudId=localStorage.getItem("oedip_current_study_cloud_id")||""; }catch(e){}
-  applyBundledDefaultProjectSync();
   currentStudyFile=""; currentStudyHandle=null;
   if(sbCloudActive()&&currentStudyCloudId){
     if(await loadStudyFromCloud(currentStudyCloudId)){
@@ -775,6 +774,11 @@ async function onSbAuthChanged(){
 
 async function bootApp(){
   if(typeof sbBootstrapAuth==="function") await sbBootstrapAuth();
+  let catalogLoaded=false;
+  if(typeof loadReferenceCatalogFromCloud==="function"){
+    catalogLoaded=await loadReferenceCatalogFromCloud();
+  }
+  if(!catalogLoaded) applyBundledDefaultProjectSync();
   await bootstrapWorkspace();
   fillSelects(); fillDbPerfSelects(); writeForm(); recalc(); renderGammes(); syncDeptFromCp(true);
   $("verLabel").textContent=`${state.meta.outil} ${state.meta.version} · ${state.meta.millesime||""}`;
