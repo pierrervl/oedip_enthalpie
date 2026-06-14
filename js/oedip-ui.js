@@ -773,18 +773,32 @@ function readPrix(){ const p=state.prix;
   p.elec=+$('c_pelec').value;p.fuelL=+$('c_pfuel').value;p.rdtFuel=+$('c_rfuel').value;p.gazKwh=+$('c_pgaz').value;p.rdtGaz=+$('c_rgaz').value;p.granKg=+$('c_pgran').value;p.rdtGran=+$('c_rgran').value;p.bucheKwh=+$('c_pbuche').value;p.rdtBuche=+$('c_rbuche').value;
 }
 function buildCompareData(r){
-  const p=state.prix, pci=state.pci, co2=state.co2, besoin=r.besoin;
+  const p=state.prix, pci=state.pci, co2=state.co2||{}, besoin=r.besoin;
   const sol=[
-    {nom:`PAC géothermique`, pac:true, kwhUtileToCost: besoin/(r.scop||3.5)*p.elec, co2: besoin/(r.scop||3.5)*co2.pac},
-    {nom:`Convecteurs élec.`, kwhUtileToCost: besoin/1.0*p.elec, co2: besoin*co2.joule},
-    {nom:`Chaudière fioul`, kwhUtileToCost: (besoin/(p.rdtFuel/100))/pci.fuelL*p.fuelL, co2: besoin/(p.rdtFuel/100)*co2.fuel},
-    {nom:`Chaudière gaz nat.`, kwhUtileToCost: besoin/(p.rdtGaz/100)*p.gazKwh, co2: besoin/(p.rdtGaz/100)*co2.gaz},
-    {nom:`Chaudière granulés`, kwhUtileToCost: (besoin/(p.rdtGran/100))/pci.granKg*p.granKg, co2: besoin/(p.rdtGran/100)*co2.gran},
-    {nom:`Chaudière bûches`, kwhUtileToCost: besoin/(p.rdtBuche/100)*p.bucheKwh, co2: besoin/(p.rdtBuche/100)*co2.buche}
+    {nom:`PAC géothermique`, pac:true, kwhUtileToCost: besoin/(r.scop||3.5)*p.elec, co2: besoin/(r.scop||3.5)*(co2.pac||0)},
+    {nom:`Convecteurs élec.`, kwhUtileToCost: besoin/1.0*p.elec, co2: besoin*(co2.joule||0)},
+    {nom:`Chaudière fioul`, kwhUtileToCost: (besoin/(p.rdtFuel/100))/pci.fuelL*p.fuelL, co2: besoin/(p.rdtFuel/100)*(co2.fuel||0)},
+    {nom:`Chaudière gaz nat.`, kwhUtileToCost: besoin/(p.rdtGaz/100)*p.gazKwh, co2: besoin/(p.rdtGaz/100)*(co2.gaz||0)},
+    {nom:`Chaudière granulés`, kwhUtileToCost: (besoin/(p.rdtGran/100))/pci.granKg*p.granKg, co2: besoin/(p.rdtGran/100)*(co2.gran||0)},
+    {nom:`Chaudière bûches`, kwhUtileToCost: besoin/(p.rdtBuche/100)*p.bucheKwh, co2: besoin/(p.rdtBuche/100)*(co2.buche||0)}
   ];
-  return {sol, besoin, scop:r.scop, p, maxC:Math.max(...sol.map(s=>s.kwhUtileToCost)), maxCo2:Math.max(...sol.map(s=>s.co2))};
+  sol.forEach(s=>{
+    s.kwhUtileToCost=Math.max(0,Number(s.kwhUtileToCost)||0);
+    s.co2=Math.max(0,Number(s.co2)||0);
+  });
+  return {sol,besoin,scop:r.scop,p,maxC:Math.max(...sol.map(s=>s.kwhUtileToCost),1),maxCo2:Math.max(...sol.map(s=>s.co2),1)};
 }
 const COMPARE_BAR_NARROW_PCT=30;
+const NOTE_COMPARE_BAR_NARROW_PCT=34;
+const NOTE_CMP_PAC="#0E4D52";
+const NOTE_CMP_OTHER="#3E8E9B";
+const NOTE_SPARK_SVG=`<svg width="26" height="26" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9.2" stroke="#fff" stroke-width="1.6"/><path d="M12 3v18" stroke="#fff" stroke-width="1.2" opacity=".5"/><path d="M6 9h5M6 9l2-2M6 9l2 2" stroke="#9fd6cf" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M18 15h-5m5 0l-2-2m2 2l-2 2" stroke="#ffd0b8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+
+function compareBarColor(entry){ return entry.pac?NOTE_CMP_PAC:NOTE_CMP_OTHER; }
+function compareBarBg(entry){
+  const c=compareBarColor(entry);
+  return entry.pac?OEDIP_BAR_GEO:`linear-gradient(90deg,${c},${c}cc)`;
+}
 function compareBarRow(lbl,pct,barText,costText,isPac,bg){
   const w=Math.max(8,pct);
   const narrow=w<COMPARE_BAR_NARROW_PCT;
@@ -795,6 +809,26 @@ function compareBarRow(lbl,pct,barText,costText,isPac,bg){
     </div>
     <span class="cost">${costText}</span></div>`;
 }
+function noteCompareBarRow(name,pct,label,isPac){
+  const w=Math.max(4,pct);
+  const inside=w>=NOTE_COMPARE_BAR_NARROW_PCT;
+  const col=isPac?NOTE_CMP_PAC:NOTE_CMP_OTHER;
+  return `<div class="note-cmp-row"><span class="blab">${escHtml(name)}</span>
+    <div class="bar-cell">
+      <div class="bar${inside?"":" bar-label-out"}" style="width:${w}%;background:${col}">${inside?escHtml(label):""}</div>
+      ${inside?"":`<span class="bar-val-out" style="left:calc(${w}% + 6px)">${escHtml(label)}</span>`}
+    </div></div>`;
+}
+function renderNoteCompareBarsHtml(sol,maxC){
+  return sol.map(s=>noteCompareBarRow(
+    s.nom,s.kwhUtileToCost/maxC*100,`${fmt(s.kwhUtileToCost,0)} €/an`,!!s.pac
+  )).join("");
+}
+function renderNoteCompareCo2Html(sol,maxCo2){
+  return sol.map(s=>noteCompareBarRow(
+    s.nom,s.co2/maxCo2*100,`${fmt(s.co2/1e6,2)} t/an`,!!s.pac
+  )).join("");
+}
 function renderCompareBarsHtml(sol,maxC){
   return sol.map(s=>compareBarRow(
     s.nom,
@@ -802,7 +836,7 @@ function renderCompareBarsHtml(sol,maxC){
     `${fmt(s.kwhUtileToCost,0)} €`,
     `${fmt(s.kwhUtileToCost,0)} €/an`,
     !!s.pac,
-    s.pac?OEDIP_BAR_GEO:OEDIP_BAR_HEAT
+    compareBarBg(s)
   )).join("")
     +`<div class="hint" style="margin-top:10px">La PAC est prise comme référence : économie de <b>${fmt((1-sol[0].kwhUtileToCost/sol[2].kwhUtileToCost)*100,0)} %</b> vs fioul, <b>${fmt((1-sol[0].kwhUtileToCost/sol[3].kwhUtileToCost)*100,0)} %</b> vs gaz, <b>${fmt((1-sol[0].kwhUtileToCost/sol[1].kwhUtileToCost)*100,0)} %</b> vs convecteurs.</div>`;
 }
@@ -810,19 +844,24 @@ function renderCompareCo2Html(sol,maxCo2){
   return sol.map(s=>compareBarRow(
     s.nom,
     s.co2/maxCo2*100,
-    `${fmt(s.co2/1000,0)} kg`,
-    `${fmt(s.co2/1000,0)} kg/an`,
+    `${fmt(s.co2/1e6,2)} t`,
+    `${fmt(s.co2/1e6,2)} t/an`,
     !!s.pac,
-    s.pac?OEDIP_BAR_GEO:OEDIP_BAR_GRAY
+    compareBarBg(s)
   )).join("");
 }
-function renderCompareInto(targets,r){
+function renderCompareInto(targets,r,opts){
+  opts=opts||{};
   readPrix();
   r=r||compute();
   const {sol,besoin,scop,p,maxC,maxCo2}=buildCompareData(r);
-  if(targets.besoin) targets.besoin.textContent=`besoin ${fmt(besoin,0)} kWh/an · SCOP PAC ${fmt(scop,2)}`;
-  if(targets.bars) targets.bars.innerHTML=renderCompareBarsHtml(sol,maxC);
-  if(targets.co2) targets.co2.innerHTML=renderCompareCo2Html(sol,maxCo2);
+  if(targets.besoin) targets.besoin.textContent=opts.noteStyle
+    ?`besoin ${fmt(besoin,0)} kWh/an · SCOP PAC ${fmt(scop,2)}`
+    :`besoin ${fmt(besoin,0)} kWh/an · SCOP PAC ${fmt(scop,2)}`;
+  if(targets.bars) targets.bars.innerHTML=opts.noteStyle
+    ?renderNoteCompareBarsHtml(sol,maxC):renderCompareBarsHtml(sol,maxC);
+  if(targets.co2) targets.co2.innerHTML=opts.noteStyle
+    ?renderNoteCompareCo2Html(sol,maxCo2):renderCompareCo2Html(sol,maxCo2);
   if(targets.hint) targets.hint.textContent=`Hypothèses : élec ${fmt(p.elec,3)} €/kWh · fioul ${fmt(p.fuelL,2)} €/L (${fmt(p.rdtFuel,0)} %) · gaz ${fmt(p.gazKwh,3)} €/kWh (${fmt(p.rdtGaz,0)} %) · granulés ${fmt(p.granKg,2)} €/kg (${fmt(p.rdtGran,0)} %) · bûches ${fmt(p.bucheKwh,3)} €/kWh (${fmt(p.rdtBuche,0)} %). PCI : fioul 9,97 kWh/L · granulés 4,8 kWh/kg.`;
 }
 function renderCompare(){
@@ -834,7 +873,7 @@ function syncNotePrintCompare(){
     bars:$('noteCmpBars'),
     co2:$('noteCmpCo2'),
     hint:$('noteCmpHint')
-  }, LAST);
+  }, LAST, { noteStyle: true });
 }
 function syncNotePrintAnnex(){
   syncNotePrintCharts();
@@ -850,25 +889,57 @@ function noteLineOn(id,def=true){
   if(projet.noteLines[id]===undefined) projet.noteLines[id]=def;
   return !!projet.noteLines[id];
 }
-function noteRow(id,k,u,v){
-  const on=noteLineOn(id);
+function noteRowChk(id,on){
   const sid=escAttr(id);
-  return `<div class="drow note-row${on?"":" note-row-off"}" data-note-id="${sid}">
-    <label class="note-row-chk noprint" title="Inclure à l'impression"><input type="checkbox"${on?" checked":""} onchange="toggleNoteLine('${sid}',this.checked)"></label>
-    <span class="note-lbl">${escHtml(k)}</span><span class="u">${escHtml(u||"")}</span><span class="val">${escHtml(v==null?"—":String(v))}</span></div>`;
+  return `<label class="note-row-chk noprint" title="Inclure à l'impression"><input type="checkbox"${on?" checked":""} onchange="toggleNoteLine('${sid}',this.checked)"></label>`;
 }
-function noteHl(id,k,v){
+function noteValHtml(u,v){
+  if(v==null||v==="—") return "—";
+  const s=String(v);
+  if(!u||u==="-"||u==="") return escHtml(s);
+  return `${escHtml(s)} <span class="u">${escHtml(u)}</span>`;
+}
+function noteRow(id,k,u,v,opts){
+  opts=opts||{};
   const on=noteLineOn(id);
   const sid=escAttr(id);
-  return `<div class="hl note-row${on?"":" note-row-off"}" data-note-id="${sid}">
-    <label class="note-row-chk noprint" title="Inclure à l'impression"><input type="checkbox"${on?" checked":""} onchange="toggleNoteLine('${sid}',this.checked)"></label>
-    <span><b>${escHtml(k)}</b></span><span class="v">${escHtml(v==null?"—":String(v))}</span></div>`;
+  return `<div class="note-drow note-row${on?"":" note-row-off"}${opts.muted?" muted":""}${opts.wrap?" note-drow-wrap":""}" data-note-id="${sid}">
+    ${noteRowChk(id,on)}<span class="lbl">${escHtml(k)}</span><span class="dots"></span><span class="val">${noteValHtml(u,v)}</span></div>`;
+}
+function noteSection(num,title,body,opts){
+  opts=opts||{};
+  return `<section class="block${opts.first?" note-block-first":""}"><div class="dt"><span class="num">${num}</span><h3>${title}</h3></div>${body}</section>`;
+}
+function noteReadout(id,label,value,unit,sub){
+  const on=noteLineOn(id);
+  const sid=escAttr(id);
+  const parts=String(value??"—").trim().split(/\s+/);
+  const num=parts[0]||"—";
+  const u=unit||(parts[1]||"");
+  return `<div class="readout note-row${on?"":" note-row-off"}" data-note-id="${sid}">
+    ${noteRowChk(id,on)}<div class="ro-lbl">${escHtml(label)}${sub?`<small>${escHtml(sub)}</small>`:""}</div>
+    <div class="ro-val">${escHtml(num)}${u?`<span class="u">${escHtml(u)}</span>`:""}</div></div>`;
+}
+function noteDocHead(opts){
+  const icon=opts.showLogo&&opts.logoUrl
+    ? `<div class="note-logo note-logo-img"><img src="${escAttr(opts.logoUrl)}" alt=""></div>`
+    : `<div class="note-logo" aria-hidden="true">${NOTE_SPARK_SVG}</div>`;
+  return `<header class="dhead">${icon}<div class="title">
+    ${opts.eyebrow?`<div class="eyebrow">${escHtml(opts.eyebrow)}</div>`:""}
+    <h1>${escHtml(opts.title||"Note de dimensionnement")}</h1>
+    ${opts.company?`<div class="company">${escHtml(opts.company)}</div>`:""}
+  </div><div class="meta">${opts.metaHtml||""}</div></header>`;
+}
+function notePageFoot(left,right){
+  return `<div class="pagefoot"><span>${escHtml(left||"—")}</span><span>${escHtml(right||"")}</span></div>`;
 }
 function noteFoot(id,text){
   const on=noteLineOn(id);
   const sid=escAttr(id);
-  return `<div class="foot note-row${on?"":" note-row-off"}" data-note-id="${sid}">
-    <label class="note-row-chk noprint" style="display:inline-flex;margin-right:8px;vertical-align:middle" title="Inclure à l'impression"><input type="checkbox"${on?" checked":""} onchange="toggleNoteLine('${sid}',this.checked)"></label>${escHtml(text)}</div>`;
+  return `<div class="foot note-row${on?"":" note-row-off"}" data-note-id="${sid}">${noteRowChk(id,on)}${escHtml(text)}</div>`;
+}
+function noteHl(id,k,v){
+  return noteReadout(id,k,v,"", "Valeur retenue pour la sélection machine");
 }
 function toggleNoteLine(id,on){
   ensureNoteLines();
@@ -919,16 +990,16 @@ function noteInstallerSectionHtml(c){
   const ni=ensureProjetNoteInstaller();
   if(!ni.showCompany) return "";
   const addr=[ip.adr,ip.cp,ip.ville].filter(Boolean).join(" ");
-  let h=`<section><h3 class="dt">Installateur</h3>`;
-  if(ip.company) h+=noteRow("install.company","Raison sociale","",ip.company);
-  if(addr) h+=noteRow("install.adresse","Adresse","",addr);
-  if(ip.tel) h+=noteRow("install.tel","Téléphone","",ip.tel);
-  if(ip.email) h+=noteRow("install.email","E-mail","",ip.email);
-  if(ip.web) h+=noteRow("install.web","Site web","",ip.web);
-  if(ip.siret) h+=noteRow("install.siret","SIRET","",ip.siret);
-  if(c.referent) h+=noteRow("install.referent","Référent chantier","",c.referent);
-  if(h.indexOf("note-row")<0) return "";
-  return h+"</section>";
+  let body="";
+  if(ip.company) body+=noteRow("install.company","Raison sociale","",ip.company);
+  if(addr) body+=noteRow("install.adresse","Adresse","",addr);
+  if(ip.tel) body+=noteRow("install.tel","Téléphone","",ip.tel);
+  if(ip.email) body+=noteRow("install.email","E-mail","",ip.email);
+  if(ip.web) body+=noteRow("install.web","Site web","",ip.web);
+  if(ip.siret) body+=noteRow("install.siret","SIRET","",ip.siret);
+  if(c.referent) body+=noteRow("install.referent","Référent chantier","",c.referent);
+  if(!body) return "";
+  return noteSection("—","Installateur",body);
 }
 function captureNotePrintConfig(){
   ensureNoteLines();
@@ -1026,75 +1097,131 @@ function renderNote(){
   const d=state.departements.find(x=>x.code===b.dept)||{};
   ensureProjetHydraulique(projet);
   ensureNoteLines();
-  const zoneRows=(bs.zones||[]).map((z,i)=>{
-    const em=state.emetteurs[z.emIdx];
-    const lbl=typeof zoneChauffDetailLabel==='function'?zoneChauffDetailLabel(z,em):emetteurOptionLabel(em);
-    const nom=typeof zoneDisplayName==='function'?zoneDisplayName(z):'Zone';
-    return noteRow("zone."+i,nom,"-",lbl);
-  }).join('');
-  const fnGam=r.gamme.fonction?fonctionLabel(r.gamme.fonction):"géothermie";
+  const fnGam=r.gamme?.fonction?fonctionLabel(r.gamme.fonction):"géothermie";
   const ip=typeof getInstallerProfile==="function"?getInstallerProfile():{};
   const ni=ensureProjetNoteInstaller();
-  const showLogo=!!ni.showLogo&&!!ip.logoUrl;
-  const headIcon=showLogo
-    ? `<div class="dhead-logo"><img src="${escAttr(ip.logoUrl)}" alt=""></div>`
-    : `<div class="spark"></div>`;
+  const ref=c.ref||"—";
+  const dateStr=new Date().toLocaleDateString("fr-FR");
+  const pageFootCo=ip.company||c.installateur||state.meta.outil;
+  const zoneRows=(bs.zones||[]).map((z,i)=>{
+    const em=state.emetteurs[z.emIdx];
+    const lbl=typeof zoneChauffDetailLabel==="function"?zoneChauffDetailLabel(z,em):emetteurOptionLabel(em);
+    const nom=typeof zoneDisplayName==="function"?zoneDisplayName(z):"Zone";
+    return noteRow("zone."+i,nom,"",lbl,{wrap:true});
+  }).join("");
   const installSec=noteInstallerSectionHtml(c);
   const installClientLine=!installSec
-    ? noteRow("client.installateur","Installateur","",c.installateur||'—')+noteRow("client.referent","Référent","",c.referent||'—')
-    : noteRow("client.installateur","Installateur","",ip.company||c.installateur||'—');
-  const noteSubtitle=ip.company||c.installateur||"—";
-  let h=`<div class="dhead${showLogo?" dhead-installer":""}">${headIcon}<div><h2>Note de dimensionnement</h2><div class="note dhead-company">${escHtml(noteSubtitle)}</div></div>
-    <div class="meta">${state.meta.outil} ${state.meta.version}<br>Réf : ${c.ref||'—'}<br>${new Date().toLocaleDateString('fr-FR')}</div></div>
-  <section><h3 class="dt">Opération &amp; client</h3>
-    ${noteRow("client.ref","Référence chantier","",c.ref||'—')}${noteRow("client.type","Type de chantier","",c.type||'—')}${noteRow("client.nom","Client","",c.nom||'—')}
-    ${noteRow("client.adresse","Adresse","",(c.adr||'')+' '+(c.cp||'')+' '+(c.ville||''))}${installClientLine}</section>
-  ${installSec}
-  <section><h3 class="dt">Données d'entrée de l'étude</h3>
-    ${noteRow("input.cp","Code postal","",c.cp||"—")}${noteRow("input.dept","Département","-",d.code+" · "+d.nom)}${noteRow("input.alt","Altitude","m",fmt(b.alt,0))}${noteRow("input.tbaseRef","T° base département (réf.)","°C",fmt(r.TbaseRef,0))}${noteRow("input.tbase","Température de base retenue","°C",fmt(r.Tbase,0))}
-    ${noteRow("input.vol","Volume chauffé","m³",fmt(r.V,0))}${noteRow("input.tint","Température intérieure","°C",fmt(b.tint,0))}${noteRow("input.g","Coefficient G","W/m³.°C",fmt(r.G,2))}
-    ${zoneRows||noteRow("input.zones","Zones de chauffage","-","—")}
-    ${noteRow("input.regimeEmitter","Régime émetteur retenu","°C",r.regimeEmitter?r.regimeEmitter+"°C":'—')}${noteRow("input.depRegime","Point perf catalogue","°C",r.depRegime)}${noteRow("input.copEmitter","COP au régime émetteur","-",fmt(r.cop,2))}
-    ${r.hydro?.active?noteRow("hydro.debit","Débit chauffage estimé","m³/h",fmt(r.hydro.debitM3h,2))+noteRow("hydro.pdc","Pdc chauffage estimée","kPa",fmt(r.hydro.pdcTotalKpa,1))+noteRow("hydro.hmt","HMT estimée","m",fmt(r.hydro.hmtM,2)):''}
-    ${noteRow("input.ecs","Eau chaude sanitaire","-",e.present?("Oui · "+e.nb+" pers · ballon "+fmt(Engine.volumeBallon(e),0)+" L"):"Non")}${noteRow("input.source","Type de source","-",r.src)}</section>
-  <section><h3 class="dt">Besoins en puissance</h3>
-    ${noteRow("power.dep","Déperditions thermiques à T base","W",fmt(r.dep*1000,0))}${noteRow("power.pECS","Puissance additionnelle ECS","W",fmt(r.pECS*1000,0))}${noteRow("power.surp","Surpuissance appliquée","%",fmt(bs.surp,0))}
-    ${noteHl("power.pInst","Puissance à installer",fmt(r.pInst,1)+" kW")}</section>
-  <section><h3 class="dt">Étude énergétique annuelle (DJU intégrés par tranches)</h3>
-    ${noteRow("nrg.dju","DJU de référence (SDES base "+(state.reglages?.djuBase??17)+"°C, "+djuRefLabel(r.djuAnnee??state.reglages?.djuAnnee)+")","DJU",fmt(r.dju,0))}${noteRow("nrg.tnc","T° de non-chauffage","°C",fmt(state.reglages.tnc,1))}
-    ${noteRow("nrg.heures","Heures de chauffage","h/an",fmt(r.heures,0))}${noteRow("nrg.tbiv","Point de bivalence",">°C", r.Tbiv!=null?fmt(r.Tbiv,0):"sans appoint")}
-    ${noteRow("nrg.besoin","Besoin énergétique annuel","kWh/an",fmt(r.besoin,0))}${noteRow("nrg.appoint","Énergie d'appoint","kWh/an",fmt(r.appoint,0))}
-    ${noteRow("nrg.scop","SCOP saisonnier","-",fmt(r.scop,2))}${noteRow("nrg.elec","Consommation électrique PAC","kWh/an",fmt(r.elec,0))}${noteRow("nrg.economie","Économie d'énergie","%",fmt(r.economie,1))}</section>`;
-  if(chosen){ const capt=state.captages[s.captage]; const f=getFiche(state.performances,chosen.pac,r.src,r.depRegime);
-    let lcapt = f&&f.capteurVert? Math.round(f.capteurVert*(r.pInst/chosen.pCalo)) : null;
-    h+=`<section><h3 class="dt">Solution retenue</h3>
-      ${noteRow("sol.pac","Modèle de PAC","-",chosen.pac)}${noteRow("sol.gamme","Gamme","-",r.gamme.nom)}${noteRow("sol.fonction","Fonction","-",fnGam)}${noteRow("sol.comp","Compresseurs","-",chosen.nbComp)}
-      ${noteRow("sol.pCalo","Puissance calorifique au régime","kW",fmt(chosen.pCalo,2))}${noteRow("sol.cop","COP au régime","-",chosen.cop?fmt(chosen.cop,2):'—')}
-      ${noteRow("sol.coverage","Taux de couverture","%",fmt(chosen.pCalo/r.pInst*100,0))}
-      ${f&&f.hp?noteRow("sol.hp","Pressions HP / BP","barg",fmt(f.hp,1)+" / "+fmt(f.bp,1)):''}
-      ${(()=>{const imp=calcGwpImpact(machineByPac(chosen.pac)); return imp?[
-        noteRow("sol.fluide","Fluide frigorigène","-",imp.fluide),
-        noteRow("sol.gwp","PRP (GWP)","kg CO₂eq/kg",fmt(imp.gwp,0)),
-        noteRow("sol.charge","Charge fluide","kg",fmt(imp.charge,2)),
-        noteRow("sol.co2eq","Impact GWP (fuite totale)","tCO₂eq",fmt(imp.co2eqT,3))
-      ].join(''):'';})()}
-      ${f&&f.debitR407C?noteRow("sol.debitR407C","Débit R407C","g/s",fmt(f.debitR407C,1)):''}
-      ${f&&f.chaudM3H?noteRow("sol.chaudM3H","Débit hydraulique chaud","m³/h",fmt(f.chaudM3H,2)):''}
-      ${lcapt?noteRow("sol.captage","Longueur de captage ("+capt.nom.toLowerCase()+")","ml",fmt(lcapt,0)):''}</section>`;
-  } else { h+=`<section><h3 class="dt">Solution retenue</h3><div class="note">Aucune machine retenue — onglet « Résultats &amp; sélection », bouton « Retenir pour la note ».</div></section>`; }
-  h+=noteFoot("note.foot",`Ces informations sont non contractuelles et données à titre indicatif. Besoin annuel calculé par intégration des DJU sur les tranches de température (base ${state.reglages.tnc}°C). — ${state.meta.outil} ${state.meta.version}`);
-  $('doc').innerHTML=h;
-  const annexCb=$('notePrintCharts');
+    ?noteRow("client.installateur","Installateur","",c.installateur||"—",{muted:true})
+      +noteRow("client.referent","Référent","",c.referent||"—")
+    :noteRow("client.installateur","Installateur","",ip.company||c.installateur||"—",{muted:true});
+  const clientBody=
+    noteRow("client.ref","Référence dossier","",c.ref||"—")
+    +noteRow("client.type","Type de chantier","",c.type||"—")
+    +noteRow("client.nom","Client","",c.nom||"—")
+    +noteRow("client.adresse","Adresse","",(c.adr||"")+" "+(c.cp||"")+" "+(c.ville||"").trim()||"—")
+    +installClientLine;
+  const hydroRows=r.hydro?.active
+    ?noteRow("hydro.debit","Débit chauffage estimé","m³/h",fmt(r.hydro.debitM3h,2))
+      +noteRow("hydro.pdc","Pdc chauffage estimée","kPa",fmt(r.hydro.pdcTotalKpa,1))
+      +noteRow("hydro.hmt","HMT estimée","m",fmt(r.hydro.hmtM,2)):"";
+  const inputBody=
+    noteRow("input.cp","Code postal / dépt.","",`${c.cp||"—"} · ${d.code||"—"}`)
+    +noteRow("input.alt","Altitude","m",fmt(b.alt,0))
+    +noteRow("input.tbase","T° base réf. / retenue","°C",`${fmt(r.TbaseRef,0)} / ${fmt(r.Tbase,0)}`)
+    +noteRow("input.vol","Volume chauffé","m³",fmt(r.V,0))
+    +noteRow("input.tint","Température intérieure","°C",fmt(b.tint,0))
+    +noteRow("input.g","Coefficient G","W/m³·K",fmt(r.G,2))
+    +(zoneRows||noteRow("input.zones","Zones de chauffage","—","—"))
+    +noteRow("input.regimeEmitter","Régime émetteur retenu","°C",r.regimeEmitter?r.regimeEmitter+"°C":"—")
+    +noteRow("input.depRegime","Point perf catalogue","°C",r.depRegime||"—")
+    +noteRow("input.copEmitter","COP au régime émetteur","",fmt(r.cop,2))
+    +hydroRows
+    +noteRow("input.ecs","Eau chaude sanitaire","",e.present?`Oui · ${e.nb} pers · ballon ${fmt(Engine.volumeBallon(e),0)} L`:"Non")
+    +noteRow("input.source","Type de source","",r.src||"—");
+  const pInstShown=chosen?chosen.pCalo:r.pInst;
+  const pInstSub=chosen?`${chosen.pac}`:"Valeur retenue pour la sélection machine";
+  const besoinPwr=r.dep+r.pECS;
+  const surpKw=pInstShown-besoinPwr;
+  const surpPct=besoinPwr>0?(surpKw/besoinPwr)*100:0;
+  const surpTxt=besoinPwr>0
+    ?`${surpKw>=0?"+":""}${fmt(surpKw,1)} kW (${surpPct>=0?"+":""}${fmt(surpPct,0)} %)`
+    :"—";
+  const powerBody=
+    noteRow("power.dep","Déperditions (T base)","kW",fmt(r.dep,2))
+    +noteRow("power.pECS","Puissance ECS","kW",fmt(r.pECS,2))
+    +noteRow("power.surp","Surpuissance","",surpTxt)
+    +noteReadout("power.pInst","Puissance installée",fmt(pInstShown,1),"kW",pInstSub);
+  const nrgBody=
+    noteRow("nrg.dju","DJU (intégrés par tranches)","",fmt(r.dju,0))
+    +noteRow("nrg.tnc","T° de non-chauffage","°C",fmt(state.reglages.tnc,1))
+    +noteRow("nrg.heures","Heures de chauffage","h/an",fmt(r.heures,0))
+    +noteRow("nrg.tbiv","Point de bivalence","°C",r.Tbiv!=null?fmt(r.Tbiv,0):"sans appoint")
+    +noteRow("nrg.besoin","Besoin énergétique annuel","kWh/an",fmt(r.besoin,0))
+    +noteRow("nrg.appoint","Énergie d'appoint","kWh/an",fmt(r.appoint,0))
+    +noteRow("nrg.scop","SCOP saisonnier","",fmt(r.scop,2))
+    +noteRow("nrg.elec","Consommation électrique PAC","kWh/an",fmt(r.elec,0))
+    +noteRow("nrg.economie","Économie d'énergie","%",fmt(r.economie,1));
+  let solutionSec;
+  if(chosen){
+    const capt=state.captages[s.captage]; const f=getFiche(state.performances,chosen.pac,r.src,r.depRegime);
+    const lcapt=f&&f.capteurVert?Math.round(f.capteurVert*(r.pInst/chosen.pCalo)):null;
+    const imp=calcGwpImpact(machineByPac(chosen.pac));
+    const solL=
+      noteRow("sol.pac","Modèle PAC","",chosen.pac)
+      +noteRow("sol.gamme","Gamme","",r.gamme.nom)
+      +noteRow("sol.fonction","Fonction","",fnGam)
+      +noteRow("sol.comp","Compresseurs","",chosen.nbComp)
+      +noteRow("sol.pCalo","P. calorifique (régime)","kW",fmt(chosen.pCalo,2))
+      +noteRow("sol.cop","COP (régime)","",chosen.cop?fmt(chosen.cop,2):"—");
+    const solR=
+      noteRow("sol.coverage","Taux de couverture","%",fmt(chosen.pCalo/r.pInst*100,0))
+      +(f&&f.hp?noteRow("sol.hp","Pressions HP / BP","barg",`${fmt(f.hp,1)} / ${fmt(f.bp,1)}`):"")
+      +(imp?noteRow("sol.fluide","Fluide frigorigène","",imp.fluide)+noteRow("sol.gwp","GWP / charge","",`${fmt(imp.gwp,0)} · ${fmt(imp.charge,2)} kg`)+noteRow("sol.co2eq","Équivalent CO₂ (charge)","tCO₂eq",fmt(imp.co2eqT,3)):"")
+      +(f&&f.debitR407C?noteRow("sol.debitR407C","Débit R407C","g/s",fmt(f.debitR407C,1)):"")
+      +(f&&f.chaudM3H?noteRow("sol.chaudM3H","Débit hydraulique chaud","m³/h",fmt(f.chaudM3H,2)):"")
+      +(lcapt?noteRow("sol.captage",`Captage (${capt.nom.toLowerCase()})`,"ml",fmt(lcapt,0)):"");
+    solutionSec=noteSection("05","Solution retenue",
+      `<div class="solution"><span class="badge"><span class="dot"></span>Machine sélectionnée</span><div class="note-cols note-cols-tight"><div class="note-col">${solL}</div><div class="note-col">${solR}</div></div></div>`);
+  } else {
+    solutionSec=noteSection("05","Solution retenue",
+      `<div class="note-empty">Aucune machine retenue — onglet « Résultats &amp; sélection », bouton « Retenir pour la note ».</div>`);
+  }
+  const metaHtml=`${escHtml(state.meta.outil)} ${escHtml(state.meta.version)}<br>Réf : <b>${escHtml(ref)}</b><br>${escHtml(dateStr)}`;
+  let h=`<div class="note-page">`;
+  h+=noteDocHead({
+    showLogo:!!ni.showLogo,
+    logoUrl:ip.logoUrl,
+    eyebrow:`Étude thermique · ${fnGam}`,
+    title:"Note de dimensionnement",
+    company:ip.company||c.installateur||"—",
+    metaHtml
+  });
+  h+=`<div class="note-cols"><div class="note-col">`;
+  h+=noteSection("01","Opération &amp; client",clientBody,{first:true});
+  h+=noteSection("02","Données d'entrée de l'étude",inputBody);
+  h+=installSec;
+  h+=`</div><div class="note-col">`;
+  h+=noteSection("03","Besoins en puissance",powerBody,{first:true});
+  h+=noteSection("04","Étude énergétique annuelle",nrgBody);
+  h+=`</div></div>`;
+  h+=solutionSec;
+  h+=noteFoot("note.foot",`Note établie à titre indicatif sur la base des données communiquées et des hypothèses de l'étude (DJU intégrés par tranches de température, base ${state.reglages.tnc}°C). Document non contractuel. — ${state.meta.outil} ${state.meta.version}`);
+  h+=notePageFoot(pageFootCo,`Réf. ${ref} — Page 1/2`);
+  h+=`</div>`;
+  $("doc").innerHTML=h;
+  const annexCb=$("notePrintCharts");
   if(annexCb){
     if(projet.notePrintIncludeAnnex!=null) annexCb.checked=!!projet.notePrintIncludeAnnex;
     else projet.notePrintIncludeAnnex=annexCb.checked;
-    $('docPrintCharts')?.classList.toggle('print-include',annexCb.checked);
+    $("docPrintCharts")?.classList.toggle("print-include",annexCb.checked);
   }
   fillNotePrintPresetSelect();
   syncNoteInstallerToolbar();
-  const chartMeta=$('noteChartDocMeta');
-  if(chartMeta) chartMeta.innerHTML=`Réf : ${c.ref||'—'}<br>${new Date().toLocaleDateString('fr-FR')}`;
-  if($('notePrintCharts')?.checked) syncNotePrintAnnex();
+  const chartMeta=$("noteChartDocMeta");
+  if(chartMeta) chartMeta.innerHTML=`Réf : <b>${escHtml(ref)}</b><br>${escHtml(dateStr)}`;
+  const annexFoot=$("noteAnnexFoot");
+  if(annexFoot) annexFoot.innerHTML=`<span>${escHtml(pageFootCo)}</span><span>Réf. ${escHtml(ref)} — Page 2/2</span>`;
+  if($("notePrintCharts")?.checked) syncNotePrintAnnex();
 }
 
 function toggleNotePrintChartsPreview(){

@@ -181,120 +181,77 @@ function instNumInput(id, val, step, min, onchange) {
   return `<input type="number" id="${id}" class="inst-inp" value="${val}" step="${step}"${min != null ? ` min="${min}"` : ""} oninput="${onchange}">`;
 }
 
-function instResultRow(label, value, unit, highlight) {
-  return `<tr class="${highlight ? "inst-row-result" : "inst-row-calc"}"><td>${label}</td><td class="mono${highlight ? " inst-val-main" : ""}">${value}</td><td>${unit || ""}</td></tr>`;
+function instResultRow(label, value, unit, highlight, resId) {
+  const rid = resId ? ` data-inst-res="${resId}"` : "";
+  return `<tr class="${highlight ? "inst-row-result" : "inst-row-calc"}"${rid}><td>${label}</td><td class="mono${highlight ? " inst-val-main" : ""}" data-inst-val>${value}</td><td>${unit || ""}</td></tr>`;
 }
 
-function renderInstallPdcPanel(ins) {
-  const p = ins.pdc;
-  const r = calcLinearPdc(p);
-  return `<div class="inst-panel">
-    <p class="hint">Pertes de charge linéaires — tuyauterie lisse (Blasius, Re 4 000–100 000).</p>
-    <table class="inst-calc-tbl">
-      <tbody>
-        <tr class="inst-row-in"><td>Débit volumique</td><td>${instNumInput("instPdcQ", p.debitM3h, "0.1", 0, "onInstallField()")}</td><td>m³/h</td></tr>
-        <tr class="inst-row-in"><td>Taux de glycol</td><td>${instNumInput("instPdcGly", p.glycolPct, "1", 0, "onInstallField()")}</td><td>%</td></tr>
-        <tr class="inst-row-in"><td>Température moyenne</td><td>${instNumInput("instPdcT", p.tempC, "1", -20, "onInstallField()")}</td><td>°C</td></tr>
-        <tr><td colspan="3" class="inst-section">Tuyauterie lisse</td></tr>
-        <tr class="inst-row-in"><td>Longueur de la conduite</td><td>${instNumInput("instPdcL", p.lengthM, "0.5", 0, "onInstallField()")}</td><td>m</td></tr>
-        <tr class="inst-row-in"><td>Diamètre de la conduite</td><td>${instNumInput("instPdcD", p.diamMm, "1", 1, "onInstallField()")}</td><td>mm</td></tr>
-        ${instResultRow("Vitesse dans la conduite", fmt(r.velocity, 2), "m/s")}
-        ${instResultRow("Viscosité cinématique", r.nu ? r.nu.toExponential(2) : "—", "m²/s")}
-        ${instResultRow("Nbr de Reynolds", r.re ? fmt(r.re, 0) : "—", "")}
-        ${instResultRow("Rugosité relative", "—", "")}
-        ${instResultRow("Coef pertes de charge linéaire", r.lambda != null ? fmt(r.lambda, 3) : "—", "Blasius")}
-        ${instResultRow("Pertes de charges linéaires", r.headM != null ? fmt(r.headM, 2) : "—", "mCE", true)}
-      </tbody>
-    </table>
-    <div class="inst-actions">
-      <button type="button" class="btn-soft" onclick="applyPdcToCirc()">→ Transférer HMT au choix circulateur</button>
-      ${typeof LAST !== "undefined" && LAST?.hydro?.active ? `<button type="button" class="btn-ghost" onclick="prefillInstallFromHydro()">Préremplir depuis le projet</button>` : ""}
-    </div>
-  </div>`;
+function setInstVal(resId, text) {
+  const td = document.querySelector(`#instToolBody [data-inst-res="${resId}"] [data-inst-val]`);
+  if (td) td.textContent = text;
 }
 
-function renderInstallVolumePanel(ins) {
-  const segs = ins.volume.segments;
-  const { rows, totalL } = calcPipeVolumeLiters(segs);
-  const body = rows.map((s, i) => `
-    <tr>
-      <td><input type="text" class="inst-inp" value="${escHtml(s.label || "")}" placeholder="Tronçon ${i + 1}" oninput="onInstallVolumeRow(${i}, 'label', this.value)"></td>
-      <td><input type="number" class="inst-inp" value="${s.lengthM ?? ""}" step="0.5" min="0" oninput="onInstallVolumeRow(${i}, 'lengthM', this.value)"></td>
-      <td><input type="number" class="inst-inp" value="${s.diamMm ?? ""}" step="1" min="1" oninput="onInstallVolumeRow(${i}, 'diamMm', this.value)"></td>
-      <td class="mono">${fmt(s.volL, 2)}</td>
-      <td><button type="button" class="btn-ghost inst-rm" onclick="removeInstallVolumeRow(${i})" title="Supprimer">✕</button></td>
-    </tr>`).join("");
-  return `<div class="inst-panel">
-    <p class="hint">Volume d'eau dans la tuyauterie : V = π × (D/2)² × L — somme des tronçons (aller, retour, boucles…).</p>
-    <table class="inst-vol-tbl">
-      <thead><tr><th>Désignation</th><th>Longueur (m)</th><th>Diamètre (mm)</th><th>Volume (L)</th><th></th></tr></thead>
-      <tbody>${body}</tbody>
-      <tfoot><tr><td colspan="3"><b>Volume total tuyauterie</b></td><td class="mono inst-val-main">${fmt(totalL, 2)} L</td><td></td></tr></tfoot>
-    </table>
-    <div class="inst-actions">
-      <button type="button" class="btn-soft" onclick="addInstallVolumeRow()">+ Tronçon</button>
-      <button type="button" class="btn-ghost" onclick="applyVolumeToGlycol()">→ Reprendre volume tuyauterie pour le glycol</button>
-      <button type="button" class="btn-ghost" onclick="applyVolumeToVase()">→ Reprendre volume total pour le vase</button>
-    </div>
-  </div>`;
+function updateInstallPdcResults() {
+  const r = calcLinearPdc(installState().pdc);
+  setInstVal("pdc.velocity", fmt(r.velocity, 2));
+  setInstVal("pdc.nu", r.nu ? r.nu.toExponential(2) : "—");
+  setInstVal("pdc.re", r.re ? fmt(r.re, 0) : "—");
+  setInstVal("pdc.lambda", r.lambda != null ? fmt(r.lambda, 3) : "—");
+  setInstVal("pdc.headM", r.headM != null ? fmt(r.headM, 2) : "—");
 }
 
-function renderInstallGlycolPanel(ins) {
-  const g = ins.glycol;
+function updateInstallVolumeRowCalc(idx) {
+  const ins = installState();
+  const s = ins.volume.segments[idx];
+  if (!s) return;
+  const volL = calcPipeVolumeLiters([s]).rows[0]?.volL ?? 0;
+  const tr = document.querySelector(`#instToolBody tr[data-vol-idx="${idx}"]`);
+  const td = tr?.querySelector("td.mono");
+  if (td) td.textContent = fmt(volL, 2);
+}
+
+function updateInstallVolumeTotals() {
+  const { totalL } = calcPipeVolumeLiters(installState().volume.segments);
+  const td = document.querySelector("#instToolBody .inst-vol-tbl tfoot [data-inst-val]");
+  if (td) td.textContent = `${fmt(totalL, 2)} L`;
+}
+
+function updateInstallGlycolResults() {
+  const ins = installState();
   const pipeL = calcPipeVolumeLiters(ins.volume.segments).totalL;
-  const totalL = Math.max(0, +g.volumeTotalL || 0) || installVolumeTotalLiters(ins);
-  const r = calcGlycolDose({ volumeTotalL: totalL, targetPct: g.targetPct, productPct: g.productPct });
-  const hint = glycolProtectionHint(g.tMinC);
-  return `<div class="inst-panel">
-    <p class="hint">Calcul du taux de glycol en fonction du volume d'installation — remplissage à vide (% vol.). Volume total = tuyauterie + appoint (émetteurs, buffer, échangeurs…).</p>
-    <table class="inst-calc-tbl">
-      <tbody>
-        <tr class="inst-row-calc"><td>Volume tuyauterie (calculé)</td><td class="mono">${fmt(pipeL, 1)}</td><td>L</td></tr>
-        <tr class="inst-row-in"><td>Volume appoint</td><td>${instNumInput("instGlyExtra", g.volumeExtraL, "1", 0, "onInstallField()")}</td><td>L · émetteurs, buffer, PAC…</td></tr>
-        <tr class="inst-row-in"><td>Volume total installation</td><td>${instNumInput("instGlyVol", totalL, "1", 0, "onInstallField()")}</td><td>L</td></tr>
-        <tr class="inst-row-in"><td>Taux de glycol cible</td><td>${instNumInput("instGlyPct", g.targetPct, "1", 0, "onInstallField()")}</td><td>% vol.</td></tr>
-        <tr class="inst-row-in"><td>Concentration produit</td><td>${instNumInput("instGlyProd", g.productPct, "1", 1, "onInstallField()")}</td><td>% vol. · 100 = glycol pur</td></tr>
-        <tr class="inst-row-in"><td>Température protection min.</td><td>${instNumInput("instGlyTmin", g.tMinC, "1", -40, "onInstallField()")}</td><td>°C</td></tr>
-        ${hint ? `<tr><td colspan="3" class="hint" style="padding:8px 10px;font-size:12px">${hint}</td></tr>` : ""}
-        ${instResultRow("Volume glycol pur", fmt(r.pureGlycolL, 1), "L", true)}
-        ${instResultRow("Volume eau", fmt(r.waterL, 1), "L")}
-        ${instResultRow("Produit commercial à verser", fmt(r.productL, 1), "L", true)}
-        ${instResultRow("Eau à compléter", fmt(r.waterAddL, 1), "L")}
-        ${instResultRow("Taux obtenu", fmt(r.targetPct, 1), "% vol.")}
-      </tbody>
-    </table>
-    <div class="inst-actions">
-      <button type="button" class="btn-soft" onclick="syncInstallVolumeToGlycol()">↺ Recalculer depuis tuyauterie + appoint</button>
-      <button type="button" class="btn-ghost" onclick="applyGlycolToPdc()">→ Reprendre le taux pour PDC linéaires</button>
-      <button type="button" class="btn-ghost" onclick="applyGlycolVolumeToVase()">→ Reprendre volume total pour le vase</button>
-    </div>
-  </div>`;
+  const totalL = Math.max(0, +ins.glycol.volumeTotalL || 0) || installVolumeTotalLiters(ins);
+  const r = calcGlycolDose({ volumeTotalL: totalL, targetPct: ins.glycol.targetPct, productPct: ins.glycol.productPct });
+  setInstVal("gly.pipeL", fmt(pipeL, 1));
+  setInstVal("gly.pure", fmt(r.pureGlycolL, 1));
+  setInstVal("gly.water", fmt(r.waterL, 1));
+  setInstVal("gly.product", fmt(r.productL, 1));
+  setInstVal("gly.waterAdd", fmt(r.waterAddL, 1));
+  setInstVal("gly.rate", fmt(r.targetPct, 1));
+  const hintEl = document.querySelector("#instToolBody [data-inst-gly-hint]");
+  if (hintEl) {
+    const hint = glycolProtectionHint(ins.glycol.tMinC);
+    hintEl.textContent = hint;
+    hintEl.style.display = hint ? "" : "none";
+  }
 }
 
-function renderInstallVasePanel(ins) {
-  const v = ins.vase;
-  const r = calcExpansionVessel(v);
-  return `<div class="inst-panel">
-    <p class="hint">Dimensionnement vase d'expansion — eau (masse volumique 0–100 °C) · réserve 0,5 % · effet utile selon pressions de gonflage et tarage soupape.</p>
-    <table class="inst-calc-tbl">
-      <tbody>
-        <tr class="inst-row-in"><td>Température 1</td><td>${instNumInput("instVaseT1", v.temp1, "1", 0, "onInstallField()")}</td><td>°C · ρ = ${fmt(r.rho1, 2)} kg/m³</td></tr>
-        <tr class="inst-row-in"><td>Température 2</td><td>${instNumInput("instVaseT2", v.temp2, "1", 0, "onInstallField()")}</td><td>°C · ρ = ${fmt(r.rho2, 2)} kg/m³</td></tr>
-        ${instResultRow("Coeff. de dilatation", fmt(r.coeffPct, 2), "%")}
-        <tr class="inst-row-in"><td>Volume du système</td><td>${instNumInput("instVaseVol", v.volumeL, "1", 0, "onInstallField()")}</td><td>L</td></tr>
-        ${instResultRow("Volume de dilatation", fmt(r.volDilat, 2), "L", true)}
-        ${instResultRow("Volume de réserve", fmt(r.volReserve, 2), "L", true)}
-        <tr class="inst-row-in"><td>Hauteur statique</td><td>${instNumInput("instVaseH", v.hStatic, "0.5", 0, "onInstallField()")}</td><td>m</td></tr>
-        <tr class="inst-row-in"><td>Tarage soupape</td><td>${instNumInput("instVaseP", v.pSoupape, "0.1", 0.5, "onInstallField()")}</td><td>bar</td></tr>
-        ${instResultRow("Pression de gonflage", fmt(r.pGonflage, 1), "bar")}
-        ${instResultRow("Effet utile", fmt(r.effetUtile, 2), "")}
-        ${instResultRow("Besoin vase d'expansion", fmt(r.besoinL, 1), "L", true)}
-      </tbody>
-    </table>
-  </div>`;
+function updateInstallVaseResults() {
+  const ins = installState();
+  const r = calcExpansionVessel(ins.vase);
+  const t1 = document.querySelector("#instToolBody [data-inst-rho='t1']");
+  const t2 = document.querySelector("#instToolBody [data-inst-rho='t2']");
+  if (t1) t1.textContent = `°C · ρ = ${fmt(r.rho1, 2)} kg/m³`;
+  if (t2) t2.textContent = `°C · ρ = ${fmt(r.rho2, 2)} kg/m³`;
+  setInstVal("vase.coeff", fmt(r.coeffPct, 2));
+  setInstVal("vase.dilat", fmt(r.volDilat, 2));
+  setInstVal("vase.reserve", fmt(r.volReserve, 2));
+  setInstVal("vase.pGonf", fmt(r.pGonflage, 1));
+  setInstVal("vase.effet", fmt(r.effetUtile, 2));
+  setInstVal("vase.besoin", fmt(r.besoinL, 1));
 }
 
-function renderInstallCircPanel(ins) {
+let _instCircRedrawTimer = null;
+function renderInstallCircDynamic(ins) {
   const c = ins.circ;
   const pdc = calcLinearPdc(ins.pdc);
   const pdcHead = pdc.headM ?? 0;
@@ -318,21 +275,175 @@ function renderInstallCircPanel(ins) {
         </tr>`).join("")
       }</tbody></table>`
     : `<p class="hint circ-curves-empty">Aucun circulateur avec courbe HMT dans le catalogue — renseignez des fiches (onglet Composants) ou importez le pack Wilo.</p>`;
-  return `<div class="inst-panel">
-    <p class="hint">Comparaison des circulateurs du catalogue à un point de fonctionnement (débit + HMT requis).</p>
-    <div class="row inst-circ-fields">
-      <div><label class="subhead">Débit</label>${instNumInput("instCircQ", c.useHydro && LAST?.hydro?.active ? LAST.hydro.debitM3h : c.debitM3h, "0.1", 0, "onInstallField()")} <span class="unit">m³/h</span></div>
-      <div><label class="subhead">HMT requis</label>${instNumInput("instCircH", c.useHydro && LAST?.hydro?.active ? LAST.hydro.hmtM : c.hmtM, "0.1", 0, "onInstallField()")} <span class="unit">mCE</span></div>
-      <div><label class="subhead">PDC complémentaire</label>${instNumInput("instCircExtra", c.pdcExtraM, "0.1", 0, "onInstallField()")} <span class="unit">mCE</span></div>
-    </div>
-    <label class="inst-check"><input type="checkbox" id="instCircHydro" ${c.useHydro ? "checked" : ""} onchange="onInstallField()"> Utiliser l'estimation hydraulique du projet (onglet Saisie)</label>
-    <p class="hint">PDC linéaire actuelle : <b>${fmt(pdcHead, 2)} mCE</b>${extra ? ` + ${fmt(extra, 2)} m compl. = <b>${fmt(hmtFromPdc, 2)} mCE</b>` : ""}</p>
+  return `<p class="hint" id="instCircPdcHint">PDC linéaire actuelle : <b>${fmt(pdcHead, 2)} mCE</b>${extra ? ` + ${fmt(extra, 2)} m compl. = <b>${fmt(hmtFromPdc, 2)} mCE</b>` : ""}</p>
     <p class="inst-circ-summary">${okList.length ? `<span class="hydro-circ-ok">${okList.length} circulateur(s) adapté(s)</span>` : ranked.length ? `<span class="hydro-circ-ko">Aucun circulateur ne couvre le point</span>` : ""}</p>
     <div class="circ-curves-panel" style="margin:14px 0">
       <div class="circ-chart-wrap" id="instCircChartWrap"><div class="circ-chart-tooltip" id="instCircChartTooltip" hidden></div><svg id="instCircChartSvg" role="img" aria-label="Courbes HMT circulateurs"></svg></div>
       <div class="circ-legend" id="instCircChartLegend"></div>
     </div>
-    ${listHtml}
+    ${listHtml}`;
+}
+
+function updateInstallCircDynamic() {
+  const el = $("instCircDynamic");
+  if (!el) return;
+  el.innerHTML = renderInstallCircDynamic(installState());
+  requestAnimationFrame(() => drawInstallCircChart());
+}
+
+function scheduleInstallCircRedraw() {
+  clearTimeout(_instCircRedrawTimer);
+  _instCircRedrawTimer = setTimeout(updateInstallCircDynamic, 180);
+}
+
+function syncInstallCircHydroFields() {
+  const ins = installState();
+  const c = ins.circ;
+  const useH = c.useHydro && typeof LAST !== "undefined" && LAST?.hydro?.active;
+  const qIn = $("instCircQ");
+  const hIn = $("instCircH");
+  if (qIn) {
+    qIn.value = useH ? LAST.hydro.debitM3h : c.debitM3h;
+    qIn.readOnly = !!useH;
+  }
+  if (hIn) {
+    hIn.value = useH ? LAST.hydro.hmtM : c.hmtM;
+    hIn.readOnly = !!useH;
+  }
+}
+
+function updateInstallResults() {
+  if (INSTALL_TOOL === "pdc") updateInstallPdcResults();
+  else if (INSTALL_TOOL === "volume") updateInstallVolumeTotals();
+  else if (INSTALL_TOOL === "glycol") updateInstallGlycolResults();
+  else if (INSTALL_TOOL === "vase") updateInstallVaseResults();
+  else if (INSTALL_TOOL === "circ") {
+    syncInstallCircHydroFields();
+    scheduleInstallCircRedraw();
+  }
+}
+
+function renderInstallPdcPanel(ins) {
+  const p = ins.pdc;
+  const r = calcLinearPdc(p);
+  return `<div class="inst-panel">
+    <p class="hint">Pertes de charge linéaires — tuyauterie lisse (Blasius, Re 4 000–100 000).</p>
+    <table class="inst-calc-tbl">
+      <tbody>
+        <tr class="inst-row-in"><td>Débit volumique</td><td>${instNumInput("instPdcQ", p.debitM3h, "0.1", 0, "onInstallField()")}</td><td>m³/h</td></tr>
+        <tr class="inst-row-in"><td>Taux de glycol</td><td>${instNumInput("instPdcGly", p.glycolPct, "1", 0, "onInstallField()")}</td><td>%</td></tr>
+        <tr class="inst-row-in"><td>Température moyenne</td><td>${instNumInput("instPdcT", p.tempC, "1", -20, "onInstallField()")}</td><td>°C</td></tr>
+        <tr><td colspan="3" class="inst-section">Tuyauterie lisse</td></tr>
+        <tr class="inst-row-in"><td>Longueur de la conduite</td><td>${instNumInput("instPdcL", p.lengthM, "0.5", 0, "onInstallField()")}</td><td>m</td></tr>
+        <tr class="inst-row-in"><td>Diamètre de la conduite</td><td>${instNumInput("instPdcD", p.diamMm, "1", 1, "onInstallField()")}</td><td>mm</td></tr>
+        ${instResultRow("Vitesse dans la conduite", fmt(r.velocity, 2), "m/s", false, "pdc.velocity")}
+        ${instResultRow("Viscosité cinématique", r.nu ? r.nu.toExponential(2) : "—", "m²/s", false, "pdc.nu")}
+        ${instResultRow("Nbr de Reynolds", r.re ? fmt(r.re, 0) : "—", "", false, "pdc.re")}
+        ${instResultRow("Rugosité relative", "—", "")}
+        ${instResultRow("Coef pertes de charge linéaire", r.lambda != null ? fmt(r.lambda, 3) : "—", "Blasius", false, "pdc.lambda")}
+        ${instResultRow("Pertes de charges linéaires", r.headM != null ? fmt(r.headM, 2) : "—", "mCE", true, "pdc.headM")}
+      </tbody>
+    </table>
+    <div class="inst-actions">
+      <button type="button" class="btn-soft" onclick="applyPdcToCirc()">→ Transférer HMT au choix circulateur</button>
+      ${typeof LAST !== "undefined" && LAST?.hydro?.active ? `<button type="button" class="btn-ghost" onclick="prefillInstallFromHydro()">Préremplir depuis le projet</button>` : ""}
+    </div>
+  </div>`;
+}
+
+function renderInstallVolumePanel(ins) {
+  const segs = ins.volume.segments;
+  const { rows, totalL } = calcPipeVolumeLiters(segs);
+  const body = rows.map((s, i) => `
+    <tr data-vol-idx="${i}">
+      <td><input type="text" class="inst-inp" value="${escHtml(s.label || "")}" placeholder="Tronçon ${i + 1}" oninput="onInstallVolumeRow(${i}, 'label', this.value)"></td>
+      <td><input type="number" class="inst-inp" value="${s.lengthM ?? ""}" step="0.5" min="0" oninput="onInstallVolumeRow(${i}, 'lengthM', this.value)"></td>
+      <td><input type="number" class="inst-inp" value="${s.diamMm ?? ""}" step="1" min="1" oninput="onInstallVolumeRow(${i}, 'diamMm', this.value)"></td>
+      <td class="mono">${fmt(s.volL, 2)}</td>
+      <td><button type="button" class="btn-ghost inst-rm" onclick="removeInstallVolumeRow(${i})" title="Supprimer">✕</button></td>
+    </tr>`).join("");
+  return `<div class="inst-panel">
+    <p class="hint">Volume d'eau dans la tuyauterie : V = π × (D/2)² × L — somme des tronçons (aller, retour, boucles…).</p>
+    <table class="inst-vol-tbl">
+      <thead><tr><th>Désignation</th><th>Longueur (m)</th><th>Diamètre (mm)</th><th>Volume (L)</th><th></th></tr></thead>
+      <tbody>${body}</tbody>
+      <tfoot><tr><td colspan="3"><b>Volume total tuyauterie</b></td><td class="mono inst-val-main" data-inst-val>${fmt(totalL, 2)} L</td><td></td></tr></tfoot>
+    </table>
+    <div class="inst-actions">
+      <button type="button" class="btn-soft" onclick="addInstallVolumeRow()">+ Tronçon</button>
+      <button type="button" class="btn-ghost" onclick="applyVolumeToGlycol()">→ Reprendre volume tuyauterie pour le glycol</button>
+      <button type="button" class="btn-ghost" onclick="applyVolumeToVase()">→ Reprendre volume total pour le vase</button>
+    </div>
+  </div>`;
+}
+
+function renderInstallGlycolPanel(ins) {
+  const g = ins.glycol;
+  const pipeL = calcPipeVolumeLiters(ins.volume.segments).totalL;
+  const totalL = Math.max(0, +g.volumeTotalL || 0) || installVolumeTotalLiters(ins);
+  const r = calcGlycolDose({ volumeTotalL: totalL, targetPct: g.targetPct, productPct: g.productPct });
+  const hint = glycolProtectionHint(g.tMinC);
+  return `<div class="inst-panel">
+    <p class="hint">Calcul du taux de glycol en fonction du volume d'installation — remplissage à vide (% vol.). Volume total = tuyauterie + appoint (émetteurs, buffer, échangeurs…).</p>
+    <table class="inst-calc-tbl">
+      <tbody>
+        <tr class="inst-row-calc"><td>Volume tuyauterie (calculé)</td><td class="mono" data-inst-res="gly.pipeL" data-inst-val>${fmt(pipeL, 1)}</td><td>L</td></tr>
+        <tr class="inst-row-in"><td>Volume appoint</td><td>${instNumInput("instGlyExtra", g.volumeExtraL, "1", 0, "onInstallField()")}</td><td>L · émetteurs, buffer, PAC…</td></tr>
+        <tr class="inst-row-in"><td>Volume total installation</td><td>${instNumInput("instGlyVol", totalL, "1", 0, "onInstallField()")}</td><td>L</td></tr>
+        <tr class="inst-row-in"><td>Taux de glycol cible</td><td>${instNumInput("instGlyPct", g.targetPct, "1", 0, "onInstallField()")}</td><td>% vol.</td></tr>
+        <tr class="inst-row-in"><td>Concentration produit</td><td>${instNumInput("instGlyProd", g.productPct, "1", 1, "onInstallField()")}</td><td>% vol. · 100 = glycol pur</td></tr>
+        <tr class="inst-row-in"><td>Température protection min.</td><td>${instNumInput("instGlyTmin", g.tMinC, "1", -40, "onInstallField()")}</td><td>°C</td></tr>
+        ${hint ? `<tr><td colspan="3" class="hint" data-inst-gly-hint" style="padding:8px 10px;font-size:12px">${hint}</td></tr>` : `<tr style="display:none"><td colspan="3" class="hint" data-inst-gly-hint></td></tr>`}
+        ${instResultRow("Volume glycol pur", fmt(r.pureGlycolL, 1), "L", true, "gly.pure")}
+        ${instResultRow("Volume eau", fmt(r.waterL, 1), "L", false, "gly.water")}
+        ${instResultRow("Produit commercial à verser", fmt(r.productL, 1), "L", true, "gly.product")}
+        ${instResultRow("Eau à compléter", fmt(r.waterAddL, 1), "L", false, "gly.waterAdd")}
+        ${instResultRow("Taux obtenu", fmt(r.targetPct, 1), "% vol.", false, "gly.rate")}
+      </tbody>
+    </table>
+    <div class="inst-actions">
+      <button type="button" class="btn-soft" onclick="syncInstallVolumeToGlycol()">↺ Recalculer depuis tuyauterie + appoint</button>
+      <button type="button" class="btn-ghost" onclick="applyGlycolToPdc()">→ Reprendre le taux pour PDC linéaires</button>
+      <button type="button" class="btn-ghost" onclick="applyGlycolVolumeToVase()">→ Reprendre volume total pour le vase</button>
+    </div>
+  </div>`;
+}
+
+function renderInstallVasePanel(ins) {
+  const v = ins.vase;
+  const r = calcExpansionVessel(v);
+  return `<div class="inst-panel">
+    <p class="hint">Dimensionnement vase d'expansion — eau (masse volumique 0–100 °C) · réserve 0,5 % · effet utile selon pressions de gonflage et tarage soupape.</p>
+    <table class="inst-calc-tbl">
+      <tbody>
+        <tr class="inst-row-in"><td>Température 1</td><td>${instNumInput("instVaseT1", v.temp1, "1", 0, "onInstallField()")}</td><td data-inst-rho="t1">°C · ρ = ${fmt(r.rho1, 2)} kg/m³</td></tr>
+        <tr class="inst-row-in"><td>Température 2</td><td>${instNumInput("instVaseT2", v.temp2, "1", 0, "onInstallField()")}</td><td data-inst-rho="t2">°C · ρ = ${fmt(r.rho2, 2)} kg/m³</td></tr>
+        ${instResultRow("Coeff. de dilatation", fmt(r.coeffPct, 2), "%", false, "vase.coeff")}
+        <tr class="inst-row-in"><td>Volume du système</td><td>${instNumInput("instVaseVol", v.volumeL, "1", 0, "onInstallField()")}</td><td>L</td></tr>
+        ${instResultRow("Volume de dilatation", fmt(r.volDilat, 2), "L", true, "vase.dilat")}
+        ${instResultRow("Volume de réserve", fmt(r.volReserve, 2), "L", true, "vase.reserve")}
+        <tr class="inst-row-in"><td>Hauteur statique</td><td>${instNumInput("instVaseH", v.hStatic, "0.5", 0, "onInstallField()")}</td><td>m</td></tr>
+        <tr class="inst-row-in"><td>Tarage soupape</td><td>${instNumInput("instVaseP", v.pSoupape, "0.1", 0.5, "onInstallField()")}</td><td>bar</td></tr>
+        ${instResultRow("Pression de gonflage", fmt(r.pGonflage, 1), "bar", false, "vase.pGonf")}
+        ${instResultRow("Effet utile", fmt(r.effetUtile, 2), "", false, "vase.effet")}
+        ${instResultRow("Besoin vase d'expansion", fmt(r.besoinL, 1), "L", true, "vase.besoin")}
+      </tbody>
+    </table>
+  </div>`;
+}
+
+function renderInstallCircPanel(ins) {
+  const c = ins.circ;
+  const useH = c.useHydro && typeof LAST !== "undefined" && LAST?.hydro?.active;
+  return `<div class="inst-panel">
+    <p class="hint">Comparaison des circulateurs du catalogue à un point de fonctionnement (débit + HMT requis).</p>
+    <div class="row inst-circ-fields">
+      <div><label class="subhead">Débit</label>${instNumInput("instCircQ", useH ? LAST.hydro.debitM3h : c.debitM3h, "0.1", 0, "onInstallField()")} <span class="unit">m³/h</span></div>
+      <div><label class="subhead">HMT requis</label>${instNumInput("instCircH", useH ? LAST.hydro.hmtM : c.hmtM, "0.1", 0, "onInstallField()")} <span class="unit">mCE</span></div>
+      <div><label class="subhead">PDC complémentaire</label>${instNumInput("instCircExtra", c.pdcExtraM, "0.1", 0, "onInstallField()")} <span class="unit">mCE</span></div>
+    </div>
+    <label class="inst-check"><input type="checkbox" id="instCircHydro" ${c.useHydro ? "checked" : ""} onchange="onInstallField()"> Utiliser l'estimation hydraulique du projet (onglet Saisie)</label>
+    <div id="instCircDynamic">${renderInstallCircDynamic(ins)}</div>
   </div>`;
 }
 
@@ -373,7 +484,8 @@ function readInstallForm() {
 
 function onInstallField() {
   readInstallForm();
-  renderInstallationTab(false);
+  updateInstallResults();
+  if (typeof markDirty === "function") markDirty();
 }
 
 function setInstallTool(t) {
@@ -388,7 +500,11 @@ function onInstallVolumeRow(idx, key, val) {
   const row = ins.volume.segments[idx];
   if (!row) return;
   row[key] = key === "label" ? val : +val;
-  renderInstallationTab(false);
+  if (key !== "label") {
+    updateInstallVolumeRowCalc(idx);
+    updateInstallVolumeTotals();
+  }
+  if (typeof markDirty === "function") markDirty();
 }
 
 function addInstallVolumeRow() {
@@ -591,7 +707,10 @@ function renderInstallationTab(scrollTop) {
   </div>
   <div id="instToolBody">${panel}</div>`;
 
-  if (INSTALL_TOOL === "circ") requestAnimationFrame(() => drawInstallCircChart());
+  if (INSTALL_TOOL === "circ") requestAnimationFrame(() => {
+    syncInstallCircHydroFields();
+    drawInstallCircChart();
+  });
   if (scrollTop !== false) window.scrollTo(0, 0);
 }
 

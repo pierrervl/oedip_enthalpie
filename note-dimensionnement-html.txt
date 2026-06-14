@@ -1,0 +1,148 @@
+OEDIP — HTML de la note de dimensionnement
+==========================================
+Sources : oedip.html (#v-note), js/oedip-ui.js (renderNote, noteRow, noteHl, noteFoot)
+Styles : css/oedip.css (.doc, .dhead, .dt, .drow, .doc-print-charts)
+
+──────────────────────────────────────────────────────────────────────────────
+A. SQUELETTE FIXE (oedip.html — onglet Note)
+──────────────────────────────────────────────────────────────────────────────
+
+<section class="view" id="v-note">
+  <div class="toolbar noprint note-print-toolbar">…barre outils (non imprimée)…</div>
+  <div class="doc" id="doc"></div>   <!-- PAGE 1 : rempli par renderNote() -->
+  <div class="doc doc-print-charts doc-print-one-page print-include" id="docPrintCharts">
+    <!-- PAGE 2 : annexes (voir section C) -->
+  </div>
+</section>
+
+──────────────────────────────────────────────────────────────────────────────
+B. PAGE 1 — générée par renderNote() → $('doc').innerHTML
+──────────────────────────────────────────────────────────────────────────────
+
+<div class="dhead[ dhead-installer]">
+  [<div class="dhead-logo"><img src="URL_LOGO" alt=""></div>
+   | <div class="spark"></div>]
+  <div>
+    <h2>Note de dimensionnement</h2>
+    <div class="note dhead-company">NOM ENTREPRISE</div>
+  </div>
+  <div class="meta">OEDIP v2.0 web<br>Réf : …<br>JJ/MM/AAAA</div>
+</div>
+
+<section>
+  <h3 class="dt">Opération &amp; client</h3>
+  <!-- noteRow client.ref, client.type, client.nom, client.adresse -->
+  <!-- noteRow client.installateur [, client.referent si pas section Installateur] -->
+</section>
+
+[<section>   <!-- si coordonnées entreprise activées -->
+  <h3 class="dt">Installateur</h3>
+  <!-- noteRow install.company, install.adresse, install.tel, install.email,
+       install.web, install.siret, install.referent -->
+</section>]
+
+<section>
+  <h3 class="dt">Données d'entrée de l'étude</h3>
+  <!-- noteRow input.cp, input.dept, input.alt, input.tbaseRef, input.tbase,
+       input.vol, input.tint, input.g, zone.*, input.regimeEmitter,
+       input.depRegime, input.copEmitter, hydro.*, input.ecs, input.source -->
+</section>
+
+<section>
+  <h3 class="dt">Besoins en puissance</h3>
+  <!-- noteRow power.dep, power.pECS, power.surp -->
+  <!-- noteHl power.pInst -->
+</section>
+
+<section>
+  <h3 class="dt">Étude énergétique annuelle (DJU intégrés par tranches)</h3>
+  <!-- noteRow nrg.dju, nrg.tnc, nrg.heures, nrg.tbiv, nrg.besoin,
+       nrg.appoint, nrg.scop, nrg.elec, nrg.economie -->
+</section>
+
+[<section>   <!-- si machine retenue (chosen) -->
+  <h3 class="dt">Solution retenue</h3>
+  <!-- noteRow sol.pac, sol.gamme, sol.fonction, sol.comp, sol.pCalo,
+       sol.cop, sol.coverage, sol.hp, sol.fluide, sol.gwp, sol.charge,
+       sol.co2eq, sol.debitR407C, sol.chaudM3H, sol.captage -->
+</section>
+ | <section><h3 class="dt">Solution retenue</h3><div class="note">Aucune machine…</div></section>]
+
+<!-- noteFoot -->
+<div class="foot note-row" data-note-id="note.foot">…disclaimer…</div>
+
+──────────────────────────────────────────────────────────────────────────────
+B1. HELPERS (js/oedip-ui.js)
+──────────────────────────────────────────────────────────────────────────────
+
+noteRow(id, libellé, unité, valeur) :
+<div class="drow note-row[ note-row-off]" data-note-id="ID">
+  <label class="note-row-chk noprint"><input type="checkbox" …></label>
+  <span class="note-lbl">LIBELLÉ</span><span class="u">UNITÉ</span><span class="val">VALEUR</span>
+</div>
+
+noteHl(id, libellé, valeur) :
+<div class="hl note-row[ note-row-off]" data-note-id="ID">
+  <label class="note-row-chk noprint"><input type="checkbox" …></label>
+  <span><b>LIBELLÉ</b></span><span class="v">VALEUR</span>
+</div>
+
+noteFoot(id, texte) :
+<div class="foot note-row[ note-row-off]" data-note-id="ID">
+  <label class="note-row-chk noprint">…</label> TEXTE
+</div>
+
+──────────────────────────────────────────────────────────────────────────────
+C. PAGE 2 — annexes énergétiques (oedip.html + syncNotePrintAnnex)
+──────────────────────────────────────────────────────────────────────────────
+
+<div class="doc doc-print-charts doc-print-one-page print-include" id="docPrintCharts">
+  <div class="dhead">
+    <div class="spark"></div>
+    <div>
+      <h2>Annexes énergétiques</h2>
+      <div class="note">Profil de consommation &amp; comparaison des énergies</div>
+    </div>
+    <div class="meta" id="noteChartDocMeta">Réf : …<br>JJ/MM/AAAA</div>
+  </div>
+  <section class="annex-chart-section">
+    <h3 class="dt">Profil journalier besoin / consommation PAC</h3>
+    <div class="dju-chart-legend">…légende couleurs…</div>
+    <p class="tag mono" id="noteChartMeta">—</p>
+    <div class="dju-chart-wrap note-chart-wrap" id="noteChartWrap"><svg …></svg></div>
+    <p class="hint" id="noteChartHint"></p>
+  </section>
+  <section class="note-compare-section">
+    <h3 class="dt">Comparaison des énergies</h3>
+    <p class="tag mono" id="noteCmpBesoin">—</p>
+    <div class="note-compare-grid">
+      <div>
+        <h4 class="note-compare-sub">Coût annuel de chauffage</h4>
+        <div id="noteCmpBars"><!-- barrow + bar --></div>
+      </div>
+      <div>
+        <h4 class="note-compare-sub">Émissions de CO₂</h4>
+        <div id="noteCmpCo2"><!-- barrow + bar --></div>
+      </div>
+    </div>
+    <p class="hint" id="noteCmpHint"></p>
+  </section>
+</div>
+
+Barre comparaison (compareBarRow) :
+<div class="barrow">
+  <span class="lbl">NOM</span>
+  <div class="bar-cell">
+    <div class="bar[ pac][ bar-narrow]" style="width:XX%;background:…">VALEUR</div>
+    [<span class="bar-val-out">VALEUR</span>]   <!-- si barre &lt; 30 % -->
+  </div>
+  <span class="cost">VALEUR/an</span>
+</div>
+
+──────────────────────────────────────────────────────────────────────────────
+D. IMPRESSION
+──────────────────────────────────────────────────────────────────────────────
+- Classe .noprint : masquée à l'impression (toolbar, checkboxes)
+- Classe .note-row-off : ligne exclue de l'impression
+- #docPrintCharts sans .print-include : page 2 masquée
+- printNote() → window.print()
