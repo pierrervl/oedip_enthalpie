@@ -3,6 +3,7 @@ let _sbClient = null;
 let _sbSession = null;
 let _sbReady = false;
 let _sbIsAdmin = false;
+let _sbIsTechnicien = false;
 
 function sbIsReady() {
   return _sbReady && !!_sbClient;
@@ -32,7 +33,10 @@ function sbInit() {
   _sbReady = true;
   _sbClient.auth.onAuthStateChange((_event, session) => {
     _sbSession = session;
-    if (!session) _sbIsAdmin = false;
+    if (!session) {
+      _sbIsAdmin = false;
+      _sbIsTechnicien = false;
+    }
     if (typeof updateSbAuthUI === "function") updateSbAuthUI();
   });
   return true;
@@ -51,6 +55,7 @@ async function sbBootstrapAuth() {
     }
   } else {
     _sbIsAdmin = false;
+    _sbIsTechnicien = false;
   }
   if (typeof updateSbAuthUI === "function") updateSbAuthUI();
   if (typeof updateProcedureAdminUI === "function") updateProcedureAdminUI();
@@ -84,6 +89,7 @@ async function sbSignOut() {
   await _sbClient.auth.signOut();
   _sbSession = null;
   _sbIsAdmin = false;
+  _sbIsTechnicien = false;
   if (typeof updateSbAuthUI === "function") updateSbAuthUI();
   if (typeof updateProcedureAdminUI === "function") updateProcedureAdminUI();
 }
@@ -230,20 +236,43 @@ async function sbSaveProfilePreferences(partial) {
 async function sbLoadProfile() {
   if (!sbIsReady() || !(await sbEnsureSession())) {
     _sbIsAdmin = false;
+    _sbIsTechnicien = false;
     return null;
   }
   const { data, error } = await _sbClient
     .from("profiles")
-    .select("display_name,is_admin,preferences")
+    .select("display_name,is_admin,is_technicien,preferences")
     .eq("id", _sbSession.user.id)
     .maybeSingle();
   if (error) throw error;
   _sbIsAdmin = !!data?.is_admin;
+  _sbIsTechnicien = !!data?.is_technicien;
   return data;
 }
 
 function sbIsAdmin() {
   return !!_sbIsAdmin && !!_sbSession;
+}
+
+function sbIsTechnicien() {
+  return !!_sbIsTechnicien && !!_sbSession;
+}
+
+/** Admin ou technicien — droits édition catalogues / procédures (identiques pour l'instant). */
+function sbCanEditReference() {
+  return !!_sbSession && (_sbIsAdmin || _sbIsTechnicien);
+}
+
+async function sbCanEditReferenceAsync() {
+  if (!(await sbEnsureSession())) return false;
+  if (!_sbSession) return false;
+  try {
+    await sbLoadProfile();
+  } catch (e) {
+    console.warn("Profil:", e.message);
+    return false;
+  }
+  return _sbIsAdmin || _sbIsTechnicien;
 }
 
 async function sbIsAdminAsync() {
@@ -259,7 +288,7 @@ async function sbIsAdminAsync() {
 }
 
 async function sbUpsertReferenceCatalog(key, { name, description, payload }) {
-  if (!(await sbIsAdminAsync())) throw new Error("Réservé aux administrateurs OEDIP");
+  if (!(await sbCanEditReferenceAsync())) throw new Error("Réservé aux techniciens et administrateurs OEDIP");
   const { error } = await _sbClient.from("reference_catalogs").upsert(
     {
       key,
@@ -276,7 +305,7 @@ async function sbUpsertReferenceCatalog(key, { name, description, payload }) {
 }
 
 async function sbPublishProcedureCatalogsFromState(gammeCode) {
-  if (!(await sbIsAdminAsync())) throw new Error("Réservé aux administrateurs OEDIP");
+  if (!(await sbCanEditReferenceAsync())) throw new Error("Réservé aux techniciens et administrateurs OEDIP");
   if (typeof getProcedureCatalog !== "function" || !Array.isArray(state?.procedureCatalogs)) {
     throw new Error("Catalogue procédures indisponible");
   }
@@ -338,16 +367,23 @@ function updateSbAuthUI() {
   if (!btn || !label) return;
   if (_sbSession?.user) {
     const email = _sbSession.user.email || "Compte";
-    const adminHint = _sbIsAdmin ? "\nAdministrateur OEDIP · publication procédures" : "";
-    label.textContent = (_sbIsAdmin ? "★ " : "") + email.split("@")[0].slice(0, 12);
-    btn.title = "Connecté · " + email + adminHint + "\nCliquer pour se déconnecter";
+    const roleHint = _sbIsAdmin
+      ? "\nAdministrateur OEDIP · publication procédures"
+      : _sbIsTechnicien
+        ? "\nTechnicien OEDIP · édition procédures"
+        : "";
+    const prefix = _sbIsAdmin ? "★ " : _sbIsTechnicien ? "◆ " : "";
+    label.textContent = prefix + email.split("@")[0].slice(0, 12);
+    btn.title = "Connecté · " + email + roleHint + "\nCliquer pour se déconnecter";
     btn.classList.add("sb-on");
-    if (_sbIsAdmin) btn.classList.add("sb-admin");
-    else btn.classList.remove("sb-admin");
+    btn.classList.toggle("sb-admin", _sbIsAdmin);
+    btn.classList.toggle("sb-tech", _sbIsTechnicien && !_sbIsAdmin);
+    if (!_sbIsAdmin) btn.classList.remove("sb-admin");
+    if (!_sbIsTechnicien || _sbIsAdmin) btn.classList.remove("sb-tech");
   } else {
     label.textContent = "Cloud";
     btn.title = "Se connecter à Supabase pour enregistrer vos études en ligne";
-    btn.classList.remove("sb-on", "sb-admin");
+    btn.classList.remove("sb-on", "sb-admin", "sb-tech");
   }
 }
 

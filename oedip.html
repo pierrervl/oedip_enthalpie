@@ -291,9 +291,10 @@
     <label class="subhead" style="margin:0">Gamme</label>
     <select id="procGamme" onchange="renderProceduresTab()" style="max-width:320px"></select>
     <span class="grow"></span>
+    <button type="button" class="btn-heat proc-new-btn" onclick="openNewProcedureModal()">+ Nouvelle procédure</button>
     <button class="btn-soft" onclick="printGammeProcedures()">🖶 Imprimer gamme (atelier)</button>
   </div>
-  <div class="hint noprint" style="margin-bottom:14px">Galerie des procédures — réf. construction (<span class="mono">T1-CP-CD-xx</span>) et nom du tronçon. Clic = aperçu · <b>Édition</b> réservée aux administrateurs connectés (publication cloud pour tous). <b>Imprimer gamme</b> pour les fiches A4 atelier.</div>
+  <div class="hint noprint" style="margin-bottom:14px">Galerie des procédures — réf. construction (<span class="mono">T1-CP-CD-xx</span>) et nom du tronçon. Clic = aperçu · <b>Édition</b> réservée aux techniciens et administrateurs connectés (publication cloud pour tous). <b>+ Nouvelle procédure</b> ouvre l’éditeur avec galerie / appareil photo. <b>Imprimer gamme</b> pour les fiches A4 atelier.</div>
   <div id="procList"></div>
 </section>
 
@@ -457,6 +458,32 @@
     <button type="button" class="btn-heat" onclick="saveProcedureEditor()">Enregistrer</button></div>
   <div class="mbody" id="procedureEditBody"></div>
 </div></div>
+<div class="modal" id="modalProcedureNew"><div class="card new-study-card">
+  <div class="mhead"><h3>Nouvelle procédure</h3></div>
+  <div class="mbody">
+    <div class="hint" style="margin-bottom:12px">Créez une fiche atelier pour une gamme. L’éditeur s’ouvre ensuite pour saisir le texte et ajouter des photos (galerie ou appareil photo sur tablette).</div>
+    <label class="subhead" for="procNewGamme">Gamme</label>
+    <select id="procNewGamme"></select>
+    <label class="subhead" for="procNewKind" style="margin-top:10px">Type</label>
+    <select id="procNewKind" onchange="toggleNewProcedureTubeFields()">
+      <option value="tube">Tube frigo (tronçon Tn-…)</option>
+      <option value="custom">Procédure libre</option>
+    </select>
+    <label class="subhead" for="procNewTitle" style="margin-top:10px">Nom du tronçon (optionnel)</label>
+    <input id="procNewTitle" type="text" placeholder="Ex. Lignée compresseur — assemblage" autocomplete="off">
+    <div id="procNewTubeFields">
+      <label class="subhead" for="procNewTubeRef" style="margin-top:10px">Référence tube</label>
+      <input id="procNewTubeRef" type="text" class="mono" placeholder="T11-CP-CD" autocomplete="off">
+      <label class="subhead" for="procNewTubeNum" style="margin-top:10px">Numéro tube</label>
+      <input id="procNewTubeNum" type="number" min="1" class="mono" style="max-width:6rem">
+    </div>
+    <div id="procNewError" class="hint" style="color:var(--bad);margin-top:10px;min-height:1.2em"></div>
+    <div class="new-study-actions">
+      <button type="button" class="btn-ghost" onclick="closeNewProcedureModal()">Annuler</button>
+      <button type="button" class="btn-heat" onclick="confirmNewProcedure()">Créer et éditer</button>
+    </div>
+  </div>
+</div></div>
 <div class="toast" id="toast"></div>
 
 <script src="data/oedip-dju-departements.js"></script>
@@ -476,12 +503,12 @@
 <script src="js/oedip-schemas.js"></script>
 <script src="js/oedip-supabase-config.js?v=7"></script>
 <script src="js/oedip-media.js?v=8"></script>
-<script src="js/oedip-procedures.js?v=2"></script>
+<script src="js/oedip-procedures.js?v=3"></script>
 <script src="js/oedip-procedure-print.js"></script>
 <script src="js/oedip-ui.js"></script>
 <script src="js/oedip-csv.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-<script src="js/oedip-supabase.js?v=9"></script>
+<script src="js/oedip-supabase.js?v=10"></script>
 <script src="js/oedip-catalog-cloud.js?v=9"></script>
 <script src="js/oedip-workspace.js?v=16"></script>
 </body>

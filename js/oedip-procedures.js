@@ -36,7 +36,7 @@ function pickProcedureCatalog(candidate, gammeCode) {
 }
 
 function procedureEditAllowed() {
-  return typeof sbIsAdmin === "function" && sbIsAdmin();
+  return typeof sbCanEditReference === "function" && sbCanEditReference();
 }
 
 function updateProcedureAdminUI() {
@@ -63,6 +63,121 @@ function ensureProcedureCatalogPhotos() {
 function getProcedureCatalog(gammeCode) {
   ensureProcedureCatalogs();
   return state.procedureCatalogs.find((c) => +c.gammeCode === +gammeCode) || null;
+}
+
+function ensureProcedureCatalogForGamme(gammeCode) {
+  ensureProcedureCatalogs();
+  let cat = getProcedureCatalog(gammeCode);
+  if (!cat) {
+    cat = { gammeCode: +gammeCode, procedures: [] };
+    state.procedureCatalogs.push(cat);
+  }
+  if (!Array.isArray(cat.procedures)) cat.procedures = [];
+  return cat;
+}
+
+function nextProcedureOrder(gammeCode) {
+  const cat = ensureProcedureCatalogForGamme(gammeCode);
+  const orders = cat.procedures.map((p) => p.order ?? 0);
+  return orders.length ? Math.max(...orders) + 1 : 1;
+}
+
+function generateProcedureId(gammeCode, kind) {
+  const cat = ensureProcedureCatalogForGamme(gammeCode);
+  const ids = new Set(cat.procedures.map((p) => p.id));
+  if (kind === "tube") {
+    let n = 1;
+    while (ids.has(`geo-tube-${String(n).padStart(2, "0")}`)) n++;
+    return `geo-tube-${String(n).padStart(2, "0")}`;
+  }
+  let n = 1;
+  while (ids.has(`proc-custom-${n}`)) n++;
+  return `proc-custom-${n}`;
+}
+
+function buildNewProcedureTemplate(gammeCode, opts) {
+  opts = opts || {};
+  const kind = opts.kind || "tube";
+  const tubeRef = String(opts.tubeRef || "").trim();
+  const tubeNum = opts.tubeNum != null && opts.tubeNum !== "" ? +opts.tubeNum : null;
+  const id = generateProcedureId(gammeCode, kind);
+  const proc = {
+    id,
+    order: nextProcedureOrder(gammeCode),
+    title: String(opts.title || "").trim()
+      || (kind === "tube"
+        ? `Tube ${tubeNum || "?"} — Nouveau tronçon`
+        : "Nouvelle procédure atelier"),
+    steps: [{ text: "", _media: [] }],
+  };
+  if (kind === "tube") {
+    proc.tubeRef = tubeRef || "T?-XX-YY";
+    if (tubeNum) proc.tubeNum = tubeNum;
+    proc.variants = [{ ver: "01", ref: `${proc.tubeRef}-01`, stepDims: { e1: {} } }];
+  }
+  return proc;
+}
+
+function openNewProcedureModal() {
+  if (!procedureEditAllowed()) {
+    toast("Connectez-vous en technicien ou administrateur OEDIP");
+    return;
+  }
+  const code = +($("procGamme")?.value || state.gammes[0]?.code);
+  const gamSel = $("procNewGamme");
+  if (gamSel) {
+    gamSel.innerHTML = state.gammes.map((g) =>
+      `<option value="${g.code}"${+g.code === code ? " selected" : ""}>${escHtml(g.nom)} (${g.code})</option>`
+    ).join("");
+  }
+  const tubeProcs = tubeProceduresForGamme(code);
+  const nextTube = tubeProcs.length
+    ? Math.max(...tubeProcs.map((p) => p.tubeNum ?? 0)) + 1
+    : 1;
+  if ($("procNewKind")) $("procNewKind").value = "tube";
+  if ($("procNewTitle")) $("procNewTitle").value = "";
+  if ($("procNewTubeRef")) $("procNewTubeRef").value = `T${nextTube}-XX-YY`;
+  if ($("procNewTubeNum")) $("procNewTubeNum").value = nextTube;
+  toggleNewProcedureTubeFields();
+  $("procNewError") && ($("procNewError").textContent = "");
+  $("modalProcedureNew")?.classList.add("show");
+  setTimeout(() => $("procNewTitle")?.focus(), 50);
+}
+
+function closeNewProcedureModal() {
+  $("modalProcedureNew")?.classList.remove("show");
+}
+
+function toggleNewProcedureTubeFields() {
+  const kind = $("procNewKind")?.value || "tube";
+  const row = $("procNewTubeFields");
+  if (row) row.style.display = kind === "tube" ? "" : "none";
+}
+
+function confirmNewProcedure() {
+  if (!procedureEditAllowed()) {
+    toast("Connectez-vous en technicien ou administrateur OEDIP");
+    return;
+  }
+  const gammeCode = +($("procNewGamme")?.value || $("procGamme")?.value);
+  const kind = $("procNewKind")?.value || "tube";
+  const title = ($("procNewTitle")?.value || "").trim();
+  const tubeRef = ($("procNewTubeRef")?.value || "").trim();
+  const tubeNum = ($("procNewTubeNum")?.value || "").trim();
+  const errEl = $("procNewError");
+  if (kind === "tube" && !tubeRef) {
+    if (errEl) errEl.textContent = "Indiquez une référence tube (ex. T11-CP-CD).";
+    return;
+  }
+  const cat = ensureProcedureCatalogForGamme(gammeCode);
+  const proc = buildNewProcedureTemplate(gammeCode, { kind, title, tubeRef, tubeNum });
+  cat.procedures.push(proc);
+  if ($("procGamme")) $("procGamme").value = String(gammeCode);
+  closeNewProcedureModal();
+  renderProceduresTab();
+  openProcedureEditor(gammeCode, proc.id);
+  if (typeof markDirty === "function") markDirty();
+  toast("Nouvelle procédure créée — ajoutez texte et photos");
 }
 
 function machinesInGamme(gammeCode) {
@@ -457,7 +572,8 @@ function renderProcedureEditPhotosInner(step, stepIdx) {
   }).join("");
   return `${cards ? `<div class="proc-edit-photos-grid">${cards}</div>` : ""}
     <div class="proc-edit-photos-actions">
-      <button type="button" class="btn-soft" onclick="procEditPhotoPickFile(${stepIdx},-1)">+ Ajouter une photo</button>
+      <button type="button" class="btn-soft" onclick="procEditPhotoPickFile(${stepIdx},-1)">🖼 Galerie</button>
+      <button type="button" class="btn-soft" onclick="procEditPhotoTakeCamera(${stepIdx},-1)">📷 Photo</button>
     </div>`;
 }
 
@@ -546,6 +662,12 @@ function procEditPhotoPickFile(stepIdx, photoIdx) {
   syncProcedureEditTextsOnly();
   procEditPhotoPick = { stepIdx, photoIdx };
   $("procEditPhotoFileInput")?.click();
+}
+
+function procEditPhotoTakeCamera(stepIdx, photoIdx) {
+  syncProcedureEditTextsOnly();
+  procEditPhotoPick = { stepIdx, photoIdx };
+  $("procEditPhotoCameraInput")?.click();
 }
 
 async function onProcEditPhotoFileChange(ev) {
@@ -732,12 +854,13 @@ function renderProcedureEditor() {
     <p class="hint">Une ligne = une variante (<span class="mono">${escVal(proc.tubeRef || "T?")}-01</span>, <span class="mono">-02</span>…). La machine choisit la version sur le schéma frigo.</p>
     <div id="procEditDims">${renderProcedureVariantsTableHtml(proc, { mode: "edit" })}</div>
     <input type="file" id="procEditPhotoFileInput" accept="image/*" hidden onchange="onProcEditPhotoFileChange(event)">
+    <input type="file" id="procEditPhotoCameraInput" accept="image/*" capture="environment" hidden onchange="onProcEditPhotoFileChange(event)">
   </div>`;
 }
 
 function openProcedureEditor(gammeCode, procId) {
   if (!procedureEditAllowed()) {
-    toast("Édition réservée aux administrateurs OEDIP");
+    toast("Édition réservée aux techniciens et administrateurs OEDIP");
     return;
   }
   const cat = getProcedureCatalog(gammeCode);
@@ -758,7 +881,7 @@ function closeProcedureEditor() {
 function saveProcedureEditor() {
   if (!procedureEditDraft) return;
   if (!procedureEditAllowed()) {
-    toast("Édition réservée aux administrateurs OEDIP");
+    toast("Édition réservée aux techniciens et administrateurs OEDIP");
     return;
   }
   gatherProcedureEditForm();
@@ -778,7 +901,7 @@ function saveProcedureEditor() {
       });
   } else {
     markDirty();
-    toast("Procédure enregistrée localement — connectez-vous en admin pour publier");
+    toast("Procédure enregistrée localement — connectez-vous en technicien/admin pour publier");
   }
 }
 
@@ -1022,13 +1145,16 @@ function renderProceduresTab() {
   const cat = getProcedureCatalog(code);
   const procs = (cat?.procedures || []).slice().sort((a, b) => (a.order ?? 999) - (b.order ?? 999));
   const machines = machinesInGamme(code);
+  const canEdit = procedureEditAllowed();
   if (!procs.length) {
-    list.innerHTML = `<div class="empty">Aucune procédure pour <b>${escHtml(gam?.nom || "cette gamme")}</b>. Ajoutez-les dans le catalogue (<span class="mono">procedureCatalogs</span> du projet).</div>`;
+    list.innerHTML = `<div class="empty proc-empty-create">
+      <p>Aucune procédure pour <b>${escHtml(gam?.nom || "cette gamme")}</b>.</p>
+      ${canEdit ? `<button type="button" class="btn-heat" onclick="openNewProcedureModal()">+ Nouvelle procédure</button>` : `<p class="hint">Connectez-vous en technicien ou administrateur pour en créer.</p>`}
+    </div>`;
     return;
   }
   const previewPac = machines[0]?.pac;
   const pacAttr = previewPac ? escAttr(previewPac) : "";
-  const canEdit = procedureEditAllowed();
   list.innerHTML = `<div class="proc-gallery">${procs.map((p) => {
     const idAttr = escAttr(p.id);
     const onPreview = previewPac
@@ -1100,3 +1226,4 @@ function renderFrigoTubeVariantsTable(pac) {
 $("modalProcedure")?.addEventListener("click", (e) => { if (e.target.id === "modalProcedure") closeProcedureViewer(); });
 $("modalProcedurePicker")?.addEventListener("click", (e) => { if (e.target.id === "modalProcedurePicker") closeProcedurePicker(); });
 $("modalProcedureEdit")?.addEventListener("click", (e) => { if (e.target.id === "modalProcedureEdit") closeProcedureEditor(); });
+$("modalProcedureNew")?.addEventListener("click", (e) => { if (e.target.id === "modalProcedureNew") closeNewProcedureModal(); });

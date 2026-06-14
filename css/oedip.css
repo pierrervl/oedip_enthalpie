@@ -528,7 +528,14 @@
   .studies-section-label{font-family:var(--disp);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--geo);margin:4px 0 8px}
   header.bar .btn-ghost.sb-on{border-color:#3d7a86;color:#b8e4eb}
   header.bar .btn-ghost.sb-admin{border-color:#c9a227;color:#f5e6a8}
+  header.bar .btn-ghost.sb-tech{border-color:#6b8cae;color:#c8daf0}
+  #v-procedures .btn-ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+  #v-procedures .btn-ghost:hover{background:#e8e4da;border-color:var(--ink-soft);color:var(--ink)}
+  #v-procedures .btn-soft{background:var(--geo);color:#fff;border:1px solid var(--geo)}
+  #v-procedures .btn-soft:hover{background:#0a6675;border-color:#0a6675;color:#fff}
+  #v-procedures:not(.proc-admin) .proc-new-btn{display:none}
   #v-procedures:not(.proc-admin) .proc-gallery-actions .btn-heat{display:none}
+  .proc-empty-create{display:flex;flex-direction:column;align-items:center;gap:12px;padding:32px 16px;text-align:center}
   .new-study-card{max-width:440px}
   .new-study-card #newStudyName{width:100%;margin-top:6px;font-size:14px}
   .new-study-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
