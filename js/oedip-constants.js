@@ -1,6 +1,14 @@
 /* OEDIP — constantes & départements — ne pas modifier l'ordre de chargement dans oedip.html */
 
 const $ = (id) => document.getElementById(id);
+const fmt = (n, d = 0) =>
+  n == null || isNaN(n) || n === "" ? "—" : Number(n).toLocaleString("fr-FR", { minimumFractionDigits: d, maximumFractionDigits: d });
+function escHtml(s) {
+  return String(s ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/"/g, "&quot;");
+}
 
 /* ============================================================
    OEDIP · intégration DJU + modèle machine enrichi

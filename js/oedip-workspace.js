@@ -212,6 +212,9 @@ function finishCatalogLoad(opts) {
   if (state.meta) {
     $("verLabel").textContent = `${state.meta.outil || "OEDIP"} ${state.meta.version} · ${state.meta.millesime || ""}`;
   }
+  if ($("v-composants")?.classList.contains("active") && typeof renderComposants === "function") {
+    renderComposants();
+  }
   if (!opts.silent) toast(opts.toast || "Catalogue chargé");
 }
 
@@ -988,6 +991,7 @@ async function bootApp(){
   $("verLabel").textContent=`${state.meta.outil} ${state.meta.version} · ${state.meta.millesime||""}`;
   updateWsStatus();
   updateStudyUI();
+  if (typeof initComposantsTab === "function") initComposantsTab();
 }
 bootApp();
 

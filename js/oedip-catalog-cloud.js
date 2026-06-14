@@ -26,6 +26,9 @@ async function loadReferenceCatalogFromCloud() {
 
     if (map.catalog_echangeurs_pdc?.byRef) {
       window.OEDIP_ECHANGEURS_PDC = map.catalog_echangeurs_pdc.byRef;
+      if (typeof mergeEchangeursPdcIntoComposants === "function") {
+        mergeEchangeursPdcIntoComposants(state.composants);
+      }
     }
 
     if (map.catalog_procedures_geo && Array.isArray(state.procedureCatalogs)) {

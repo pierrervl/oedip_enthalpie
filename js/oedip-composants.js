@@ -246,7 +246,7 @@ function assignMissingCompIds() {
   });
 }
 
-/** Réinjecte la bibliothèque embarquée si le cloud / un import n'a laissé qu'un catalogue partiel. */
+/** Réinjecte / complète la bibliothèque embarquée (cloud ou import partiel, courbes manquantes…). */
 function ensureBundledComposants() {
   ensureComposants();
   const bc = bundledComposantsData();
@@ -254,31 +254,33 @@ function ensureBundledComposants() {
     assignMissingCompIds();
     return;
   }
-  const cur = composantCount(state.composants);
-  const exp = composantCount(bc);
-  if (cur < exp) {
-    Object.keys(COMP_TYPES).forEach((k) => {
-      const src = bc[k];
-      if (!Array.isArray(src) || !src.length) return;
-      if (!Array.isArray(state.composants[k])) state.composants[k] = [];
-      src.forEach((item) => {
-        const j = state.composants[k].findIndex(
-          (c) =>
-            (item.id && c.id === item.id) ||
-            (item.ref && c.ref === item.ref) ||
-            (item.modele && c.modele === item.modele)
-        );
-        if (j >= 0) {
-          state.composants[k][j] = {
-            ...item,
-            id: state.composants[k][j].id || item.id || nextCompId(),
-          };
-        } else {
-          state.composants[k].push({ ...item, id: item.id || nextCompId() });
-        }
-      });
+  Object.keys(COMP_TYPES).forEach((k) => {
+    const src = bc[k];
+    if (!Array.isArray(src) || !src.length) return;
+    if (!Array.isArray(state.composants[k])) state.composants[k] = [];
+    src.forEach((item) => {
+      const j = state.composants[k].findIndex(
+        (c) =>
+          (item.id && c.id === item.id) ||
+          (item.ref && c.ref === item.ref) ||
+          (item.modele && c.modele === item.modele)
+      );
+      if (j >= 0) {
+        const cur = state.composants[k][j];
+        state.composants[k][j] = {
+          ...item,
+          ...cur,
+          id: cur.id || item.id || nextCompId(),
+          courbeHmt:
+            cur.courbeHmt?.length >= 2 ? cur.courbeHmt : item.courbeHmt || cur.courbeHmt,
+          courbesPdc:
+            cur.courbesPdc?.length ? cur.courbesPdc : item.courbesPdc || cur.courbesPdc,
+        };
+      } else {
+        state.composants[k].push({ ...item, id: item.id || nextCompId() });
+      }
     });
-  }
+  });
   assignMissingCompIds();
 }
 
@@ -994,13 +996,6 @@ function renderComposants() {
         })
         .join("")
     : `<div class="empty" style="grid-column:1/-1">Aucun ${def.label.toLowerCase()} — ajoutez une fiche pour constituer votre bibliothèque.</div>`;
-}
-
-function escHtml(s) {
-  return String(s ?? "")
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/"/g, "&quot;");
 }
 
 function openCompModal(type, idx) {
