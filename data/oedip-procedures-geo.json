@@ -11,22 +11,37 @@
       },
       "steps": [
         {
-          "text": "Couper {{L}} cm de {{diam}}\"."
+          "text": "Couper {{L}} cm de {{diam}}\".",
+          "image": "img/procedures/geo/T1-E1.jpg"
         },
         {
-          "text": "Ergot, cintrer à 90° puis recouper {{L}} cm."
+          "text": "Ergot, cintrer à 90° puis recouper {{L}} cm.",
+          "images": [
+            "img/procedures/geo/T1-E2.jpg",
+            "img/procedures/geo/T1-E2-2.jpg"
+          ]
         },
         {
-          "text": "Coter {{L}} cm de l'axe du tube."
+          "text": "Coter {{L}} cm de l'axe du tube.",
+          "images": [
+            "img/procedures/geo/T1-E3.jpg",
+            "img/procedures/geo/T1-E3-2.jpg"
+          ]
         },
         {
           "text": "Marque sur \"O\", cintrer à 45° dans le même sens."
         },
         {
-          "text": "Réduction M-F {{diam1}}\"–{{diam2}}\" + Coude 90° M-F {{diam3}}\" GR."
+          "text": "Réduction M-F {{diam1}}\"–{{diam2}}\" + Coude 90° M-F {{diam3}}\" GR.",
+          "images": [
+            "img/procedures/geo/T1_E5-1.jpg",
+            "img/procedures/geo/T1_E5-2.jpg",
+            "img/procedures/geo/T1-E5.jpg"
+          ]
         },
         {
-          "text": "Braser le tout."
+          "text": "Braser le tout.",
+          "image": "img/procedures/geo/T1-E6-2.jpg"
         }
       ],
       "tubeRef": "T1-CP-CD",
@@ -68,19 +83,27 @@
           "text": "Couper {{L}} cm de {{diam}}\"."
         },
         {
-          "text": "Coter {{L}} cm du bord du tube."
+          "text": "Coter {{L}} cm du bord du tube.",
+          "image": "img/procedures/geo/T2-E2.jpg"
         },
         {
-          "text": "Marque sur \"L\", cintrer à 90°."
+          "text": "Marque sur \"L\", cintrer à 90°.",
+          "images": [
+            "img/procedures/geo/T2-E3-1.jpg",
+            "img/procedures/geo/T2-E3-2.jpg"
+          ]
         },
         {
-          "text": "Coter {{L}} cm de l'axe du tube."
+          "text": "Coter {{L}} cm de l'axe du tube.",
+          "image": "img/procedures/geo/T2-E4.jpg"
         },
         {
-          "text": "Marque sur \"O\", cintrer à 22,5°, tube à l'opposé."
+          "text": "Marque sur \"O\", cintrer à 22,5°, tube à l'opposé.",
+          "image": "img/procedures/geo/T2-E5.jpg"
         },
         {
-          "text": "Recouper {{L}} cm."
+          "text": "Recouper {{L}} cm.",
+          "image": "img/procedures/geo/T2-E6.jpg"
         }
       ],
       "tubeRef": "T2-CD-T3",
@@ -117,34 +140,59 @@
       },
       "steps": [
         {
-          "text": "Couper {{L}} cm de {{diam}}\"."
+          "text": "Couper {{L}} cm de {{diam}}\".",
+          "image": "img/procedures/geo/T3-E1.jpg"
         },
         {
-          "text": "Ergot, cintrer à 45° puis recouper {{L}} cm."
+          "text": "Ergot, cintrer à 45° puis recouper {{L}} cm.",
+          "image": "img/procedures/geo/T3-E2.jpg"
         },
         {
-          "text": "Coter {{L}} cm du bout du tube."
+          "text": "Coter {{L}} cm du bout du tube.",
+          "image": "img/procedures/geo/T3-E3.jpg"
         },
         {
-          "text": "Marque sur 45°, cintré à 45° à l'inverse."
+          "text": "Marque sur 45°, cintré à 45° à l'inverse.",
+          "images": [
+            "img/procedures/geo/T3-E4.jpg",
+            "img/procedures/geo/T3-E4-2.jpg"
+          ]
         },
         {
-          "text": "Couper 1 Schrader {{diam}}\" en 2."
+          "text": "Couper 1 Schrader {{diam}}\" en 2.",
+          "image": "img/procedures/geo/T3-E5.jpg"
         },
         {
-          "text": "Ergot, cintrer le pressostat HP à 90°."
+          "text": "Ergot, cintrer le pressostat HP à 90°.",
+          "images": [
+            "img/procedures/geo/T3-E6.jpg",
+            "img/procedures/geo/T3-E6-2.jpg"
+          ]
         },
         {
-          "text": "Coter {{L1}} cm et {{L2}} cm du bord du tube."
+          "text": "Coter {{L1}} cm et {{L2}} cm du bord du tube.",
+          "images": [
+            "img/procedures/geo/T3-E7-1.jpg",
+            "img/procedures/geo/T3-E7-2.jpg"
+          ]
         },
         {
           "text": "Percer le tube au marque de Ø {{diamTrou}} mm puis ébavurer les deux trous."
         },
         {
-          "text": "Monter le Schrader et le pressostat puis braser."
+          "text": "Monter le Schrader et le pressostat puis braser.",
+          "images": [
+            "img/procedures/geo/T3-E9-1.jpg",
+            "img/procedures/geo/T3-E9-2.jpg"
+          ]
         },
         {
-          "text": "Faire une emboiture {{diam}}\" après le pressostat."
+          "text": "Faire une emboiture {{diam}}\" après le pressostat.",
+          "images": [
+            "img/procedures/geo/T3-E10.jpg",
+            "img/procedures/geo/T3-E10-1.jpg",
+            "img/procedures/geo/T3-E10-2.jpg"
+          ]
         }
       ],
       "tubeRef": "T3-T3-RL",
@@ -192,13 +240,26 @@
       "printIntro": "Tubes 4 à 6 : braser le tout à l'argent 15 % sous azote.",
       "steps": [
         {
-          "text": "Couper {{L}} cm de tube {{diam}}\"."
+          "text": "Couper {{L}} cm de tube {{diam}}\".",
+          "image": "img/procedures/geo/T4-E1.jpg"
         },
         {
-          "text": "Ergot, cintrer à 90° puis recouper {{L}} cm."
+          "text": "Ergot, cintrer à 90° puis recouper {{L}} cm.",
+          "images": [
+            "img/procedures/geo/T4-E2-1.jpg",
+            "img/procedures/geo/T4-E2-2.jpg",
+            "img/procedures/geo/T4-E2-3.jpg"
+          ]
         },
         {
-          "text": "Coter {{L}} cm de l'axe du tube — Marque sur \"O\" puis cintrer à 15° (tube vers nous) — Puis recouper {{L2}} cm — Réduction MF {{diam1}}\"–{{diam2}}\"."
+          "text": "Coter {{L}} cm de l'axe du tube — Marque sur \"O\" puis cintrer à 15° (tube vers nous) — Puis recouper {{L2}} cm — Réduction MF {{diam1}}\"–{{diam2}}\".",
+          "images": [
+            "img/procedures/geo/T4-E3-1.jpg",
+            "img/procedures/geo/T4-E3-2.jpg",
+            "img/procedures/geo/t4-E3-3.jpg",
+            "img/procedures/geo/T4-E3-4.jpg",
+            "img/procedures/geo/T4-E3-5.jpg"
+          ]
         }
       ],
       "tubeRef": "T4-RL-DH",
@@ -235,13 +296,19 @@
       },
       "steps": [
         {
-          "text": "Couper {{L}} cm de {{diam}}\"."
+          "text": "Couper {{L}} cm de {{diam}}\".",
+          "image": "img/procedures/geo/T5-E1.jpg"
         },
         {
-          "text": "Coter {{L}} cm, marque sur \"L\"."
+          "text": "Coter {{L}} cm, marque sur \"L\".",
+          "image": "img/procedures/geo/T5-E2.jpg"
         },
         {
-          "text": "Cintrer à 90° — côté long côté déshy."
+          "text": "Cintrer à 90° — côté long côté déshy.",
+          "images": [
+            "img/procedures/geo/T5-E3-1.jpg",
+            "img/procedures/geo/T5-E3-2.jpg"
+          ]
         }
       ],
       "tubeRef": "T5-DH-VL",
@@ -272,16 +339,26 @@
       },
       "steps": [
         {
-          "text": "Couper {{L}} cm de {{diam}}\"."
+          "text": "Couper {{L}} cm de {{diam}}\".",
+          "image": "img/procedures/geo/T6-E1.jpg"
         },
         {
-          "text": "Ergot, cintrer à 90°."
+          "text": "Ergot, cintrer à 90°.",
+          "images": [
+            "img/procedures/geo/T6-E2-1.jpg",
+            "img/procedures/geo/T6-E2-2.jpg"
+          ]
         },
         {
-          "text": "Coter {{L}} cm de l'axe du tube."
+          "text": "Coter {{L}} cm de l'axe du tube.",
+          "image": "img/procedures/geo/T6-E3.jpg"
         },
         {
-          "text": "Marque sur \"L\", cintrer à 90° dans le même sens — côté long côté voyant."
+          "text": "Marque sur \"L\", cintrer à 90° dans le même sens — côté long côté voyant.",
+          "images": [
+            "img/procedures/geo/T6-E4.jpg",
+            "img/procedures/geo/T6-E4-2.jpg"
+          ]
         }
       ],
       "tubeRef": "T6-VL-BAC",
@@ -312,10 +389,12 @@
       },
       "steps": [
         {
-          "text": "Couper {{L}} cm de {{diam}}\"."
+          "text": "Couper {{L}} cm de {{diam}}\".",
+          "image": "img/procedures/geo/T7-E1.jpg"
         },
         {
-          "text": "Braser le tube sur la bouteille anti-coup, sur la sortie liquide de la bouteille."
+          "text": "Braser le tube sur la bouteille anti-coup, sur la sortie liquide de la bouteille.",
+          "image": "img/procedures/geo/T7-E2.jpg"
         }
       ],
       "tubeRef": "T7-BAC-T8",
@@ -343,19 +422,30 @@
       },
       "steps": [
         {
-          "text": "Couper {{L}} cm de {{diam}}\"."
+          "text": "Couper {{L}} cm de {{diam}}\".",
+          "image": "img/procedures/geo/T8-E1.jpg"
         },
         {
-          "text": "Coter {{L}} cm du bord du tube."
+          "text": "Coter {{L}} cm du bord du tube.",
+          "image": "img/procedures/geo/T8-E2.jpg"
         },
         {
-          "text": "Marque sur \"L\", cintrer à 90°."
+          "text": "Marque sur \"L\", cintrer à 90°.",
+          "images": [
+            "img/procedures/geo/T8-E3-1.jpg",
+            "img/procedures/geo/T8-E3-2.jpg"
+          ]
         },
         {
-          "text": "Coter {{L}} cm de l'axe du tube."
+          "text": "Coter {{L}} cm de l'axe du tube.",
+          "image": "img/procedures/geo/T8-E4.jpg"
         },
         {
-          "text": "Marque sur \"L\", cintrer à 90° à l'inverse."
+          "text": "Marque sur \"L\", cintrer à 90° à l'inverse.",
+          "images": [
+            "img/procedures/geo/T8-E5-1.jpg",
+            "img/procedures/geo/T8-E5-2.jpg"
+          ]
         }
       ],
       "tubeRef": "T8-T8-DE",
@@ -389,16 +479,27 @@
       },
       "steps": [
         {
-          "text": "Couper {{L}} cm de tube {{diam}}\"."
+          "text": "Couper {{L}} cm de tube {{diam}}\".",
+          "image": "img/procedures/geo/T9-E1.jpg"
         },
         {
-          "text": "Coter {{L}} cm du bord du tube."
+          "text": "Coter {{L}} cm du bord du tube.",
+          "image": "img/procedures/geo/T9-E2.jpg"
         },
         {
-          "text": "Marque sur \"L\", cintrer à 90°."
+          "text": "Marque sur \"L\", cintrer à 90°.",
+          "images": [
+            "img/procedures/geo/T9-E3.jpg",
+            "img/procedures/geo/T9-E3-1.jpg",
+            "img/procedures/geo/T9-E3-2.jpg"
+          ]
         },
         {
-          "text": "Puis recouper {{L}} cm (une ancienne version indiquait 2 cm — à confirmer sur plan)."
+          "text": "Puis recouper {{L}} cm (une ancienne version indiquait 2 cm — à confirmer sur plan).",
+          "images": [
+            "img/procedures/geo/T9-E4-1.jpg",
+            "img/procedures/geo/T9-E4-2.jpg"
+          ]
         }
       ],
       "tubeRef": "T9-DE-EV",
@@ -433,40 +534,77 @@
       "printIntro": "Version retenue : assemblage 7/8\" par coudes. Variante 3/4\" cintrée sur autre plan (non détaillée ici).",
       "steps": [
         {
-          "text": "Coude {{diam}}\" 90° M-F G-R."
+          "text": "Coude {{diam}}\" 90° M-F G-R.",
+          "image": "img/procedures/geo/T10-E1.jpg"
         },
         {
-          "text": "Couper {{L}} cm de tube {{diam}}\"."
+          "text": "Couper {{L}} cm de tube {{diam}}\".",
+          "images": [
+            "img/procedures/geo/T10-E2.jpg",
+            "img/procedures/geo/T10-E2 (2).jpg",
+            "img/procedures/geo/T10-E2 (3).jpg",
+            "img/procedures/geo/T10-E2 (4).jpg"
+          ]
         },
         {
-          "text": "Coude {{diam}}\" 45° F-F."
+          "text": "Coude {{diam}}\" 45° F-F.",
+          "images": [
+            "img/procedures/geo/T10-E3.jpg",
+            "img/procedures/geo/T10-E3 (2).jpg"
+          ]
         },
         {
-          "text": "Couper {{L}} cm de tube {{diam}}\"."
+          "text": "Couper {{L}} cm de tube {{diam}}\".",
+          "images": [
+            "img/procedures/geo/T10-E4.jpg",
+            "img/procedures/geo/T10-E4 (2).jpg"
+          ]
         },
         {
-          "text": "Coude {{diam}}\" 45° M-F + Coude {{diam}}\" 45° F-F."
+          "text": "Coude {{diam}}\" 45° M-F + Coude {{diam}}\" 45° F-F.",
+          "images": [
+            "img/procedures/geo/T10-E5.jpg",
+            "img/procedures/geo/T10-E5-1.jpg",
+            "img/procedures/geo/T10-E5-2.jpg"
+          ]
         },
         {
-          "text": "Couper {{L}} cm de tube {{diam}}\"."
+          "text": "Couper {{L}} cm de tube {{diam}}\".",
+          "images": [
+            "img/procedures/geo/T10-E6.jpg",
+            "img/procedures/geo/T10-E6 (2).jpg"
+          ]
         },
         {
-          "text": "Braser le tout."
+          "text": "Braser le tout.",
+          "images": [
+            "img/procedures/geo/T10-E7.jpg",
+            "img/procedures/geo/T10-E7-1.jpg",
+            "img/procedures/geo/T10-E7-2.jpg"
+          ]
         },
         {
-          "text": "Percer Ø {{diamTrou}} mm à {{L}} cm du bord du tube de {{Lref}} cm, avant le coude 45° MF."
+          "text": "Percer Ø {{diamTrou}} mm à {{L}} cm du bord du tube de {{Lref}} cm, avant le coude 45° MF.",
+          "images": [
+            "img/procedures/geo/T10-E8.jpg",
+            "img/procedures/geo/T10-E8 (2).jpg"
+          ]
         },
         {
-          "text": "Percer Ø {{diamTrou}} mm à {{L1}} cm et {{L2}} cm du bord du tube de {{Lref}} cm, après le coude F-F {{diam}}\" 45°."
+          "text": "Percer Ø {{diamTrou}} mm à {{L1}} cm et {{L2}} cm du bord du tube de {{Lref}} cm, après le coude F-F {{diam}}\" 45°.",
+          "image": "img/procedures/geo/T10-E9.jpg"
         },
         {
-          "text": "Ergot, cintrer le pressostat BP à 90°."
+          "text": "Ergot, cintrer le pressostat BP à 90°.",
+          "image": "img/procedures/geo/T10-E10.jpg"
         },
         {
-          "text": "Couper le Schrader {{diam}}\" en deux."
+          "text": "Couper le Schrader {{diam}}\" en deux.",
+          "image": "img/procedures/geo/T10-E11.jpg"
         },
         {
-          "text": "Braser le pressostat et le Schrader sur le tube."
+          "text": "Braser le pressostat et le Schrader sur le tube.",
+          "image": "img/procedures/geo/T10-E12.jpg"
         }
       ],
       "tubeRef": "T10-EV-BAC",
@@ -527,40 +665,82 @@
       "printIntro": "Version retenue : assemblage 7/8\" par coudes. Variante 3/4\" cintrée sur autre plan (non détaillée ici).",
       "steps": [
         {
-          "text": "Coude 90° M-F {{diam}}\" GR."
+          "text": "Coude 90° M-F {{diam}}\" GR.",
+          "images": [
+            "img/procedures/geo/T11-E1.jpg",
+            "img/procedures/geo/T11-E1 (2).jpg"
+          ]
         },
         {
-          "text": "Couper {{L}} cm de tube {{diam}}\" puis assembler."
+          "text": "Couper {{L}} cm de tube {{diam}}\" puis assembler.",
+          "images": [
+            "img/procedures/geo/T11-E2.jpg",
+            "img/procedures/geo/T11-E2 (2).jpg"
+          ]
         },
         {
-          "text": "Coude 90° F-F {{diam}}\" GR."
+          "text": "Coude 90° F-F {{diam}}\" GR.",
+          "images": [
+            "img/procedures/geo/T11-E3.jpg",
+            "img/procedures/geo/T11-E3 (2).jpg",
+            "img/procedures/geo/T11-E3 (3).jpg",
+            "img/procedures/geo/T11-E3 (4).jpg"
+          ]
         },
         {
-          "text": "Couper {{L}} cm de tube {{diam}}\" puis assembler."
+          "text": "Couper {{L}} cm de tube {{diam}}\" puis assembler.",
+          "images": [
+            "img/procedures/geo/T11-E4.jpg",
+            "img/procedures/geo/T11-E4 (2).jpg"
+          ]
         },
         {
-          "text": "Coude 180° F-F {{diam}}\" GR."
+          "text": "Coude 180° F-F {{diam}}\" GR.",
+          "images": [
+            "img/procedures/geo/T11-E5.jpg",
+            "img/procedures/geo/T11-E5 (2).jpg",
+            "img/procedures/geo/T11-E5-2.jpg"
+          ]
         },
         {
-          "text": "Couper {{L}} cm de tube {{diam}}\" puis assembler."
+          "text": "Couper {{L}} cm de tube {{diam}}\" puis assembler.",
+          "images": [
+            "img/procedures/geo/T11-E6.jpg",
+            "img/procedures/geo/T11-E6 (2).jpg"
+          ]
         },
         {
-          "text": "Coude 90° F-F {{diam}}\" GR."
+          "text": "Coude 90° F-F {{diam}}\" GR.",
+          "images": [
+            "img/procedures/geo/T11-E7.jpg",
+            "img/procedures/geo/T11-E7 (2).jpg",
+            "img/procedures/geo/T11-E7-2.jpg",
+            "img/procedures/geo/T11-E7-3.jpg"
+          ]
         },
         {
-          "text": "Couper {{L}} cm de tube {{diam}}\" puis assembler."
+          "text": "Couper {{L}} cm de tube {{diam}}\" puis assembler.",
+          "image": "img/procedures/geo/T11-E8.jpg"
         },
         {
-          "text": "Coude 90° F-F {{diam}}\" GR."
+          "text": "Coude 90° F-F {{diam}}\" GR.",
+          "image": "img/procedures/geo/T11-E9.jpg"
         },
         {
-          "text": "Couper {{L}} cm de tube {{diam}}\" puis assembler."
+          "text": "Couper {{L}} cm de tube {{diam}}\" puis assembler.",
+          "image": "img/procedures/geo/T11-E10.jpg"
         },
         {
-          "text": "Coude 90° M-F {{diam}}\" GR."
+          "text": "Coude 90° M-F {{diam}}\" GR.",
+          "image": "img/procedures/geo/T11-E11.jpg"
         },
         {
-          "text": "Puis braser le tout."
+          "text": "Puis braser le tout.",
+          "images": [
+            "img/procedures/geo/T11-E12-1.jpg",
+            "img/procedures/geo/T11-E12-2.jpg",
+            "img/procedures/geo/T11-E12-3.jpg"
+          ]
         }
       ],
       "tubeRef": "T11-BAC-CP",
@@ -622,22 +802,59 @@
       },
       "steps": [
         {
-          "text": "Couper {{L}} cm de {{diam}}\"."
+          "text": "Couper {{L}} cm de {{diam}}\".",
+          "images": [
+            "img/procedures/geo/T12-E1.jpg",
+            "img/procedures/geo/T12-E1-1.jpg",
+            "img/procedures/geo/T12-E1-2.jpg"
+          ]
         },
         {
-          "text": "Ergots, cintrer à 90°."
+          "text": "Ergots, cintrer à 90°.",
+          "images": [
+            "img/procedures/geo/T12-E2.jpg",
+            "img/procedures/geo/T12-E2-1.jpg",
+            "img/procedures/geo/T12-E2-2.jpg",
+            "img/procedures/geo/T12-E2-2 (2).jpg"
+          ]
         },
         {
-          "text": "Coter {{L}} cm de l'axe du tube."
+          "text": "Coter {{L}} cm de l'axe du tube.",
+          "image": "img/procedures/geo/T12-E3.jpg"
         },
         {
-          "text": "Marque sur \"L\", cintrer à 90° tube vers nous."
+          "text": "Marque sur \"L\", cintrer à 90° tube vers nous.",
+          "images": [
+            "img/procedures/geo/T12-E4.jpg",
+            "img/procedures/geo/T12-E4 (2).jpg",
+            "img/procedures/geo/T12-E4-1.jpg",
+            "img/procedures/geo/T12-E4-2.jpg",
+            "img/procedures/geo/T12-E4-2 (2).jpg"
+          ]
         },
         {
-          "text": "Coter {{L}} cm de l'axe du tube."
+          "text": "Coter {{L}} cm de l'axe du tube.",
+          "image": "img/procedures/geo/T12-E5.jpg"
         },
         {
-          "text": "Marque sur \"L\", cintrer à 90° dans le même sens que précédent."
+          "text": "Marque sur \"L\", cintrer à 90° dans le même sens que précédent.",
+          "images": [
+            "img/procedures/geo/T12-E6-1.jpg",
+            "img/procedures/geo/T12-E6-2.jpg"
+          ]
+        },
+        {
+          "text": "Étape 7 (photo)",
+          "image": "img/procedures/geo/T12-E7.jpg"
+        },
+        {
+          "text": "Étape 8 (photo)",
+          "images": [
+            "img/procedures/geo/T12-E8-1.jpg",
+            "img/procedures/geo/T12-E8-2.jpg",
+            "img/procedures/geo/T12-E8-2.1.jpg",
+            "img/procedures/geo/T12-E8-3.jpg"
+          ]
         }
       ],
       "tubeRef": "T12-EG-DE",
@@ -671,13 +888,32 @@
       },
       "steps": [
         {
-          "text": "Préparer le châssis selon plan gamme."
+          "text": "Préparer le châssis selon plan gamme.",
+          "image": "img/procedures/geo/Chassis-E1.jpg"
         },
         {
-          "text": "Châssis fini prêt pour montage."
+          "text": "Châssis fini prêt pour montage.",
+          "images": [
+            "img/procedures/geo/Chassis-E2.jpg",
+            "img/procedures/geo/Chassis-E2-1.jpg",
+            "img/procedures/geo/Chassis-E2-2.jpg",
+            "img/procedures/geo/Chassis-finis.jpg"
+          ]
         },
         {
-          "text": "Châssis positionné dans la caisse."
+          "text": "Châssis positionné dans la caisse.",
+          "images": [
+            "img/procedures/geo/chassis_E3.jpg",
+            "img/procedures/geo/chassis-dans-caisse.jpg"
+          ]
+        },
+        {
+          "text": "Étape 4 (photo)",
+          "image": "img/procedures/geo/Chassis-E4.jpg"
+        },
+        {
+          "text": "Étape 5 (photo)",
+          "image": "img/procedures/geo/Chassis-E5.jpg"
         }
       ]
     },
@@ -711,7 +947,8 @@
           "text": "Fixer sur silent-blocs, vérifier l'alignement des raccords aspiration et refoulement."
         },
         {
-          "text": "Raccordement alimentation électrique compresseur."
+          "text": "Raccordement alimentation électrique compresseur.",
+          "image": "img/procedures/geo/Alim_Compresseur-1.jpg"
         }
       ]
     },
@@ -759,10 +996,20 @@
       },
       "steps": [
         {
-          "text": "Préparer le condenseur : fixations et passages de tubes."
+          "text": "Préparer le condenseur : fixations et passages de tubes.",
+          "image": "img/procedures/geo/Condenseur-E1.jpg"
         },
         {
-          "text": "Isoler le condenseur selon notice fabricant."
+          "text": "Isoler le condenseur selon notice fabricant.",
+          "image": "img/procedures/geo/Condenseur-E2.jpg"
+        },
+        {
+          "text": "Étape 3 (photo)",
+          "image": "img/procedures/geo/Condenseur-E3.jpg"
+        },
+        {
+          "text": "Étape 4 (photo)",
+          "image": "img/procedures/geo/Condenseur-E4.jpg"
         }
       ]
     },
@@ -776,19 +1023,27 @@
       },
       "steps": [
         {
-          "text": "Préparer l'échangeur B12 × 50."
+          "text": "Préparer l'échangeur B12 × 50.",
+          "image": "img/procedures/geo/B12x50-E1.jpg"
         },
         {
-          "text": "Étape 2 — montage / positionnement."
+          "text": "Étape 2 — montage / positionnement.",
+          "image": "img/procedures/geo/B12X50-E2.jpg"
         },
         {
-          "text": "Étape 3."
+          "text": "Étape 3.",
+          "image": "img/procedures/geo/B12x50-E3.jpg"
         },
         {
-          "text": "Étape 4."
+          "text": "Étape 4.",
+          "image": "img/procedures/geo/B12x50-E4.jpg"
         },
         {
-          "text": "Étape 10 — finition."
+          "text": "Étape 10 — finition.",
+          "images": [
+            "img/procedures/geo/B12x50-E10.jpg",
+            "img/procedures/geo/B12x50-E10-1.jpg"
+          ]
         }
       ]
     },
@@ -802,10 +1057,24 @@
       },
       "steps": [
         {
-          "text": "Positionner le détendeur selon plan G-100."
+          "text": "Positionner le détendeur selon plan G-100.",
+          "image": "img/procedures/geo/Brasage détendeur-E0.jpg"
         },
         {
-          "text": "Braser les tubes 8 et 9, puis le tube 12 d'égalisation."
+          "text": "Braser les tubes 8 et 9, puis le tube 12 d'égalisation.",
+          "image": "img/procedures/geo/Brasage détendeur-E1.jpg"
+        },
+        {
+          "text": "Étape 3 (photo)",
+          "image": "img/procedures/geo/Brasage détendeur-E2.jpg"
+        },
+        {
+          "text": "Étape 4 (photo)",
+          "image": "img/procedures/geo/Brasage détendeur-E3.jpg"
+        },
+        {
+          "text": "Étape 5 (photo)",
+          "image": "img/procedures/geo/Brasage détendeur-E4.jpg"
         }
       ]
     },

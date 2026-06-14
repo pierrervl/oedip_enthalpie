@@ -562,6 +562,28 @@ async function ensureDirPermission(handle,write){
   if(p==="prompt"){ p=await handle.requestPermission({mode}); return p==="granted"; }
   return false;
 }
+async function hasDirPermission(handle,write){
+  if(!handle) return false;
+  try{
+    return (await handle.queryPermission({mode:write?"readwrite":"read"}))==="granted";
+  }catch(e){ return false; }
+}
+function catalogComposantCount(){
+  if(!state.composants||typeof state.composants!=="object") return 0;
+  return Object.keys(state.composants).reduce((n,k)=>n+(state.composants[k]?.length||0),0);
+}
+async function ensureDefaultCatalogLoaded(){
+  let ok=false;
+  if(typeof loadReferenceCatalogFromCloud==="function"){
+    try{ ok=await loadReferenceCatalogFromCloud(); }catch(e){ console.warn("Catalogue cloud:", e.message); }
+  }
+  if(!ok||catalogComposantCount()===0){
+    if(!applyBundledDefaultCatalogSync()) ok=await loadBundledDefaultCatalog();
+    else ok=true;
+  }
+  if(typeof ensureComposants==="function") ensureComposants();
+  return ok||catalogComposantCount()>0;
+}
 async function readFileFromDir(dir,name){
   const fh=await dir.getFileHandle(name);
   const file=await fh.getFile();
@@ -899,7 +921,6 @@ function closeStartupModal(){ $("modalStartup")?.classList.remove("show"); }
 async function bootstrapWorkspace(){
   workspaceBooting=true;
   try{ lastSavedFile=localStorage.getItem("oedip_last_saved_file")||""; }catch(e){}
-  try{ currentStudyFile=localStorage.getItem("oedip_current_study_file")||""; }catch(e){}
   try{ currentStudyCloudId=localStorage.getItem("oedip_current_study_cloud_id")||""; }catch(e){}
   currentStudyFile=""; currentStudyHandle=null;
   if(sbCloudActive()&&currentStudyCloudId){
@@ -911,12 +932,12 @@ async function bootstrapWorkspace(){
   const handle=await loadDirHandle();
   if(handle&&FS_SUPPORTED){
     workspaceDirHandle=handle; workspaceDirName=handle.name; updateFolderUI();
-    if(await ensureDirPermission(handle,false)){
+    if(await hasDirPermission(handle,false)){
       const remembered=localStorage.getItem("oedip_current_study_file");
       if(remembered&&await loadStudyFromDir(handle,remembered)){
         markSaved(); workspaceBooting=false; return true;
       }
-      const ok=await importWorkspace("project",{silent:true,notify:true});
+      const ok=await importWorkspace("project",{silent:true,notify:false});
       if(ok){ markSaved(); workspaceBooting=false; return true; }
     }
   }
@@ -949,7 +970,7 @@ $("startupPickFolder").onclick=()=>pickWorkspaceFolder();
 $("startupStudies").onclick=()=>{ closeStartupModal(); showStudiesModal(); };
 $("startupRestoreAutosave").onclick=()=>restoreAutosave();
 $("startupImportMach").onclick=async()=>{ await importWorkspace("db"); };
-$("startupContinue").onclick=()=>{ closeStartupModal(); toast("Liez un dossier 📁 pour enregistrer vos études"); };
+$("startupContinue").onclick=()=>{ closeStartupModal(); };
 $("modalStartup").addEventListener("click",e=>{ if(e.target.id==="modalStartup") closeStartupModal(); });
 $("modalStudies").addEventListener("click",e=>{ if(e.target.id==="modalStudies") closeStudiesModal(); });
 $("modalNewStudy").addEventListener("click",e=>{ if(e.target.id==="modalNewStudy") closeNewStudyModal(); });
@@ -976,19 +997,16 @@ async function onSbAuthChanged(){
 
 async function bootApp(){
   if(typeof sbBootstrapAuth==="function") await sbBootstrapAuth();
-  let catalogLoaded=false;
-  if(typeof loadReferenceCatalogFromCloud==="function"){
-    catalogLoaded=await loadReferenceCatalogFromCloud();
-  }
-  if(!catalogLoaded) applyBundledDefaultCatalogSync();
+  await ensureDefaultCatalogLoaded();
   await bootstrapWorkspace();
   if(!currentStudyCloudId&&!currentStudyFile) applyBundledDemoStudySync();
   fillSelects(); fillDbPerfSelects(); writeForm(); recalc(); renderGammes(); syncDeptFromCp(true);
+  if(typeof initComposantsTab==="function"&&$("compTabs")?.dataset.ready) renderComposants();
   $("verLabel").textContent=`${state.meta.outil} ${state.meta.version} · ${state.meta.millesime||""}`;
   updateWsStatus();
   updateStudyUI();
+  closeStartupModal();
   if(autosaveDiffersFromCurrent()) showStartupModal("restore");
-  else if(!workspaceDirHandle&&FS_SUPPORTED) showStartupModal("no_fs");
 }
 bootApp();
 

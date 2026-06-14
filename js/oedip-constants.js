@@ -1,5 +1,7 @@
 /* OEDIP — constantes & départements — ne pas modifier l'ordre de chargement dans oedip.html */
 
+const $ = (id) => document.getElementById(id);
+
 /* ============================================================
    OEDIP · intégration DJU + modèle machine enrichi
    ============================================================ */

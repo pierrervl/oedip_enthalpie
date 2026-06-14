@@ -441,6 +441,23 @@ const procedures = [
   }
 ];
 
+const localJpgs = fs.existsSync(IMG_DIR)
+  ? fs.readdirSync(IMG_DIR).filter((f) => f.toLowerCase().endsWith(".jpg"))
+  : [];
+const existingHasPhotos = () => {
+  if (!fs.existsSync(outPath)) return false;
+  try {
+    const cur = JSON.parse(fs.readFileSync(outPath, "utf8"));
+    return cur.procedures?.some((p) => p.steps?.some((s) => s.image || s.images));
+  } catch {
+    return false;
+  }
+};
+if (!localJpgs.length && existingHasPhotos()) {
+  console.log("Pas de photos locales — conservation de", path.relative(root, outPath));
+  process.exit(0);
+}
+
 const { orphans, mapped } = applyAutoProcedurePhotos(procedures);
 applyTubeMeta(procedures);
 const catalog = { gammeCode: 6, procedures };
