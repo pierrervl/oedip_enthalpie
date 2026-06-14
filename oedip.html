@@ -19,10 +19,9 @@
   <div class="iobtns noprint">
     <button class="btn-ghost" id="btnSbAuth" onclick="showSbAuthModal()" title="Connexion OEDIP Cloud">☁ <span id="sbAuthLabel">Cloud</span></button>
     <button class="btn-ghost" id="btnFolder" onclick="pickWorkspaceFolder()" title="Dossier de travail fixe">📁 <span id="wsFolderShort">Dossier</span></button>
-    <button class="btn-ghost" onclick="showStudiesModal()" title="Ouvrir une étude enregistrée">📋 Mes études</button>
+    <button class="btn-ghost" onclick="showStudiesModal()" title="Ouvrir une étude (cloud, dossier local ou fichier JSON)">📋 Ouvrir</button>
     <button class="btn-ghost" onclick="newStudy()" title="Nouvelle étude vierge">+ Nouvelle</button>
-    <button class="btn-ghost" onclick="importWorkspace('project')">⤓ Importer</button>
-    <button class="btn-heat" onclick="exportProject()" title="Enregistre l'étude complète (saisie, sélections, catalogue et composants modifiés)">⤒ Enregistrer</button>
+    <button class="btn-heat" onclick="exportProject()" title="Enregistrer l'étude (cloud Supabase et/ou dossier local)">⤒ Enregistrer</button>
   </div>
 </header>
 <nav class="tabs noprint">
@@ -59,12 +58,12 @@
     <select id="dbGamme" onchange="dbGammeChanged()" style="max-width:280px"></select>
     <span class="grow"></span>
     <button class="btn-soft" onclick="addMachine()">+ Ajouter une machine</button>
-    <button class="btn-soft" onclick="exportSelectedGammeCsv()" title="Exporter la gamme sélectionnée au format CSV Excel">⤒ Exporter CSV</button>
-    <button class="btn-soft" onclick="importGammeCsv()" title="Importer une gamme depuis un fichier CSV (format OEDIP-CSV v2)">⤓ Importer CSV</button>
+    <button class="btn-soft" onclick="exportSelectedGammeCsv()" title="Exporter la gamme sélectionnée au format CSV Excel">⤒ CSV gamme</button>
+    <button class="btn-soft" onclick="importGammeCsv()" title="Importer une gamme depuis un fichier CSV (format OEDIP-CSV v2)">⤓ CSV gamme</button>
     <button class="btn-ghost" onclick="downloadGammeCsvTemplate()" title="Télécharger un fichier modèle avec les colonnes attendues">Modèle CSV</button>
-    <button class="btn-soft" onclick="exportDB()">⤒ Exporter JSON</button>
-    <button class="btn-soft" onclick="importWorkspace('db')">⤓ Importer JSON</button>
-    <button class="btn-soft" onclick="importGammePack()" title="Ajoute ou met à jour une gamme sans effacer Aqua+ / GMG">⤓ Pack gamme JSON</button>
+    <button class="btn-soft" onclick="exportDB()" title="Enregistrer la base machines (cloud et/ou dossier local)">⤒ Enregistrer base</button>
+    <button class="btn-soft" onclick="importWorkspace('db')" title="Restaurer la base machines depuis le cloud ou un fichier JSON">⤓ Restaurer base</button>
+    <button class="btn-ghost" onclick="importGammePack()" title="Ajoute ou met à jour une gamme sans effacer Aqua+ / GMG">Pack gamme</button>
   </div>
   <div class="hint noprint" style="margin:-8px 0 14px;font-size:12px;line-height:1.45">
     <b>CSV gamme (Excel)</b> — séparateur <span class="mono">;</span> · sections <span class="mono">GAMME</span> · <span class="mono">MACHINE</span> · <span class="mono">COMPOSANT</span> · <span class="mono">LIEN</span> · <span class="mono">PERF</span>.
@@ -392,11 +391,12 @@
   </div>
 </div></div>
 <div class="modal" id="modalStudies"><div class="card studies-card">
-  <div class="mhead"><h3>Mes études</h3><span class="grow" style="flex:1"></span>
+  <div class="mhead"><h3>Ouvrir une étude</h3><span class="grow" style="flex:1"></span>
     <button class="btn-soft" onclick="closeStudiesModal();newStudy();">+ Nouvelle</button>
+    <button class="btn-soft" onclick="closeStudiesModal();fileImport('project');">⤓ Fichier JSON</button>
     <button class="btn-ghost" onclick="closeStudiesModal()">Fermer</button></div>
   <div class="mbody">
-    <div class="hint" style="margin-bottom:12px">Les études cloud sont dans la table <span class="mono">studies</span> (colonne <span class="mono">payload</span>). Le catalogue machines est copié dans <span class="mono">machine_libraries</span> à chaque enregistrement. Il n'y a pas de table <span class="mono">machines</span> séparée.</div>
+    <div class="hint" style="margin-bottom:12px">Études enregistrées dans le cloud (☁), dans votre dossier local (📁) ou importées depuis un fichier JSON.</div>
     <div id="studiesList" class="studies-list"></div>
   </div>
 </div></div>
@@ -414,20 +414,6 @@
       <button type="button" class="btn-soft" onclick="confirmSbAuth('signup')">Créer un compte</button>
       <button type="button" class="btn-heat" onclick="confirmSbAuth('signin')">Se connecter</button>
     </div>
-  </div>
-</div></div>
-<div class="modal startup" id="modalStartup"><div class="card">
-  <div class="mhead"><h3>Bienvenue dans OEDIP</h3></div>
-  <div class="mbody">
-    <p id="startupMsg" style="margin:0 0 14px;font-size:13.5px;line-height:1.5"></p>
-    <div style="display:flex;flex-direction:column;gap:8px">
-      <button class="btn-heat" id="startupPickFolder">📁 Choisir le dossier de travail</button>
-      <button class="btn-soft" id="startupStudies">📋 Ouvrir une étude enregistrée</button>
-      <button class="btn-soft" id="startupRestoreAutosave" style="display:none">↺ Restaurer la dernière session</button>
-      <button class="btn-soft" id="startupImportMach" style="display:none">⤓ Importer la base machines la plus récente</button>
-      <button class="btn-ghost" id="startupContinue">Continuer avec le projet par défaut</button>
-    </div>
-    <div class="hint" style="margin-top:14px">Liez un dossier pour enregistrer et retrouver vos études (<b>oedip_projet_*.json</b>). La dernière étude ouverte est rechargée automatiquement. Enregistrez avant de fermer si le point est orange.</div>
   </div>
 </div></div>
 <div class="modal" id="modalProcedure"><div class="card proc-modal-card">
@@ -472,6 +458,6 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="js/oedip-supabase.js?v=8"></script>
 <script src="js/oedip-catalog-cloud.js?v=8"></script>
-<script src="js/oedip-workspace.js?v=12"></script>
+<script src="js/oedip-workspace.js?v=13"></script>
 </body>
 </html>

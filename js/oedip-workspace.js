@@ -326,15 +326,6 @@ function wsCloudSaveError(e){
 function autosaveAvailable(){
   try{ return !!localStorage.getItem("oedip_autosave"); }catch(e){ return false; }
 }
-function autosaveDiffersFromCurrent(){
-  try{
-    const raw=localStorage.getItem("oedip_autosave");
-    if(!raw) return false;
-    let h=5381;
-    for(let i=0;i<raw.length;i++) h=((h<<5)+h)^raw.charCodeAt(i);
-    return (h>>>0).toString(36)!==stateFingerprint();
-  }catch(e){ return false; }
-}
 function updateStudyUI(){
   const el=$("wsStudyLabel"); if(!el) return;
   const label=currentStudyName||studyDisplayLabelFromProjet()||(currentStudyFile?currentStudyFile.replace(/^oedip_projet_?/,"").replace(/\.json$/,"").replace(/-/g," "):"Nouvelle étude");
@@ -425,9 +416,7 @@ async function renderStudiesList(){
   }
   if(!workspaceDirHandle||!await ensureDirPermission(workspaceDirHandle,false)){
     list.innerHTML=cloudHtml+`<div class="studies-section-label" style="margin-top:14px">📁 Fichiers locaux</div>
-      <div class="hint">Liez un dossier de travail (📁) pour lister vos études JSON, ou choisissez un fichier.</div>
-      <button type="button" class="btn-soft" style="margin-top:10px" id="studiesPickFile">⤓ Choisir un fichier…</button>`;
-    $("studiesPickFile").onclick=()=>{ fileImport("project"); closeStudiesModal(); };
+      <div class="hint">Liez un dossier de travail (📁) pour lister vos études, ou utilisez <b>Fichier JSON</b> ci-dessus.</div>`;
     list.querySelectorAll("[data-cloud-idx]").forEach(btn=>{
       btn.onclick=async()=>{
         const row=_studiesCloudCache[+btn.dataset.cloudIdx];
@@ -533,21 +522,6 @@ async function confirmNewStudy(){
 function newStudy(){
   if(isDirty()&&!confirm("Modifications non enregistrées. Démarrer une nouvelle étude sans enregistrer ?")) return;
   showNewStudyModal("create");
-}
-function restoreAutosave(){
-  try{
-    const raw=localStorage.getItem("oedip_autosave");
-    if(!raw) return false;
-    const obj=JSON.parse(raw);
-    applyImport(obj,"project",{silent:true,studyOnly:true});
-    currentStudyFile=""; currentStudyHandle=null;
-    currentStudyName=obj.etudeNom||"";
-    persistCurrentStudyFile("");
-    markDirty(); updateStudyUI();
-    toast("Session restaurée — enregistrez dans le dossier");
-    closeStartupModal();
-    return true;
-  }catch(e){ return false; }
 }
 
 function updateFolderUI(){
@@ -928,30 +902,8 @@ async function pickWorkspaceFolder(){
     const ok=await importWorkspace("project",{silent:true,notify:true});
     if(ok) markSaved();
     else toast("Dossier « "+handle.name+" » — enregistrez (⤒) pour créer votre première étude");
-    closeStartupModal();
   }catch(e){ if(e.name!=="AbortError") alert(e.message); }
 }
-
-function showStartupModal(mode){
-  const m=$("modalStartup"), msg=$("startupMsg");
-  const cont=$("startupContinue"), mach=$("startupImportMach"), restore=$("startupRestoreAutosave");
-  if(!m) return;
-  if(mode==="imported"){ closeStartupModal(); return; }
-  if(mode==="no_fs"){
-    msg.textContent="Liez un dossier de travail pour enregistrer vos études et y revenir facilement, ou continuez avec le projet par défaut.";
-  } else if(mode==="no_file"){
-    msg.textContent="Dossier « "+workspaceDirName+" » lié, mais aucune étude enregistrée. Renseignez le projet puis cliquez Enregistrer.";
-  } else if(mode==="restore"){
-    msg.textContent="Une session non enregistrée a été détectée. Souhaitez-vous la restaurer ou continuer avec le projet chargé ?";
-  } else {
-    msg.textContent="Choisissez votre dossier de travail pour retrouver vos études à chaque ouverture.";
-  }
-  if(restore) restore.style.display=autosaveDiffersFromCurrent()?"block":"none";
-  cont.style.display="block";
-  mach.style.display=FS_SUPPORTED?"block":"none";
-  m.classList.add("show");
-}
-function closeStartupModal(){ $("modalStartup")?.classList.remove("show"); }
 
 async function bootstrapWorkspace(){
   workspaceBooting=true;
@@ -1001,12 +953,6 @@ bindSeg('seg_rev',v=>{projet.source.reversible=+v;recalc();});
 $('modal').addEventListener('click',e=>{ if(e.target.id==='modal') closeModal(); });
 $('modalGamme').addEventListener('click',e=>{ if(e.target.id==='modalGamme') closeGammeModal(); });
 
-$("startupPickFolder").onclick=()=>pickWorkspaceFolder();
-$("startupStudies").onclick=()=>{ closeStartupModal(); showStudiesModal(); };
-$("startupRestoreAutosave").onclick=()=>restoreAutosave();
-$("startupImportMach").onclick=async()=>{ await importWorkspace("db"); };
-$("startupContinue").onclick=()=>{ closeStartupModal(); };
-$("modalStartup").addEventListener("click",e=>{ if(e.target.id==="modalStartup") closeStartupModal(); });
 $("modalStudies").addEventListener("click",e=>{ if(e.target.id==="modalStudies") closeStudiesModal(); });
 $("modalNewStudy").addEventListener("click",e=>{ if(e.target.id==="modalNewStudy") closeNewStudyModal(); });
 $("newStudyName")?.addEventListener("keydown",e=>{ if(e.key==="Enter"){ e.preventDefault(); confirmNewStudy(); } });
@@ -1042,8 +988,6 @@ async function bootApp(){
   $("verLabel").textContent=`${state.meta.outil} ${state.meta.version} · ${state.meta.millesime||""}`;
   updateWsStatus();
   updateStudyUI();
-  closeStartupModal();
-  if(autosaveDiffersFromCurrent()) showStartupModal("restore");
 }
 bootApp();
 

@@ -467,8 +467,6 @@
   .comp-field>span{color:var(--ink-soft)}
   .comp-field input,.comp-field select,.comp-field textarea{width:100%}
   .comp-field .unit{font-family:var(--mono);font-size:11px;color:var(--ink-soft);margin-top:2px}
-  .modal.startup{align-items:center}
-  .modal.startup .card{max-width:500px}
   #wsStudyLabel{max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#c8cdd2}
   .studies-card{max-width:560px}
   .studies-list{display:flex;flex-direction:column;gap:6px;max-height:min(420px,60vh);overflow:auto}
