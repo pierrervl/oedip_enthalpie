@@ -6,9 +6,12 @@
     "procedures:photos:import": "python scripts/convert-procedure-photos.py",
     "procedures:geo:build": "node scripts/build-procedures-geo.mjs",
     "default:build": "node scripts/build-procedures-geo.mjs && node scripts/build-default-project.mjs",
-    "gpac:build": "node scripts/build-gpac-pack.mjs"
+    "gpac:build": "node scripts/build-gpac-pack.mjs",
+    "supabase:login": "supabase login",
+    "supabase:link": "supabase link --project-ref lgpckxeyorsnizetpmuz"
   },
   "devDependencies": {
+    "supabase": "^2.106.0",
     "xlsx": "^0.18.5"
   }
 }

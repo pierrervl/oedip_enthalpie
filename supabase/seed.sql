@@ -1,0 +1,2 @@
+-- Seed data for local development (`supabase db reset`).
+-- Reference catalogues remain in data/ until a dedicated import migration.

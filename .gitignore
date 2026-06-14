@@ -1,3 +1,7 @@
 node_modules/
 data/_xlsx_unzip/
 data/_xlsx.zip
+
+.env
+.env.local
+.env.*.local
