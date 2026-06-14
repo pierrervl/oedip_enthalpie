@@ -246,6 +246,7 @@ function readForm(){
   if($('b_hydro_pdc_coll')) hy.pdcCollecteurBoucleKpa=+$('b_hydro_pdc_coll').value||0;
   e.nb=+$('e_nb').value;e.volPers=+$('e_vol').value;
   projet.source.gamme=+$('s_gamme').value;projet.source.regimeSource=+$('s_source').value;projet.source.captage=+$('s_capt').value;
+  if(typeof readInstallForm==='function') readInstallForm();
 }
 function writeForm(){
   const c=projet.client,b=projet.batiment,bs=projet.besoin,e=projet.ecs,s=projet.source;
@@ -1043,6 +1044,7 @@ function goTab(t){ document.querySelectorAll('nav.tabs button').forEach(b=>b.cla
   if(t==='result')runSelection(); if(t==='note')renderNote(); if(t==='db')renderGammes(); if(t==='compare')renderCompare();
   if(t==='composants') initComposantsTab();
   if(t==='outils'&&typeof initOutilsTab==='function') initOutilsTab();
+  if(t==='installation'&&typeof initInstallationTab==='function') initInstallationTab();
   if(t==='procedures'&&typeof initProceduresTab==='function') initProceduresTab();
   if(t==='projet') setTimeout(()=>renderDjuChart(LAST), 50);
   window.scrollTo(0,0); }

@@ -161,6 +161,7 @@ function applyProjetPayload(p) {
     delete projet.batiment.tbase;
   }
   if (typeof ensureProjetHydraulique === "function") ensureProjetHydraulique(projet);
+  if (typeof ensureProjetInstallation === "function") ensureProjetInstallation(projet);
   if (typeof normalizeZonesChauffage === "function") normalizeZonesChauffage(projet);
 }
 
@@ -958,6 +959,7 @@ document.body.addEventListener("input",markDirty,true);
 document.body.addEventListener("change",markDirty,true);
 
 if(typeof ensureProjetHydraulique==="function") ensureProjetHydraulique(projet);
+if(typeof ensureProjetInstallation==="function") ensureProjetInstallation(projet);
 async function onSbAuthChanged(){
   if(sbCloudActive()){
     try{

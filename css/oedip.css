@@ -317,6 +317,30 @@
   .circ-leg-item{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;color:var(--ink)}
   .circ-leg-swatch{width:14px;height:3px;border-radius:2px;flex-shrink:0}
   .circ-curves-empty,.circ-no-curve{font-size:12.5px;color:var(--ink-soft);line-height:1.45}
+
+  /* Installation tools */
+  .inst-tabs{margin-top:12px}
+  .inst-panel{max-width:720px}
+  .inst-calc-tbl,.inst-vol-tbl{width:100%;border-collapse:collapse;font-size:13px;margin-top:8px}
+  .inst-calc-tbl td,.inst-vol-tbl td,.inst-vol-tbl th{padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:middle}
+  .inst-vol-tbl th{font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-soft);text-align:left}
+  .inst-row-in td:first-child{font-weight:500}
+  .inst-row-in td:nth-child(2){background:#fff8d6;width:120px}
+  .inst-row-calc td:nth-child(2){background:#eef6fb}
+  .inst-row-result td:nth-child(2){background:#fff5f0}
+  .inst-val-main{font-weight:700;color:var(--heat);font-size:15px}
+  .inst-section{font-weight:700;font-size:12px;color:var(--ink-soft);padding-top:14px!important;background:var(--panel)}
+  .inst-inp{width:100%;max-width:110px;padding:6px 8px;border:1px solid var(--line);border-radius:4px;font-family:var(--mono);font-size:13px}
+  .inst-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+  .inst-circ-fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin:12px 0}
+  .inst-check{display:flex;align-items:center;gap:8px;font-size:13px;margin:8px 0 4px}
+  .inst-circ-summary{margin:6px 0 0;font-size:13px}
+  .inst-circ-rank{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:12px}
+  .inst-circ-rank th,.inst-circ-rank td{padding:7px 10px;border-bottom:1px solid var(--line);text-align:left}
+  .inst-circ-rank th{font-size:11px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.03em}
+  .inst-circ-ok td{background:rgba(12,122,140,.04)}
+  .inst-circ-ko td{opacity:.75}
+  .inst-rm{padding:2px 8px!important;min-width:0}
   .circ-no-curve{margin:12px 0 0}
   .ccard{background:var(--panel);border:1px solid var(--line);border-radius:9px;padding:14px 16px;box-shadow:var(--shadow)}
   .ccard-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:4px}
