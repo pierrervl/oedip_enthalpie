@@ -709,7 +709,10 @@ function ensurePage(pac,src,dep){
   return state.performances[pac][k];
 }
 function editPageQuick(pac,src,dep,k,v){
-  const f=ensurePage(pac,src,dep); f[k]=num(v)||0; syncCop(f); renderDB();
+  const f=ensurePage(pac,src,dep);
+  f[k]=num(v)||0;
+  syncCop(f,machineByPac(pac));
+  renderDB();
   if(typeof markCatalogDirty==="function") markCatalogDirty();
 }
 
@@ -725,13 +728,29 @@ function fluideDebitLabel(gam){
   if(!gam||gam.fluide==="custom") return "Débit fluide (g/s)";
   return "Débit "+(gam.fluide||"R407C");
 }
-function renderFicheThermo(f,gam,src){
+function renderFicheElecPhase(f,machine){
+  ensureFicheElecPhase(f,machine);
+  const tri=ficheIsTriphase(f,machine);
+  const pHint=tri?"P = √3 × 400 × I × cos φ":"P = 230 × I × cos φ";
+  return `<div class="fiche-cell" style="grid-column:span 2"><div class="f"><label>Alimentation électrique</label>
+    <div class="seg" style="margin-top:6px;max-width:280px">
+      <button type="button" class="${tri?'':'on'}" onclick="editFicheElecPhase(0)">MONO 230 V</button>
+      <button type="button" class="${tri?'on':''}" onclick="editFicheElecPhase(1)">TRI 400 V</button>
+    </div>
+    <div class="hint" style="font-size:11px;margin-top:6px">${pHint} · COP = P chaud / P élec</div>
+  </div></div>`;
+}
+function renderFicheThermo(f,gam,src,machine){
   const fl=fluideDebitLabel(gam);
   let h=`<div class="fiche-layout">`;
   h+=`<div class="fiche-block b-puiss"><div class="fb-head">Puissances</div><div class="fiche-puiss-cop">
     <div class="fiche-row c4">
       ${ficheCell("chaud","Chaud","kW",f)}${ficheCell("froid","Froid","kW",f)}
-      ${ficheCell("absorbee","Absorbée (élec)","kW",f)}${ficheCell("intensite","Intensité (élec)","A",f)}
+      ${ficheCell("absorbee","Absorbée (élec)","kW",f)}${ficheCell("intensite","Intensité","A",f)}
+    </div>
+    <div class="fiche-row c4" style="margin-top:8px;align-items:end">
+      ${ficheCell("cosPhi","cos φ","",f)}
+      ${renderFicheElecPhase(f,machine)}
     </div>
     <div class="fiche-cop"><span class="cop-lbl">COP</span>${ficheInp("cop",f)}</div>
   </div></div>`;
@@ -848,6 +867,7 @@ function renderMachinePerf(pac,src,dep){
   initMachinePages(pac);
   const f=ensurePage(pac,src,dep);
   const m=machineByPac(pac), gam=gammeByCode(m&&m.gammeCode), imp=calcGwpImpact(m);
+  syncCop(f,m);
   let h=renderPerfMatrix(pac,src,dep);
   h+=`<div class="fiche-block b-frigo" style="margin-bottom:14px"><div class="fb-head">Fluide frigorigène &amp; GWP</div>
     <div style="padding:12px 14px">
@@ -856,7 +876,7 @@ function renderMachinePerf(pac,src,dep){
         <div class="f"><label>PRP / GWP</label><input class="mono" readonly value="${gammeGwp(gam)!=null?gammeGwp(gam)+" kg CO₂eq/kg":""}"></div>
         <div class="f"><label>Charge fluide <span class="u">kg</span></label><input class="mono" type="number" step="0.01" value="${m&&m.chargeFluide!=null?m.chargeFluide:""}" onchange="editMachineCharge(${JSON.stringify(pac)},this.value)"></div>
       </div>${gwpHtml(imp)}</div></div>`;
-  h+=renderFicheThermo(f,gam,src);
+  h+=renderFicheThermo(f,gam,src,m);
   h+=`<div class="fiche-block b-tech"><div class="fb-head">Sous-refroidisseur (option)</div><div class="fgrid" style="padding:12px 14px">`;
   SR_FIELDS.forEach(([k,lbl,u])=>{ h+=`<div class="f"><label>${lbl} <span class="u">${u}</span></label>${ficheInp(k,f)}</div>`; });
   h+=`</div></div>`;
@@ -908,11 +928,24 @@ function closeModal(){
   renderDB(); recalc();
   if(hadMachine&&typeof markCatalogDirty==="function") markCatalogDirty();
 }
+function editFicheElecPhase(tri){
+  if(!MOPEN||MOPEN.tab!=="perf") return;
+  const f=ensurePage(MOPEN.pac,MOPEN.src,MOPEN.dep);
+  const m=machineByPac(MOPEN.pac);
+  f.elecTriphase=tri?1:0;
+  f.tensionElec=tri?400:230;
+  syncCop(f,m);
+  renderMachineModal();
+  if(typeof markCatalogDirty==="function") markCatalogDirty();
+}
 function editFiche(k,v){
   if(!MOPEN||MOPEN.tab!=="perf") return;
   const f=ensurePage(MOPEN.pac,MOPEN.src,MOPEN.dep);
-  f[k]=num(v);
-  if(k==="chaud"||k==="absorbee"||k==="cop") syncCop(f);
+  const m=machineByPac(MOPEN.pac);
+  const autoKeys=new Set(["chaud","froid","absorbee","intensite","cop","tensionElec","cosPhi","hp","bp","debitR407C","froidM3H","pdcEvapF","pdcTuyF","pdcTotF","chaudM3H","pdcCondC","pdcTuyC","pdcTotC","capteurM2","capteurMl","capteurHoriz","capteurVert","iMax230","iMax400","diamCoude","diamLyre","pCaptSpec","etaS30","etaS50"]);
+  f[k]=autoKeys.has(k)?num(v):v;
+  syncCop(f,m);
+  if(["chaud","froid","absorbee","intensite","cop","cosPhi","elecTriphase"].includes(k)) renderMachineModal();
   if(typeof markCatalogDirty==="function") markCatalogDirty();
 }
 function editMachineCharge(pac,v){

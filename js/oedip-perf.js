@@ -18,14 +18,49 @@ function normDep(d){
 }
 function pageKey(src,dep){ return normSrc(src)+"|"+normDep(dep); }
 function parsePageKey(k){ const i=k.indexOf("|"); return {src:k.slice(0,i),dep:k.slice(i+1)}; }
-function syncCop(f){
-  if(!f) return;
-  if(f.chaud&&f.absorbee) f.cop=+(f.chaud/f.absorbee).toFixed(2);
-  else if(f.chaud&&f.cop) f.absorbee=+(f.chaud/f.cop).toFixed(2);
+function defaultTensionElecV(f, machine) {
+  return ficheIsTriphase(f, machine) ? 400 : 230;
+}
+function machineIsTriphase(machine) {
+  return machine?.tension === 1;
+}
+/** Tri/mono sur la fiche perf (0 = mono 230 V, 1 = tri 400 V) ; sinon héritage machine. */
+function ficheIsTriphase(f, machine) {
+  if (f?.elecTriphase === 1 || f?.elecTriphase === true) return true;
+  if (f?.elecTriphase === 0 || f?.elecTriphase === false) return false;
+  return machineIsTriphase(machine);
+}
+function ensureFicheElecPhase(f, machine) {
+  if (!f) return;
+  if (f.elecTriphase == null) f.elecTriphase = machineIsTriphase(machine) ? 1 : 0;
+}
+/** Puissance absorbée (kW) : mono U×I×cos φ · tri √3×U×I×cos φ (U en V, I en A). */
+function calcAbsorbeeKw(intensite, tensionV, cosPhi, triphase) {
+  const I = +intensite, U = +tensionV, c = +cosPhi;
+  if (!(I > 0) || !(U > 0) || !(c > 0)) return null;
+  const w = triphase ? Math.sqrt(3) * U * I * c : U * I * c;
+  return +Math.max(0, w / 1000).toFixed(3);
+}
+function syncCop(f, machine) {
+  if (!f) return;
+  ensureFicheElecPhase(f, machine);
+  const tri = ficheIsTriphase(f, machine);
+  const U = f.tensionElec != null && f.tensionElec !== "" ? +f.tensionElec : defaultTensionElecV(f, machine);
+  const I = +f.intensite;
+  const cos = f.cosPhi != null && f.cosPhi !== "" ? +f.cosPhi : 0;
+  if (I > 0 && U > 0 && cos > 0) {
+    const p = calcAbsorbeeKw(I, U, cos, tri);
+    if (p != null) f.absorbee = p;
+  }
+  if (f.chaud > 0 && f.absorbee > 0) {
+    f.cop = +(f.chaud / f.absorbee).toFixed(2);
+  } else if (f.chaud > 0 && f.cop > 0) {
+    f.absorbee = +(f.chaud / f.cop).toFixed(3);
+  }
 }
 function mkPage(o){
   const f=Object.assign({
-    chaud:0,froid:0,absorbee:0,intensite:0,cop:0,
+    chaud:0,froid:0,absorbee:0,intensite:0,cop:0,tensionElec:null,cosPhi:null,elecTriphase:null,
     hp:null,bp:null,debitR407C:null,froidM3H:null,pdcEvapF:null,pdcTuyF:null,pdcTotF:null,
     chaudM3H:null,pdcCondC:null,pdcTuyC:null,pdcTotC:null,
     capteurM2:null,capteurMl:null,capteurHoriz:null,capteurVert:null,
@@ -35,9 +70,9 @@ function mkPage(o){
 }
 function copyThermoBase(f){
   if(!f) return {};
-  const {chaud,froid,absorbee,intensite,cop,hp,bp,debitR407C,froidM3H,pdcEvapF,pdcTuyF,pdcTotF,chaudM3H,pdcCondC,pdcTuyC,pdcTotC,
+  const {chaud,froid,absorbee,intensite,cop,tensionElec,cosPhi,elecTriphase,hp,bp,debitR407C,froidM3H,pdcEvapF,pdcTuyF,pdcTotF,chaudM3H,pdcCondC,pdcTuyC,pdcTotC,
     capteurM2,capteurMl,capteurHoriz,capteurVert,iMax230,iMax400,diamCoude,diamLyre,pCaptSpec,etaS30,etaS50}=f;
-  return {chaud,froid,absorbee,intensite,cop,hp,bp,debitR407C,froidM3H,pdcEvapF,pdcTuyF,pdcTotF,chaudM3H,pdcCondC,pdcTuyC,pdcTotC,
+  return {chaud,froid,absorbee,intensite,cop,tensionElec,cosPhi,elecTriphase,hp,bp,debitR407C,froidM3H,pdcEvapF,pdcTuyF,pdcTotF,chaudM3H,pdcCondC,pdcTuyC,pdcTotC,
     capteurM2,capteurMl,capteurHoriz,capteurVert,iMax230,iMax400,diamCoude,diamLyre,pCaptSpec,etaS30,etaS50};
 }
 /** Données « description générale » (import gamme) → champs hydrauliques des fiches perf */
