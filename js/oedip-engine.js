@@ -75,7 +75,11 @@ const Engine = {
     const cand = machines.filter((m) => m.gammeCode === gammeCode && matchT(m.tension) && m.reversible >= reversible)
       .map((m) => {
         const pc = Engine.pCalo(perf, m.pac, src, dep);
-        const cop = Engine.copReg(perf, m.pac, src, dep);
+        const gamme = typeof gammeByCode === "function" ? gammeByCode(gammeCode) : null;
+        const depTemp = opts.depTemp != null ? opts.depTemp : emitterDepartureTemp(dep);
+        const cop = typeof resolveMachineCop === "function"
+          ? resolveMachineCop(perf, m.pac, src, dep, depTemp, gamme)
+          : Engine.copReg(perf, m.pac, src, dep);
         return { ...m, pCalo: pc, cop, couverture: pc ? pc / cible * 100 : null };
       }).filter((m) => m.pCalo != null && m.pCalo > 0);
     const pick = (arr) => {
@@ -189,15 +193,20 @@ function compute(){
   const src=normSrc(srcRaw);
   const emCtx=resolveEmitterContext(bs);
   const depRegime=emCtx.depPerf;
+  let pacForCop=(typeof chosen!=="undefined"&&chosen?.pac)?chosen.pac:null;
+  if(pacForCop){
+    const m=typeof machineByPac==="function"?machineByPac(pacForCop):null;
+    if(!m||m.gammeCode!==gamme.code) pacForCop=null;
+  }
   const copCatalog=medianeCop(gamme,src,depRegime);
-  const cop=copInterpolateByDepTemp(gamme,src,emCtx.depTemp)||copCatalog||3.5;
+  const cop=resolveStudyCop(state.performances,gamme,src,emCtx,pacForCop)||copCatalog||3.5;
   const integ=Engine.integrer(G,V,b.tint,Tbase,bs.rdt,rg.tnc,dj.dju,dj.baseFactor,rg.pasMatrice,cop,pInst);
   integ.daily=Engine.repartitionJournaliere(b.dept,dj.zone,dj.djuAnnee,dj.djuBase,integ.besoin,integ.elec,integ.appoint,cop);
   const economie = integ.besoin>0 ? (integ.besoin-integ.elec)/integ.besoin*100 : 0;
   const hydro=typeof computeHydrauliqueChauffage==="function"?computeHydrauliqueChauffage(pInst,bs,projet,state.emetteurs,{gamme,src,depRegime}):null;
   const radTx=typeof computeRadiatorTransmission==="function"?computeRadiatorTransmission(bs,projet,state.emetteurs):null;
   LAST={V,G,Tbase,TbaseRef:Engine.tbaseRef(b,state.departements),dep,pECS,pInst,dju:dj.dju,djuAnnee:dj.djuAnnee,djuBase:dj.djuBase,
-        cop,copCatalog,src,depRegime,regimeEmitter:emCtx.regimeEmitter,depTemp:emCtx.depTemp,emetteurLabel:emCtx.emetteurLabel,gamme,zone:dj.zone,
+        cop,copCatalog,copPac:pacForCop,copFromMachine:!!pacForCop,src,depRegime,regimeEmitter:emCtx.regimeEmitter,depTemp:emCtx.depTemp,emetteurLabel:emCtx.emetteurLabel,gamme,zone:dj.zone,
         besoin:integ.besoin,elec:integ.elec,scop:integ.scop,heures:integ.heures,
         appoint:integ.appoint,Tbiv:integ.Tbiv,economie,hydro,radTransmission:radTx,integ};
   return LAST;
@@ -206,11 +215,17 @@ function medianeCop(gamme,srcPerf,dep){
   const c=[]; state.machines.filter(m=>m.gammeCode===gamme.code).forEach(m=>{const v=Engine.copReg(state.performances,m.pac,srcPerf,dep);if(v)c.push(v);});
   if(!c.length)return null; c.sort((a,b)=>a-b); return c[Math.floor(c.length/2)];
 }
-/** COP en fonction de la température de départ émetteur (interpolation / extrapolation sur les 3 points catalogue). */
-function copInterpolateByDepTemp(gamme,src,targetTemp){
-  const pts=PERF_DEP.map(dep=>({t:emitterDepartureTemp(dep),cop:medianeCop(gamme,src,dep)})).filter(p=>p.cop!=null);
+function perfDeparts(gamme){
+  const d=(gamme?.departs?.length?gamme.departs:PERF_DEP).map(normDep);
+  return [...new Set(d)];
+}
+function machineCopPoints(perf,pac,src,gamme){
+  return perfDeparts(gamme).map(dep=>({t:emitterDepartureTemp(dep),cop:Engine.copReg(perf,pac,src,dep)})).filter(p=>p.cop!=null);
+}
+/** Interpolation COP sur la température de départ émetteur (points catalogue). */
+function interpolateCopByDepTemp(pts,targetTemp){
   if(!pts.length) return null;
-  pts.sort((a,b)=>a.t-b.t);
+  pts=pts.slice().sort((a,b)=>a.t-b.t);
   const t=+targetTemp;
   if(t<=pts[0].t){
     const slope=pts.length>1?(pts[1].cop-pts[0].cop)/(pts[1].t-pts[0].t):0;
@@ -228,5 +243,22 @@ function copInterpolateByDepTemp(gamme,src,targetTemp){
     }
   }
   return pts[0].cop;
+}
+/** COP catalogue d'une machine : régime source étude + émetteur le plus exigeant (interpolation sur T° départ). */
+function resolveMachineCop(perf,pac,src,depPerf,depTemp,gamme){
+  const t=depTemp!=null?depTemp:emitterDepartureTemp(depPerf);
+  const interp=interpolateCopByDepTemp(machineCopPoints(perf,pac,src,gamme),t);
+  if(interp!=null) return interp;
+  return Engine.copReg(perf,pac,src,depPerf)||null;
+}
+/** COP retenu pour l'étude : machine sélectionnée si présente, sinon médiane gamme. */
+function resolveStudyCop(perf,gamme,src,emCtx,pac){
+  if(pac) return resolveMachineCop(perf,pac,src,emCtx.depPerf,emCtx.depTemp,gamme)||medianeCop(gamme,src,emCtx.depPerf);
+  return copInterpolateByDepTemp(gamme,src,emCtx.depTemp)||medianeCop(gamme,src,emCtx.depPerf);
+}
+/** COP médiane gamme en fonction de la température de départ émetteur. */
+function copInterpolateByDepTemp(gamme,src,targetTemp){
+  const pts=perfDeparts(gamme).map(dep=>({t:emitterDepartureTemp(dep),cop:medianeCop(gamme,src,dep)})).filter(p=>p.cop!=null);
+  return interpolateCopByDepTemp(pts,targetTemp);
 }
 

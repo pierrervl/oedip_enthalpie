@@ -364,17 +364,27 @@ function bundledProcedureCatalogFor(gammeCode) {
   return list.find((c) => +c.gammeCode === +gammeCode) || null;
 }
 
-/** Conserve la version la plus riche en photos (catalogue embarqué vs cloud / import). */
+/** Conserve la version active (cloud / import / édition locale) ; le bundle ne remplace plus les éditions. */
 function pickProcedureCatalog(candidate, gammeCode) {
+  if (candidate) return candidate;
   const bundled = bundledProcedureCatalogFor(gammeCode);
-  if (!candidate) return bundled ? JSON.parse(JSON.stringify(bundled)) : null;
-  if (!bundled) return candidate;
-  const candN = candidate.procedures?.length || 0;
-  const bundN = bundled.procedures?.length || 0;
-  if (candN >= bundN) return candidate;
-  return procedureCatalogImageStepCount(candidate) >= procedureCatalogImageStepCount(bundled)
-    ? candidate
-    : JSON.parse(JSON.stringify(bundled));
+  return bundled ? JSON.parse(JSON.stringify(bundled)) : null;
+}
+
+function mergeProcedureStepPhotos(from, into) {
+  if (!from?.procedures || !into?.procedures) return into;
+  from.procedures.forEach((fp) => {
+    const ip = into.procedures.find((p) => p.id === fp.id);
+    if (!ip) return;
+    (fp.steps || []).forEach((fs, si) => {
+      const is = ip.steps?.[si];
+      if (!is) return;
+      if (!is.image && fs.image) is.image = fs.image;
+      if ((!is.images || !is.images.length) && fs.images?.length) is.images = fs.images.slice();
+      if (fs.src && !is.src) is.src = fs.src;
+    });
+  });
+  return into;
 }
 
 function procedureEditAllowed() {
@@ -394,14 +404,12 @@ function ensureProcedureCatalogPhotos() {
   ensureProcedureCatalogs();
   const bundledList = (typeof OEDIP_DEFAULT_CATALOG !== "undefined" && OEDIP_DEFAULT_CATALOG?.data?.procedureCatalogs) || [];
   bundledList.forEach((bundled) => {
-    const picked = pickProcedureCatalog(
-      state.procedureCatalogs.find((c) => +c.gammeCode === +bundled.gammeCode),
-      bundled.gammeCode
-    );
-    if (!picked) return;
-    const idx = state.procedureCatalogs.findIndex((c) => +c.gammeCode === +bundled.gammeCode);
-    if (idx >= 0) state.procedureCatalogs[idx] = picked;
-    else state.procedureCatalogs.push(picked);
+    let cur = state.procedureCatalogs.find((c) => +c.gammeCode === +bundled.gammeCode);
+    if (!cur) {
+      state.procedureCatalogs.push(JSON.parse(JSON.stringify(bundled)));
+      return;
+    }
+    mergeProcedureStepPhotos(bundled, cur);
   });
 }
 
@@ -556,7 +564,8 @@ function confirmNewProcedure() {
   closeNewProcedureModal();
   renderProceduresTab();
   openProcedureEditor(gammeCode, proc.id);
-  if (typeof markDirty === "function") markDirty();
+  if (typeof markCatalogDirty === "function") markCatalogDirty();
+  else if (typeof markDirty === "function") markDirty();
   toast("Nouvelle procédure créée — ajoutez texte et photos");
 }
 
@@ -1927,16 +1936,13 @@ function saveProcedureEditor() {
   cat.procedures[idx] = d.proc;
   closeProcedureEditor();
   renderProceduresTab();
-  if (typeof sbPublishProcedureCatalogsFromState === "function" && sbCloudActive()) {
-    sbPublishProcedureCatalogsFromState(d.gammeCode)
-      .then(() => toast("Procédure publiée · visible pour tous les utilisateurs"))
-      .catch((e) => {
-        markDirty();
-        toast("Enregistrée localement · publication cloud : " + (e.message || e));
-      });
+  if (typeof markCatalogDirty === "function") markCatalogDirty();
+  if (typeof sbCanEditReference === "function" && sbCanEditReference() && sbCloudActive()) {
+    toast("Procédure enregistrée · publication cloud…");
+  } else if (typeof sbCanEditReference === "function" && sbCanEditReference()) {
+    toast("Procédure enregistrée localement — reconnectez ☁ Cloud pour publier");
   } else {
-    markDirty();
-    toast("Procédure enregistrée localement — connectez-vous en technicien/admin pour publier");
+    toast("Procédure enregistrée localement");
   }
 }
 
@@ -2192,14 +2198,11 @@ function applyProcGalleryOrderFromDom() {
       touchedGammes.add(code);
     }
   });
-  if (typeof markDirty === "function") markDirty();
-  if (typeof sbPublishProcedureCatalogsFromState === "function" && sbCloudActive()) {
-    Promise.all([...touchedGammes].map((code) => sbPublishProcedureCatalogsFromState(code)))
-      .then(() => toast("Ordre publié"))
-      .catch((e) => toast("Ordre enregistré localement · " + (e.message || e)));
-  } else {
-    toast("Ordre enregistré");
-  }
+  if (typeof markCatalogDirty === "function") markCatalogDirty();
+  else if (typeof markDirty === "function") markDirty();
+  toast(typeof sbCanEditReference === "function" && sbCanEditReference() && sbCloudActive()
+    ? "Ordre enregistré · publication cloud…"
+    : "Ordre enregistré");
 }
 
 function ensureProcGalleryDragSync() {
@@ -2346,7 +2349,8 @@ function editFrigoTubeVariant(pac, tubeRef, ver) {
   const m = machineByPac(pac);
   if (!m || !tubeRef) return;
   ensureFrigoTubeVariants(m)[tubeRef] = normalizeVariantVer(ver);
-  markDirty();
+  if (typeof markCatalogDirty === "function") markCatalogDirty();
+  else markDirty();
   if (MOPEN && MOPEN.pac === pac && MOPEN.tab === "composants-frigo") renderMachineModal();
 }
 

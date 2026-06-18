@@ -1055,7 +1055,8 @@ function saveCompModal() {
   else state.composants[type].push(data);
   closeCompModal();
   renderComposants();
-  markDirty();
+  if (typeof markCatalogDirty === "function") markCatalogDirty();
+  else markDirty();
   toast("Composant enregistré");
 }
 
@@ -1070,7 +1071,8 @@ function delComp(type, idx) {
   if (!confirm("Supprimer « " + name + " » ?")) return;
   state.composants[type].splice(idx, 1);
   renderComposants();
-  markDirty();
+  if (typeof markCatalogDirty === "function") markCatalogDirty();
+  else markDirty();
 }
 
 function dupComp(type, idx) {
@@ -1079,7 +1081,8 @@ function dupComp(type, idx) {
   if (copy.ref) copy.ref += " (copie)";
   state.composants[type].push(copy);
   renderComposants();
-  markDirty();
+  if (typeof markCatalogDirty === "function") markCatalogDirty();
+  else markDirty();
   toast("Composant dupliqué");
 }
 
@@ -1112,7 +1115,8 @@ function importComposantsJson() {
           if (Array.isArray(data[k])) state.composants[k] = data[k];
         });
         renderComposants();
-        markDirty();
+        if (typeof markCatalogDirty === "function") markCatalogDirty();
+        else markDirty();
         toast("Bibliothèque composants importée");
       } catch (err) {
         alert("JSON invalide : " + err.message);

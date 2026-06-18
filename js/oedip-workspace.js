@@ -2,9 +2,11 @@
 /* ---------- DOSSIER DE TRAVAIL · IMPORT / EXPORT ---------- */
 const WS_PREFIX={project:"oedip_projet",machines:"oedip_machines"};
 const WS_IDB="oedip-workspace-v1";
+const CATALOG_DRAFT_LS="oedip_catalog_draft";
 const FS_SUPPORTED=typeof window.showDirectoryPicker==="function";
 let workspaceDirHandle=null, workspaceDirName="", lastExportHash=null, workspaceBooting=true;
-let autosaveTimer=null, lastSavedFile="", currentStudyFile="", currentStudyHandle=null, currentStudyName="";
+let autosaveTimer=null, catalogAutosaveTimer=null, catalogDirty=false;
+let lastSavedFile="", currentStudyFile="", currentStudyHandle=null, currentStudyName="";
 let currentStudyCloudId="", _studiesCache=[], _studiesCloudCache=[], _newStudyModalMode="create";
 
 function wsPad2(n){ return String(n).padStart(2,"0"); }
@@ -368,15 +370,68 @@ function markDirty(){
   clearTimeout(autosaveTimer);
   autosaveTimer=setTimeout(()=>{ try{localStorage.setItem("oedip_autosave",JSON.stringify(buildStudyExport()));}catch(e){} },600);
 }
+function saveCatalogDraftLocal(){
+  if(typeof buildDbExport!=="function") return;
+  try{
+    localStorage.setItem(CATALOG_DRAFT_LS,JSON.stringify({date:new Date().toISOString(),payload:buildDbExport()}));
+  }catch(e){}
+}
+function clearCatalogDraftLocal(){
+  catalogDirty=false;
+  try{ localStorage.removeItem(CATALOG_DRAFT_LS); }catch(e){}
+}
+function loadCatalogDraftLocal(){
+  try{
+    const raw=localStorage.getItem(CATALOG_DRAFT_LS);
+    if(!raw) return false;
+    const obj=JSON.parse(raw);
+    const payload=obj?.payload||obj;
+    if(!payload||(!payload.gammes&&!payload.composants&&!payload.procedureCatalogs)) return false;
+    applyCatalogImport(payload,{silent:true,keepStudyName:true,markDirty:false});
+    catalogDirty=true;
+    return true;
+  }catch(e){ return false; }
+}
+async function syncReferenceCatalogToCloud(){
+  if(typeof sbPublishReferenceCatalogFromState!=="function") return false;
+  if(typeof sbCanEditReferenceAsync==="function"&&!(await sbCanEditReferenceAsync())) return false;
+  if(!sbCloudActive()) return false;
+  try{
+    await sbPublishReferenceCatalogFromState();
+    clearCatalogDraftLocal();
+    return true;
+  }catch(e){
+    console.warn("Sync catalogue:",e.message);
+    return false;
+  }
+}
+/** Modifications catalogue (machines, composants, procédures…) — brouillon local + publication cloud si éditeur. */
+function markCatalogDirty(){
+  if(workspaceBooting) return;
+  catalogDirty=true;
+  saveCatalogDraftLocal();
+  updateWsStatus();
+  clearTimeout(catalogAutosaveTimer);
+  if(typeof sbCanEditReference==="function"&&sbCanEditReference()&&sbCloudActive()){
+    catalogAutosaveTimer=setTimeout(async()=>{
+      const ok=await syncReferenceCatalogToCloud();
+      if(ok&&typeof toast==="function") toast("Catalogue publié · cloud");
+      updateWsStatus();
+    },1800);
+  }
+}
 function updateWsStatus(){
   const el=$("wsStatus"); if(!el) return;
   const dirty=isDirty();
-  el.textContent=dirty?"● Non enregistré":"● Enregistré";
-  el.className="ver mono noprint "+(dirty?"ws-warn":"ws-ok");
+  const catWarn=catalogDirty;
+  el.textContent=catWarn?"● Catalogue non publié":dirty?"● Non enregistré":"● Enregistré";
+  el.className="ver mono noprint "+(catWarn||dirty?"ws-warn":"ws-ok");
   const savedHint=currentStudyCloudId
     ?("\nCloud : "+(currentStudyName||"étude"))
     :(lastSavedFile?"\nDernier fichier : "+lastSavedFile:"");
-  el.title=dirty
+  el.title=catWarn
+    ?("Modifications catalogue en attente de publication cloud"+(dirty?" · étude non enregistrée":""))
+    :dirty
     ?("Modifications non enregistrées"+(sbCloudActive()?" — Enregistrer (⤒) pour synchroniser le cloud":""))
     :("Synchronisé"+savedHint);
 }
@@ -675,6 +730,7 @@ async function ensureDefaultCatalogLoaded(){
   if(typeof ensureComposants==="function") ensureComposants();
   if(typeof ensureBundledComposants==="function") ensureBundledComposants();
   if(typeof ensureProcedureCatalogPhotos==="function") ensureProcedureCatalogPhotos();
+  if(loadCatalogDraftLocal()) console.info("Catalogue local (brouillon) restauré");
   return ok||catalogComposantCount()>0;
 }
 async function readFileFromDir(dir,name){
@@ -713,7 +769,14 @@ async function exportProject(opts){
       currentStudyName=studyName;
       updateStudyUI(); markSaved();
       cloudSaved=true;
-      try{ await sbSaveMachineLibrary(buildDbExport()); }catch(e2){ console.warn("Sync catalogue machines:", e2.message); }
+      try{
+        if(typeof sbCanEditReferenceAsync==="function"&&await sbCanEditReferenceAsync()&&typeof sbPublishReferenceCatalogFromState==="function"){
+          await sbPublishReferenceCatalogFromState();
+          clearCatalogDraftLocal();
+        }else{
+          await sbSaveMachineLibrary(buildDbExport());
+        }
+      }catch(e2){ console.warn("Sync catalogue:", e2.message); }
       toast("Enregistré dans le cloud · "+saved.name);
       await refreshStudiesModal();
     }catch(e){
@@ -751,8 +814,14 @@ async function exportDB(){
   const session=typeof sbEnsureSession==="function"?await sbEnsureSession():null;
   if(session){
     try{
-      await sbSaveMachineLibrary(obj);
-      toast("Base machines enregistrée dans le cloud");
+      if(typeof sbCanEditReferenceAsync==="function"&&await sbCanEditReferenceAsync()&&typeof sbPublishReferenceCatalogFromState==="function"){
+        await sbPublishReferenceCatalogFromState();
+        clearCatalogDraftLocal();
+        toast("Base machines publiée · catalogue de référence cloud");
+      }else{
+        await sbSaveMachineLibrary(obj);
+        toast("Base machines enregistrée dans le cloud");
+      }
     }catch(e){
       wsCloudSaveError(e);
       return;
@@ -1054,6 +1123,12 @@ async function onSbAuthChanged(){
     if(typeof updateProcedureAdminUI==="function") updateProcedureAdminUI();
     await loadNotePrintPresetsFromCloud();
     await loadInstallerProfileFromCloud();
+    if(catalogDirty&&typeof syncReferenceCatalogToCloud==="function"){
+      try{
+        const ok=await syncReferenceCatalogToCloud();
+        if(ok&&typeof toast==="function") toast("Catalogue en attente publié · cloud");
+      }catch(e){ console.warn("Sync catalogue:",e.message); }
+    }
     try{
       const remembered=localStorage.getItem("oedip_current_study_cloud_id");
       if(remembered&&await loadStudyFromCloud(remembered)){

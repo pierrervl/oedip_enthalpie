@@ -304,30 +304,26 @@ async function sbUpsertReferenceCatalog(key, { name, description, payload }) {
   if (error) throw error;
 }
 
-async function sbPublishProcedureCatalogsFromState(gammeCode) {
+async function sbPublishReferenceCatalogFromState() {
   if (!(await sbCanEditReferenceAsync())) throw new Error("Réservé aux techniciens et administrateurs OEDIP");
-  if (typeof getProcedureCatalog !== "function" || !Array.isArray(state?.procedureCatalogs)) {
-    throw new Error("Catalogue procédures indisponible");
-  }
-  const cat = getProcedureCatalog(gammeCode);
-  if (!cat) throw new Error("Catalogue gamme introuvable");
+  if (typeof buildDbExport !== "function") throw new Error("buildDbExport indisponible");
+  const payload = JSON.parse(JSON.stringify(buildDbExport()));
 
-  const procPayload = JSON.parse(JSON.stringify(cat));
-  await sbUpsertReferenceCatalog("catalog_procedures_geo", {
-    name: "Procédures géothermie",
-    description: "Publié depuis OEDIP · admin · gamme " + gammeCode,
-    payload: procPayload,
+  await sbUpsertReferenceCatalog("catalog_db", {
+    name: "Base machines OEDIP",
+    description: "Publié depuis OEDIP · " + new Date().toISOString(),
+    payload,
   });
 
-  const mergeProcedureCatalogs = (payload) => {
-    if (!payload || typeof payload !== "object") return payload;
-    const out = JSON.parse(JSON.stringify(payload));
-    const data = out.data || out;
-    data.procedureCatalogs = JSON.parse(JSON.stringify(state.procedureCatalogs));
-    if (out.data) out.data = data;
-    out.date = new Date().toISOString();
-    return out;
-  };
+  const geoCat =
+    (state.procedureCatalogs || []).find((c) => +c.gammeCode === 0) || state.procedureCatalogs?.[0];
+  if (geoCat) {
+    await sbUpsertReferenceCatalog("catalog_procedures_geo", {
+      name: "Procédures géothermie",
+      description: "Publié depuis OEDIP",
+      payload: JSON.parse(JSON.stringify(geoCat)),
+    });
+  }
 
   const { data: fullRow } = await _sbClient
     .from("reference_catalogs")
@@ -335,30 +331,29 @@ async function sbPublishProcedureCatalogsFromState(gammeCode) {
     .eq("key", "catalog_full")
     .maybeSingle();
   if (fullRow?.payload) {
+    const out = JSON.parse(JSON.stringify(fullRow.payload));
+    const data = out.data || out;
+    [
+      "gammes", "machines", "performances", "composants", "procedureCatalogs", "outils",
+      "frigoLayoutPresets", "hydroLayoutPresets", "isolationTypes", "emetteurs", "captages", "reglages",
+    ].forEach((k) => {
+      if (payload[k] != null) data[k] = JSON.parse(JSON.stringify(payload[k]));
+    });
+    if (out.data) out.data = data;
+    else Object.assign(out, data);
+    out.date = payload.date;
     await sbUpsertReferenceCatalog("catalog_full", {
       name: "Catalogue OEDIP complet",
       description: fullRow.description || "Catalogue complet OEDIP",
-      payload: mergeProcedureCatalogs(fullRow.payload),
-    });
-  }
-
-  const { data: dbRow } = await _sbClient
-    .from("reference_catalogs")
-    .select("payload,description")
-    .eq("key", "catalog_db")
-    .maybeSingle();
-  if (dbRow?.payload) {
-    const dbPayload = JSON.parse(JSON.stringify(dbRow.payload));
-    dbPayload.procedureCatalogs = JSON.parse(JSON.stringify(state.procedureCatalogs));
-    dbPayload.date = new Date().toISOString();
-    await sbUpsertReferenceCatalog("catalog_db", {
-      name: "Base machines OEDIP",
-      description: dbRow.description || "Export oedip-db",
-      payload: dbPayload,
+      payload: out,
     });
   }
 
   return true;
+}
+
+async function sbPublishProcedureCatalogsFromState(_gammeCode) {
+  return sbPublishReferenceCatalogFromState();
 }
 
 function updateSbAuthUI() {

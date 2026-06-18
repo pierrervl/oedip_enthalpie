@@ -398,7 +398,8 @@ function saveOutilModal() {
   else state.outils[type].push(data);
   closeOutilModal();
   renderOutils();
-  markDirty();
+  if (typeof markCatalogDirty === "function") markCatalogDirty();
+  else markDirty();
   toast("Outil enregistré");
 }
 
@@ -413,7 +414,8 @@ function delOutil(type, idx) {
   if (!confirm("Supprimer « " + name + " » ?")) return;
   state.outils[type].splice(idx, 1);
   renderOutils();
-  markDirty();
+  if (typeof markCatalogDirty === "function") markCatalogDirty();
+  else markDirty();
 }
 
 function dupOutil(type, idx) {
@@ -422,7 +424,8 @@ function dupOutil(type, idx) {
   if (copy.ref) copy.ref += " (copie)";
   state.outils[type].push(copy);
   renderOutils();
-  markDirty();
+  if (typeof markCatalogDirty === "function") markCatalogDirty();
+  else markDirty();
   toast("Outil dupliqué");
 }
 
@@ -449,7 +452,8 @@ function importOutilsJson() {
           if (Array.isArray(data[k])) state.outils[k] = data[k];
         });
         renderOutils();
-        markDirty();
+        if (typeof markCatalogDirty === "function") markCatalogDirty();
+  else markDirty();
         toast("Parc outils importé");
       } catch (err) {
         alert("JSON invalide : " + err.message);

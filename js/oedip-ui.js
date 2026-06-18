@@ -400,8 +400,19 @@ function updatePdcEchangeurAutoUi(){
     else hint.textContent='Auto · machine présélectionnée';
   }
 }
+function syncChosenMachine(r){
+  if(!chosen?.pac) return;
+  const raw=machineByPac(chosen.pac);
+  if(!raw||!r.gamme||raw.gammeCode!==r.gamme.code){ chosen=null; return; }
+  const pc=Engine.pCalo(state.performances,chosen.pac,r.src,r.depRegime);
+  const cop=typeof resolveMachineCop==='function'
+    ? resolveMachineCop(state.performances,chosen.pac,r.src,r.depRegime,r.depTemp,r.gamme)
+    : Engine.copReg(state.performances,chosen.pac,r.src,r.depRegime);
+  chosen={...raw,pac:chosen.pac,pCalo:pc,cop:cop||r.cop,couverture:pc&&r.pInst?pc/r.pInst*100:null};
+}
 function recalc(){
   readForm(); const r=compute();
+  syncChosenMachine(r);
   if(typeof syncProjetPdcEchangeurFromHydro==='function') syncProjetPdcEchangeurFromHydro(projet,r.hydro);
   updatePdcEchangeurAutoUi();
   $('b_volret').value=fmt(r.V,1);
@@ -419,6 +430,9 @@ function recalc(){
   const rEm=$('r_emetteur'); if(rEm) rEm.textContent=r.emetteurLabel||'—';
   const rReg=$('r_regime'); if(rReg) rReg.textContent=r.regimeEmitter?`${r.regimeEmitter}°C → perf ${r.depRegime}`:'—';
   const rCopPt=$('r_cop_pt'); if(rCopPt) rCopPt.textContent=r.cop!=null?fmt(r.cop,2):'—';
+  const rCopLbl=$('r_cop_pt_lbl'); if(rCopLbl) rCopLbl.textContent=r.copFromMachine&&r.copPac
+    ?`COP ${r.copPac} @ ${r.src} → ${r.regimeEmitter}°C`
+    :`COP gamme @ ${r.src} → ${r.regimeEmitter}°C`;
   $('r_heures').innerHTML=`${fmt(r.heures,0)} <small>h</small>`;
   $('r_eco').innerHTML=`${fmt(r.economie,1)} <small>%</small>`;
   const djEl=$('r_djuMeta');
@@ -543,7 +557,9 @@ function saveGammeModal(){
     }
     state.gammes[GEDIT]=entry;
   } else state.gammes.push(entry);
-  closeGammeModal(); renderGammes(); toast("Gamme enregistrée");
+  closeGammeModal(); renderGammes();
+  if(typeof markCatalogDirty==="function") markCatalogDirty();
+  toast("Gamme enregistrée");
 }
 function delGamme(i){
   const g=state.gammes[i], nb=state.machines.filter(m=>m.gammeCode===g.code).length;
@@ -553,7 +569,9 @@ function delGamme(i){
   state.machines=state.machines.filter(m=>m.gammeCode!==g.code);
   removed.forEach(pac=>{ if(state.performances[pac]) delete state.performances[pac]; });
   state.gammes.splice(i,1);
-  renderGammes(); toast("Gamme supprimée");
+  renderGammes();
+  if(typeof markCatalogDirty==="function") markCatalogDirty();
+  toast("Gamme supprimée");
 }
 function fillDbPerfSelects(){
   $("dbSrc").innerHTML=PERF_SRC.map(s=>`<option value="${s}">${s}</option>`).join("");
@@ -594,6 +612,7 @@ function renderDB(){
 function editM(i,k,v){
   state.machines[i][k]=k==="chargeFluide"?num(v):v;
   renderDB();
+  if(typeof markCatalogDirty==="function") markCatalogDirty();
 }
 function ensurePage(pac,src,dep){
   initMachinePages(pac);
@@ -603,6 +622,7 @@ function ensurePage(pac,src,dep){
 }
 function editPageQuick(pac,src,dep,k,v){
   const f=ensurePage(pac,src,dep); f[k]=num(v)||0; syncCop(f); renderDB();
+  if(typeof markCatalogDirty==="function") markCatalogDirty();
 }
 
 /* ---- fiche machine complète (modal) ---- */
@@ -790,20 +810,26 @@ function editGeneral(path,v){
   if(key==="ballonL"&&o[key]!=null) o.ballon=(o.ballon&&!/L/i.test(o.ballon)?o.ballon:o[key]+"L");
   applyMachineGeneralToPerf(MOPEN.pac,g);
   if(MOPEN.tab==="perf") renderMachineModal();
+  if(typeof markCatalogDirty==="function") markCatalogDirty();
 }
 function closeModal(){
+  const hadMachine=!!MOPEN;
   $("modal").classList.remove("show");
   $("modal").querySelector(".card")?.classList.remove("fiche-wide");
+  MOPEN=null;
   renderDB(); recalc();
+  if(hadMachine&&typeof markCatalogDirty==="function") markCatalogDirty();
 }
 function editFiche(k,v){
   if(!MOPEN||MOPEN.tab!=="perf") return;
   const f=ensurePage(MOPEN.pac,MOPEN.src,MOPEN.dep);
   f[k]=num(v);
   if(k==="chaud"||k==="absorbee"||k==="cop") syncCop(f);
+  if(typeof markCatalogDirty==="function") markCatalogDirty();
 }
 function editMachineCharge(pac,v){
   const m=machineByPac(pac); if(m) m.chargeFluide=num(v);
+  if(typeof markCatalogDirty==="function") markCatalogDirty();
   if(MOPEN&&MOPEN.pac===pac) renderMachineModal();
 }
 function addMachine(){
@@ -812,9 +838,11 @@ function addMachine(){
   const m={pac:nom,gammeCode:g.code,tension:2,nbComp:1,ref:0,reversible:1,composantsLiens:{},frigoTuyaux:{},frigoLayout:{},frigoElements:FRIGO_ALL_KEYS.slice(),hydroLayout:{},hydroElements:HYDRO_DEFAULT_ELEMENTS.slice()};
   ensureMachineGeneral(m);
   state.machines.push(m);
-  initMachinePages(nom); renderDB(); toast("Machine ajoutée — 9 fiches + fiche générale");
+  initMachinePages(nom); renderDB();
+  if(typeof markCatalogDirty==="function") markCatalogDirty();
+  toast("Machine ajoutée — 9 fiches + fiche générale");
 }
-function delMachine(i){ if(confirm("Supprimer "+state.machines[i].pac+" ?")){ state.machines.splice(i,1); renderDB(); } }
+function delMachine(i){ if(confirm("Supprimer "+state.machines[i].pac+" ?")){ state.machines.splice(i,1); renderDB(); if(typeof markCatalogDirty==="function") markCatalogDirty(); } }
 
 /* ---------- TAB 3 : sélection ---------- */
 function onSelectionCouvMinChange(){
@@ -841,7 +869,7 @@ function runSelection(){
     return;
   }
   $('res_ctx').textContent=`${r.gamme.nom} (${fonctionLabel(r.gamme.fonction)}) · ${tLabel(s.tension)} · ${s.reversible?'réversible':'chaud seul'} · couv. ≥ ${couvMin} %`;
-  const sel=Engine.selection(state.machines,state.performances,r.gamme.code,s.tension,s.reversible,r.src,r.depRegime,r.pInst,{couvMinPct:couvMin});
+  const sel=Engine.selection(state.machines,state.performances,r.gamme.code,s.tension,s.reversible,r.src,r.depRegime,r.pInst,{couvMinPct:couvMin,depTemp:r.depTemp});
   $('cards_mono').innerHTML=cards(sel.mono,r,couvMin); $('cards_multi').innerHTML=cards(sel.multi,r,couvMin);
 }
 function tLabel(t){ return t===0?"mono 230V":t===1?"tri 400V":"tension indiff."; }
@@ -876,7 +904,7 @@ let chosen=null;
 function machineSelectionEntry(pac,r,couvMin){
   couvMin=couvMin??(typeof selectionCouvMinPct==='function'?selectionCouvMinPct():70);
   const s=projet.source;
-  const sel=Engine.selection(state.machines,state.performances,r.gamme.code,s.tension,s.reversible,r.src,r.depRegime,r.pInst,{couvMinPct:couvMin});
+  const sel=Engine.selection(state.machines,state.performances,r.gamme.code,s.tension,s.reversible,r.src,r.depRegime,r.pInst,{couvMinPct:couvMin,depTemp:r.depTemp});
   const found=[...sel.mono,...sel.multi].find(x=>x.pac===pac);
   if(found) return found;
   const raw=machineByPac(pac);
@@ -890,7 +918,10 @@ function machineSelectionEntry(pac,r,couvMin){
     toast(`Couverture ${fmt(cov,0)} % — sous le seuil ${couvMin} %`);
     return null;
   }
-  return {...raw,pac,pCalo:pc,cop:Engine.copReg(state.performances,pac,r.src,r.depRegime),couverture:cov};
+  const cop=typeof resolveMachineCop==='function'
+    ? resolveMachineCop(state.performances,pac,r.src,r.depRegime,r.depTemp,r.gamme)
+    : Engine.copReg(state.performances,pac,r.src,r.depRegime);
+  return {...raw,pac,pCalo:pc,cop,couverture:cov};
 }
 function chooseForNote(pac){
   const r=LAST;
@@ -1313,7 +1344,8 @@ function renderNote(){
       +noteRow("sol.fonction","Fonction","",fnGam)
       +noteRow("sol.comp","Compresseurs","",chosen.nbComp)
       +noteRow("sol.pCalo","P. calorifique (régime)","kW",fmt(chosen.pCalo,2))
-      +noteRow("sol.cop","COP (régime)","",chosen.cop?fmt(chosen.cop,2):"—");
+      +noteRow("sol.cop","COP (régime)","",chosen.cop!=null?fmt(chosen.cop,2):fmt(r.cop,2))
+      +noteRow("sol.copCtx","Point perf.","",`${r.src} · émetteur ${r.regimeEmitter}°C`)
     const solR=
       noteRow("sol.coverage","Taux de couverture","%",fmt(chosen.pCalo/r.pInst*100,0))
       +(f&&f.hp?noteRow("sol.hp","Pressions HP / BP","barg",`${fmt(f.hp,1)} / ${fmt(f.bp,1)}`):"")
