@@ -483,6 +483,7 @@ function renderGammes(){
       <div class="gmeta">${g.sources.length} régime(s) source · ${g.departs.length} régime(s) départ</div>
       <div class="gacts">
         <button class="btn-soft" onclick="openGammeModal(${i})">Modifier</button>
+        <button class="btn-soft" onclick="dupGamme(${i})">Dupliquer</button>
         <button class="btn-soft" onclick="delGamme(${i})" style="color:var(--bad)">Supprimer</button>
       </div></div>`;
   }).join('') || `<div class="empty" style="grid-column:1/-1">Aucune gamme — ajoutez-en une pour commencer.</div>`;
@@ -560,6 +561,93 @@ function saveGammeModal(){
   closeGammeModal(); renderGammes();
   if(typeof markCatalogDirty==="function") markCatalogDirty();
   toast("Gamme enregistrée");
+}
+function uniqueGammeName(base) {
+  const root = String(base || "Gamme").trim() || "Gamme";
+  if (!state.gammes.some((g) => g.nom === root)) return root;
+  let n = 2;
+  while (state.gammes.some((g) => g.nom === `${root} (copie${n > 2 ? " " + n : ""})`)) n++;
+  return n === 2 ? `${root} (copie)` : `${root} (copie ${n})`;
+}
+function uniquePacName(base) {
+  const root = String(base || "PAC").trim() || "PAC";
+  if (!state.machines.some((m) => m.pac === root)) return root;
+  let n = 2;
+  while (state.machines.some((m) => m.pac === `${root} (copie${n > 2 ? " " + n : ""})`)) n++;
+  return n === 2 ? `${root} (copie)` : `${root} (copie ${n})`;
+}
+function uniqueProcedureId(base) {
+  const root = String(base || "proc").trim() || "proc";
+  const ids = new Set();
+  (state.procedureCatalogs || []).forEach((cat) => (cat.procedures || []).forEach((p) => ids.add(p.id)));
+  if (!ids.has(root)) return root;
+  let n = 2;
+  while (ids.has(`${root}-${n}`)) n++;
+  return `${root}-${n}`;
+}
+/** Duplique une gamme, ses machines (fiches perf) et son catalogue procédures. */
+function dupGamme(i) {
+  normalizeGammes();
+  const src = state.gammes[i];
+  if (!src) return;
+  const srcCode = +src.code;
+  const newCode = nextGammeCode();
+  const newGamme = JSON.parse(JSON.stringify(src));
+  newGamme.nom = uniqueGammeName(src.nom);
+  newGamme.code = newCode;
+  state.gammes.push(newGamme);
+
+  const pacMap = new Map();
+  const srcMachines = state.machines.filter((m) => +m.gammeCode === srcCode);
+  srcMachines.forEach((m) => {
+    const newPac = uniquePacName(m.pac);
+    pacMap.set(m.pac, newPac);
+    const copy = JSON.parse(JSON.stringify(m));
+    copy.pac = newPac;
+    copy.gammeCode = newCode;
+    if (typeof ensureMachineGeneral === "function") ensureMachineGeneral(copy);
+    state.machines.push(copy);
+    if (state.performances[m.pac]) {
+      state.performances[newPac] = JSON.parse(JSON.stringify(state.performances[m.pac]));
+    } else if (typeof initMachinePages === "function") initMachinePages(newPac);
+  });
+
+  const idMap = new Map();
+  const procCat = (state.procedureCatalogs || []).find((c) => +c.gammeCode === srcCode);
+  if (procCat?.procedures?.length) {
+    const newCat = JSON.parse(JSON.stringify(procCat));
+    newCat.gammeCode = newCode;
+    newCat.procedures.forEach((p) => {
+      const newId = uniqueProcedureId(p.id);
+      idMap.set(p.id, newId);
+      p.id = newId;
+    });
+    newCat.procedures.forEach((p) => {
+      if (p.parentProcId && idMap.has(p.parentProcId)) p.parentProcId = idMap.get(p.parentProcId);
+      (p.variants || []).forEach((v) => {
+        v.machines = [...new Set((v.machines || []).map((pac) => pacMap.get(pac)).filter(Boolean))];
+      });
+    });
+    if (!Array.isArray(state.procedureCatalogs)) state.procedureCatalogs = [];
+    state.procedureCatalogs.push(newCat);
+  }
+
+  if (idMap.size) {
+    state.machines.forEach((m) => {
+      if (+m.gammeCode !== newCode || !m.frigoProcDims) return;
+      const next = {};
+      Object.entries(m.frigoProcDims).forEach(([pid, val]) => {
+        next[idMap.get(pid) || pid] = val;
+      });
+      m.frigoProcDims = next;
+    });
+  }
+
+  renderGammes();
+  const newIdx = state.gammes.findIndex((g) => +g.code === newCode);
+  if (newIdx >= 0 && $("dbGamme")) $("dbGamme").value = String(newIdx);
+  if (typeof markCatalogDirty === "function") markCatalogDirty();
+  toast(`Gamme dupliquée · ${newGamme.nom} · ${srcMachines.length} machine(s)`);
 }
 function delGamme(i){
   const g=state.gammes[i], nb=state.machines.filter(m=>m.gammeCode===g.code).length;
