@@ -57,7 +57,12 @@ function readZonesFromDom(){
       hauteur:+(block.querySelector('.zone-h')?.value||2.5),
       volumeM3:+(block.querySelector('.zone-vol-direct')?.value||0),
       emIdx:+(block.querySelector('.zone-em')?.value??3),
-      nbEmetteurs:+(block.querySelector('.zone-nb')?.value||0)
+      nbEmetteurs:+(block.querySelector('.zone-nb')?.value||0),
+      radSizing:block.querySelector('.zone-rad-sizing')?.value||'',
+      radPnomKw:+(block.querySelector('.zone-rad-pnom')?.value||0),
+      radHeightMm:+(block.querySelector('.zone-rad-h')?.value||0),
+      radWidthMm:+(block.querySelector('.zone-rad-w')?.value||0),
+      radType:+(block.querySelector('.zone-rad-type')?.value||21)
     });
   });
   bs.zones=zones;
@@ -70,12 +75,18 @@ function renderZonesChauffUI(){
   const zones=projet.besoin.zones||[];
   list.innerHTML=zones.map((z,i)=>{
     const em=state.emetteurs[z.emIdx];
-    const vis=typeof hydroZoneFieldVisibility==='function'?hydroZoneFieldVisibility(em):{nb:true};
+    const vis=typeof hydroZoneFieldVisibility==='function'?hydroZoneFieldVisibility(em):{nb:true,rad:false};
     const nom=typeof zoneDisplayName==='function'?zoneDisplayName(z,i):`Zone ${i+1}`;
     const volMode=z.volMode==='vol'?'vol':'surf';
     const vol=typeof zoneVolumeM3==='function'?zoneVolumeM3(z):0;
     const nomVal=escAttr(z.nom??'');
     const volDirect=volMode==='vol'?vol:(z.volumeM3||0);
+    const radMode=z.radSizing==='pnom'||z.radSizing==='dims'?z.radSizing:'';
+    const radTypeOpts=typeof renderRadiatorTypeOptions==='function'?renderRadiatorTypeOptions(z.radType):'';
+    const tint=projet?.batiment?.tint??20;
+    const pnomPreview=radMode&&z.nbEmetteurs>0&&typeof radiatorPowerAtRegime==='function'
+      ? radiatorPowerAtRegime(radiatorUnitPnomDt50Kw(z),em?.regime,tint)*(z.nbEmetteurs||0)
+      : 0;
     return `<div class="zone-chauff-block" data-idx="${i}">
       <div class="zone-chauff-head">
         <span class="zone-chauff-title">${escHtml(nom)}</span>
@@ -125,8 +136,43 @@ function renderZonesChauffUI(){
         <input type="number" class="zone-nb" value="${z.nbEmetteurs??0}" min="0" step="1" oninput="recalc()">
         <span class="unit">u</span>
       </div>
+      <div class="zone-rad-fields" style="display:${vis.rad?'block':'none'}">
+        <div class="row">
+          <label>Dimensionnement rad.</label>
+          <select class="zone-rad-sizing" onchange="onZoneRadSizingChange(${i})" style="grid-column:2/4">
+            <option value=""${!radMode?' selected':''}>— Non renseigné —</option>
+            <option value="dims"${radMode==='dims'?' selected':''}>Dimensions (H × L)</option>
+            <option value="pnom"${radMode==='pnom'?' selected':''}>Puissance nominale @ ΔT50</option>
+          </select>
+        </div>
+        <div class="zone-rad-dims" style="display:${radMode==='dims'?'block':'none'}">
+          <div class="row">
+            <label>Hauteur</label>
+            <input type="number" class="zone-rad-h" value="${z.radHeightMm??600}" min="0" step="10" oninput="recalc()">
+            <span class="unit">mm</span>
+          </div>
+          <div class="row">
+            <label>Largeur</label>
+            <input type="number" class="zone-rad-w" value="${z.radWidthMm??1000}" min="0" step="10" oninput="recalc()">
+            <span class="unit">mm</span>
+          </div>
+          <div class="row">
+            <label>Type panneau</label>
+            <select class="zone-rad-type" onchange="recalc()" style="grid-column:2/4">${radTypeOpts}</select>
+          </div>
+        </div>
+        <div class="zone-rad-pnom" style="display:${radMode==='pnom'?'block':'none'}">
+          <div class="row">
+            <label>P nom. / radiateur</label>
+            <input type="number" class="zone-rad-pnom" value="${z.radPnomKw??0}" min="0" step="0.05" oninput="recalc()">
+            <span class="unit">kW @ ΔT50</span>
+          </div>
+        </div>
+        <p class="hint zone-rad-preview" style="margin:4px 0 0;font-size:11px">${pnomPreview>0?`→ ${fmt(pnomPreview,1)} kW transmissibles au régime retenu (${emetteurOptionLabel(em)})`:'Renseignez dimensions ou P nom. pour estimer la puissance max.'}</p>
+      </div>
     </div>`;
   }).join('');
+  updateZoneChauffFieldVisibility();
   updateZonesChauffSummary();
 }
 function onZoneVolModeChange(idx,mode){
@@ -174,15 +220,41 @@ function onZoneNomInput(idx){
   if(title) title.textContent=nom||`Zone ${idx+1}`;
   recalc();
 }
+function onZoneRadSizingChange(idx){
+  readZonesFromDom();
+  const z=projet.besoin.zones[idx];
+  if(!z) return;
+  const block=$('zones_chauff_list')?.querySelector(`.zone-chauff-block[data-idx="${idx}"]`);
+  const mode=block?.querySelector('.zone-rad-sizing')?.value||'';
+  z.radSizing=mode==='pnom'||mode==='dims'?mode:'';
+  updateZoneRadFieldVisibility();
+  recalc();
+}
+function updateZoneRadFieldVisibility(){
+  const list=$('zones_chauff_list');
+  if(!list) return;
+  list.querySelectorAll('.zone-chauff-block').forEach(block=>{
+    const em=state.emetteurs[+block.querySelector('.zone-em')?.value];
+    const vis=typeof hydroZoneFieldVisibility==='function'?hydroZoneFieldVisibility(em):{nb:true,rad:false};
+    const radWrap=block.querySelector('.zone-rad-fields');
+    if(radWrap) radWrap.style.display=vis.rad?'block':'none';
+    const mode=block.querySelector('.zone-rad-sizing')?.value||'';
+    const dims=block.querySelector('.zone-rad-dims');
+    const pnom=block.querySelector('.zone-rad-pnom');
+    if(dims) dims.style.display=mode==='dims'?'block':'none';
+    if(pnom) pnom.style.display=mode==='pnom'?'block':'none';
+  });
+}
 function updateZoneChauffFieldVisibility(){
   const list=$('zones_chauff_list');
   if(!list) return;
   list.querySelectorAll('.zone-chauff-block').forEach(block=>{
     const em=state.emetteurs[+block.querySelector('.zone-em')?.value];
-    const vis=typeof hydroZoneFieldVisibility==='function'?hydroZoneFieldVisibility(em):{nb:true};
+    const vis=typeof hydroZoneFieldVisibility==='function'?hydroZoneFieldVisibility(em):{nb:true,rad:false};
     const nb=block.querySelector('.zone-field-nb');
     if(nb) nb.style.display=vis.nb?'grid':'none';
   });
+  updateZoneRadFieldVisibility();
 }
 function updateZonesChauffSummary(){
   const el=$('zones_chauff_summary');
@@ -191,7 +263,9 @@ function updateZonesChauffSummary(){
   const surf=typeof zonesSurfaceM2==='function'?zonesSurfaceM2(zones):0;
   const vol=typeof zonesVolumeM3==='function'?zonesVolumeM3(zones):0;
   if(!zones.length){ el.textContent='Aucune zone — ajoutez au moins une zone.'; return; }
-  el.textContent=`${zones.length} zone(s) · ${fmt(surf,0)} m² · volume total ${fmt(vol,1)} m³`;
+  const rad=typeof computeRadiatorTransmission==='function'?computeRadiatorTransmission(projet.besoin,projet,state.emetteurs):null;
+  const radTxt=rad?.active?` · radiateurs ${fmt(rad.totalKw,1)} kW max`:'';
+  el.textContent=`${zones.length} zone(s) · ${fmt(surf,0)} m² · volume total ${fmt(vol,1)} m³${radTxt}`;
 }
 function listUpdateZoneVolumes(){
   const list=$('zones_chauff_list');
@@ -350,7 +424,25 @@ function recalc(){
   const djEl=$('r_djuMeta');
   if(djEl) djEl.textContent=`${fmt(r.dju,0)} DJU · ${djuRefLabel(r.djuAnnee)} · base ${r.djuBase??17}°C`;
   updateZonesChauffSummary();
-  const hb=$('hydro_breakdown'); if(hb&&typeof renderHydrauliqueBreakdown==='function') hb.innerHTML=renderHydrauliqueBreakdown(r.hydro);
+  const hb=$('hydro_breakdown');
+  if(hb){
+    let hhtml=typeof renderHydrauliqueBreakdown==='function'?renderHydrauliqueBreakdown(r.hydro):'';
+    if(typeof renderRadiatorTransmissionBreakdown==='function'&&r.radTransmission?.active){
+      hhtml+=renderRadiatorTransmissionBreakdown(r.radTransmission,r.pInst);
+    }
+    hb.innerHTML=hhtml;
+  }
+  const rRad=$('r_rad_pmax');
+  if(rRad){
+    if(r.radTransmission?.active){
+      const ok=r.pInst<=0||r.radTransmission.totalKw>=r.pInst;
+      rRad.innerHTML=`${fmt(r.radTransmission.totalKw,1)} <small>kW</small>`;
+      rRad.classList.toggle('warn-val',!ok);
+    } else {
+      rRad.innerHTML='—';
+      rRad.classList.remove('warn-val');
+    }
+  }
   const rhq=$('r_hydro_q'), rhp=$('r_hydro_pdc'), rhh=$('r_hydro_hmt');
   if(r.hydro?.active){
     if(rhq) rhq.innerHTML=`${fmt(r.hydro.debitM3h,2)} <small>m³/h</small>`;
@@ -725,8 +817,21 @@ function addMachine(){
 function delMachine(i){ if(confirm("Supprimer "+state.machines[i].pac+" ?")){ state.machines.splice(i,1); renderDB(); } }
 
 /* ---------- TAB 3 : sélection ---------- */
+function onSelectionCouvMinChange(){
+  const el=$('res_couv_min');
+  if(!el) return;
+  const v=Math.max(50,Math.min(100,+(el.value)||70));
+  el.value=v;
+  if(!state.reglages) state.reglages={};
+  state.reglages.selectionCouvMin=v;
+  if(typeof markDirty==='function') markDirty();
+  runSelection();
+}
 function runSelection(){
   recalc(); const r=LAST,s=projet.source;
+  const couvMin=typeof selectionCouvMinPct==='function'?selectionCouvMinPct():70;
+  const couvInp=$('res_couv_min');
+  if(couvInp) couvInp.value=couvMin;
   $('res_cible').textContent=fmt(r.pInst,1);
   $('res_regime').textContent=`${r.src} → ${r.depRegime} · COP ${fmt(r.cop,2)} · émetteur ${r.regimeEmitter}°C`;
   $('res_biv').textContent = r.Tbiv!=null? `${fmt(r.Tbiv,0)} °C` : "couvert";
@@ -735,20 +840,25 @@ function runSelection(){
     $('cards_mono').innerHTML=$('cards_multi').innerHTML='<div class="empty">Sélectionnez ou créez une gamme de PAC.</div>';
     return;
   }
-  $('res_ctx').textContent=`${r.gamme.nom} (${fonctionLabel(r.gamme.fonction)}) · ${tLabel(s.tension)} · ${s.reversible?'réversible':'chaud seul'}`;
-  const sel=Engine.selection(state.machines,state.performances,r.gamme.code,s.tension,s.reversible,r.src,r.depRegime,r.pInst);
-  $('cards_mono').innerHTML=cards(sel.mono,r); $('cards_multi').innerHTML=cards(sel.multi,r);
+  $('res_ctx').textContent=`${r.gamme.nom} (${fonctionLabel(r.gamme.fonction)}) · ${tLabel(s.tension)} · ${s.reversible?'réversible':'chaud seul'} · couv. ≥ ${couvMin} %`;
+  const sel=Engine.selection(state.machines,state.performances,r.gamme.code,s.tension,s.reversible,r.src,r.depRegime,r.pInst,{couvMinPct:couvMin});
+  $('cards_mono').innerHTML=cards(sel.mono,r,couvMin); $('cards_multi').innerHTML=cards(sel.multi,r,couvMin);
 }
 function tLabel(t){ return t===0?"mono 230V":t===1?"tri 400V":"tension indiff."; }
-function cards(arr,r){
-  if(!arr||!arr.length) return `<div class="empty">Aucune machine de cette catégorie ne correspond aux paramètres.</div>`;
+function cards(arr,r,couvMin){
+  couvMin=couvMin??(typeof selectionCouvMinPct==='function'?selectionCouvMinPct():70);
+  if(!arr||!arr.length) return `<div class="empty">Aucune machine entre ${couvMin} % et 150 % de couverture pour ces paramètres.</div>`;
   const capt=state.captages[projet.source.captage];
-  return arr.map((m,i)=>{ const cov=m.couverture, over=cov>=100, reco=i===0&&over;
+  const recoIdx=arr.findIndex(m=>m.couverture>=100);
+  const recoAt=recoIdx>=0?recoIdx:arr.length-1;
+  return arr.map((m,i)=>{ const cov=m.couverture, full=cov>=100, reco=i===recoAt;
     const f=getFiche(state.performances,m.pac,r.src,r.depRegime);
     let lcapt=null;
-    if(f&&f.capteurVert) lcapt=Math.round(f.capteurVert*(r.pInst/m.pCalo)); // longueur ajustée au besoin
+    if(f&&f.capteurVert) lcapt=Math.round(f.capteurVert*(r.pInst/m.pCalo));
     else if(capt.mlParKw>0&&m.cop) lcapt=Math.round((m.pCalo-m.pCalo/m.cop)*capt.mlParKw);
-    return `<div class="mcard${reco?' reco':''}">${reco?'<span class="reco-flag">Recommandée</span>':''}
+    const covColor=full?'var(--ok)':cov>=couvMin?'var(--heat)':'var(--bad)';
+    const covHint=full?'':` <span class="hint" style="font-size:11px">(partielle · appoint)</span>`;
+    return `<div class="mcard${reco?' reco':''}">${reco?`<span class="reco-flag">${full?'Recommandée':'Proche du besoin'}</span>`:''}
       <div class="top"><h4>${m.pac}</h4><div class="sub">${m.nbComp} compresseur(s) · ${tLabel(m.tension)}</div></div>
       <div class="body">
         <div class="mline"><span>Puissance calorifique</span><b>${fmt(m.pCalo,2)} kW</b></div>
@@ -757,15 +867,42 @@ function cards(arr,r){
         ${(()=>{const imp=calcGwpImpact(m); return imp?`<div class="mline"><span>GWP (${imp.fluide})</span><b>${fmt(imp.charge,2)} kg · ${fmt(imp.co2eqT,2)} tCO₂eq</b></div>`:'';})()}
         <div class="mline"><span>Besoin à couvrir</span><b>${fmt(r.pInst,1)} kW</b></div>
         ${lcapt!=null?`<div class="mline"><span>Capteur (${capt.nom.toLowerCase()})</span><b>${lcapt} ${capt.mlParKw>0&&!f?.capteurVert?'ml':'ml'}</b></div>`:''}
-        <div class="cov"><i class="${over?'':'over'}" style="width:${Math.min(100,cov)}%"></i></div>
-        <div class="mline" style="border:none"><span>Couverture</span><b style="color:${over?'var(--ok)':'var(--bad)'}">${fmt(cov,0)} %</b></div>
-        <button class="btn-soft noprint" style="width:100%;margin-top:8px" onclick="chooseForNote('${m.pac}')">Retenir pour la note →</button>
+        <div class="cov"><i class="${full?'':'over'}" style="width:${Math.min(150,cov)}%"></i></div>
+        <div class="mline" style="border:none"><span>Couverture</span><b style="color:${covColor}">${fmt(cov,0)} %</b>${covHint}</div>
+        <button class="btn-soft noprint" style="width:100%;margin-top:8px" onclick="chooseForNote('${escAttr(m.pac)}')">Retenir pour la note →</button>
       </div></div>`; }).join('');
 }
 let chosen=null;
-function chooseForNote(pac){ const r=LAST; const m=Engine.selection(state.machines,state.performances,r.gamme.code,projet.source.tension,projet.source.reversible,r.src,r.depRegime,r.pInst);
-  const all=[...m.mono,...m.multi].find(x=>x.pac===pac)||{pac,pCalo:Engine.pCalo(state.performances,pac,r.src,r.depRegime),cop:Engine.copReg(state.performances,pac,r.src,r.depRegime),nbComp:1};
-  chosen=all; renderNote(); goTab('note'); recalc(); toast(pac+" retenue"); }
+function machineSelectionEntry(pac,r,couvMin){
+  couvMin=couvMin??(typeof selectionCouvMinPct==='function'?selectionCouvMinPct():70);
+  const s=projet.source;
+  const sel=Engine.selection(state.machines,state.performances,r.gamme.code,s.tension,s.reversible,r.src,r.depRegime,r.pInst,{couvMinPct:couvMin});
+  const found=[...sel.mono,...sel.multi].find(x=>x.pac===pac);
+  if(found) return found;
+  const raw=machineByPac(pac);
+  if(!raw||raw.gammeCode!==r.gamme.code) return null;
+  const matchT=mt=>mt===2||s.tension===2||mt===s.tension;
+  if(!matchT(raw.tension)||raw.reversible<s.reversible) return null;
+  const pc=Engine.pCalo(state.performances,pac,r.src,r.depRegime);
+  if(!pc||pc<=0) return null;
+  const cov=pc/r.pInst*100;
+  if(cov<couvMin){
+    toast(`Couverture ${fmt(cov,0)} % — sous le seuil ${couvMin} %`);
+    return null;
+  }
+  return {...raw,pac,pCalo:pc,cop:Engine.copReg(state.performances,pac,r.src,r.depRegime),couverture:cov};
+}
+function chooseForNote(pac){
+  const r=LAST;
+  const couvMin=typeof selectionCouvMinPct==='function'?selectionCouvMinPct():70;
+  const all=machineSelectionEntry(pac,r,couvMin);
+  if(!all) return;
+  chosen=all;
+  renderNote();
+  goTab('note');
+  recalc();
+  toast(`${pac} retenue · couverture ${fmt(all.couverture,0)} %`);
+}
 
 /* ---------- TAB 4 : comparaison énergies ---------- */
 function readPrix(){ const p=state.prix;
@@ -1124,6 +1261,9 @@ function renderNote(){
     ?noteRow("hydro.debit","Débit chauffage estimé","m³/h",fmt(r.hydro.debitM3h,2))
       +noteRow("hydro.pdc","Pdc chauffage estimée","kPa",fmt(r.hydro.pdcTotalKpa,1))
       +noteRow("hydro.hmt","HMT estimée","m",fmt(r.hydro.hmtM,2)):"";
+  const radRows=r.radTransmission?.active
+    ?noteRow("power.radMax","Puissance transmissible radiateurs","kW",fmt(r.radTransmission.totalKw,1))
+      +(r.pInst>0?noteRow("power.radMargin","Marge radiateurs / P installée","kW",fmt(r.radTransmission.totalKw-r.pInst,1)):""):"";
   const inputBody=
     noteRow("input.cp","Code postal / dépt.","",`${c.cp||"—"} · ${d.code||"—"}`)
     +noteRow("input.alt","Altitude","m",fmt(b.alt,0))
@@ -1136,6 +1276,7 @@ function renderNote(){
     +noteRow("input.depRegime","Point perf catalogue","°C",r.depRegime||"—")
     +noteRow("input.copEmitter","COP au régime émetteur","",fmt(r.cop,2))
     +hydroRows
+    +radRows
     +noteRow("input.ecs","Eau chaude sanitaire","",e.present?`Oui · ${e.nb} pers · ballon ${fmt(Engine.volumeBallon(e),0)} L`:"Non")
     +noteRow("input.source","Type de source","",r.src||"—");
   const pInstShown=chosen?chosen.pCalo:r.pInst;

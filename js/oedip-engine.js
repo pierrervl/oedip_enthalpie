@@ -64,15 +64,36 @@ const Engine = {
     });
     return {besoin,elec,scop: elec>0?besoin/elec:0,heures,appoint,heuresAppoint,Tbiv,bins,cop};
   },
-  /* sélection mono/multi */
-  selection(machines,perf,gammeCode,tension,reversible,src,dep,cible){
-    const matchT=mt=> mt===2||tension===2||mt===tension;
-    const cand=machines.filter(m=>m.gammeCode===gammeCode&&matchT(m.tension)&&m.reversible>=reversible)
-      .map(m=>{ const pc=Engine.pCalo(perf,m.pac,src,dep), cop=Engine.copReg(perf,m.pac,src,dep);
-        return {...m,pCalo:pc,cop:cop,couverture:pc?pc/cible*100:null}; }).filter(m=>m.pCalo!=null&&m.pCalo>0);
-    const pick=arr=>{ arr.sort((a,b)=>a.pCalo-b.pCalo); const i=arr.findIndex(m=>m.pCalo>=cible);
-      return i===-1?arr.slice(-2):arr.slice(Math.max(0,i),i+2); };
-    return {mono:pick(cand.filter(m=>m.nbComp===1)), multi:pick(cand.filter(m=>m.nbComp>=2))};
+  /* sélection mono/multi — affiche les machines entre couvMin % et ~150 % du besoin */
+  selection(machines, perf, gammeCode, tension, reversible, src, dep, cible, opts) {
+    opts = opts || {};
+    const minPct = opts.couvMinPct != null ? +opts.couvMinPct : 70;
+    const maxPct = opts.couvMaxPct != null ? +opts.couvMaxPct : 150;
+    const minP = cible * minPct / 100;
+    const maxP = cible * maxPct / 100;
+    const matchT = (mt) => mt === 2 || tension === 2 || mt === tension;
+    const cand = machines.filter((m) => m.gammeCode === gammeCode && matchT(m.tension) && m.reversible >= reversible)
+      .map((m) => {
+        const pc = Engine.pCalo(perf, m.pac, src, dep);
+        const cop = Engine.copReg(perf, m.pac, src, dep);
+        return { ...m, pCalo: pc, cop, couverture: pc ? pc / cible * 100 : null };
+      }).filter((m) => m.pCalo != null && m.pCalo > 0);
+    const pick = (arr) => {
+      arr.sort((a, b) => a.pCalo - b.pCalo);
+      let band = arr.filter((m) => m.pCalo >= minP && m.pCalo <= maxP);
+      if (!band.length) {
+        const below = arr.filter((m) => m.pCalo < cible).slice(-2);
+        const above = arr.filter((m) => m.pCalo >= cible).slice(0, 2);
+        band = [...below, ...above].filter((m, i, a) => a.findIndex((x) => x.pac === m.pac) === i);
+      }
+      if (!band.length) return [];
+      const i100 = band.findIndex((m) => m.pCalo >= cible);
+      if (i100 === -1) return band.slice(-4);
+      const start = Math.max(0, i100 - 2);
+      const end = Math.min(band.length, i100 + 3);
+      return band.slice(start, end);
+    };
+    return { mono: pick(cand.filter((m) => m.nbComp === 1)), multi: pick(cand.filter((m) => m.nbComp >= 2)), couvMinPct: minPct };
   },
 
   /* Répartition journalière : totaux annuels DJU → kWh par jour (profil climatique mensuel) */
@@ -174,10 +195,11 @@ function compute(){
   integ.daily=Engine.repartitionJournaliere(b.dept,dj.zone,dj.djuAnnee,dj.djuBase,integ.besoin,integ.elec,integ.appoint,cop);
   const economie = integ.besoin>0 ? (integ.besoin-integ.elec)/integ.besoin*100 : 0;
   const hydro=typeof computeHydrauliqueChauffage==="function"?computeHydrauliqueChauffage(pInst,bs,projet,state.emetteurs,{gamme,src,depRegime}):null;
+  const radTx=typeof computeRadiatorTransmission==="function"?computeRadiatorTransmission(bs,projet,state.emetteurs):null;
   LAST={V,G,Tbase,TbaseRef:Engine.tbaseRef(b,state.departements),dep,pECS,pInst,dju:dj.dju,djuAnnee:dj.djuAnnee,djuBase:dj.djuBase,
         cop,copCatalog,src,depRegime,regimeEmitter:emCtx.regimeEmitter,depTemp:emCtx.depTemp,emetteurLabel:emCtx.emetteurLabel,gamme,zone:dj.zone,
         besoin:integ.besoin,elec:integ.elec,scop:integ.scop,heures:integ.heures,
-        appoint:integ.appoint,Tbiv:integ.Tbiv,economie,hydro,integ};
+        appoint:integ.appoint,Tbiv:integ.Tbiv,economie,hydro,radTransmission:radTx,integ};
   return LAST;
 }
 function medianeCop(gamme,srcPerf,dep){

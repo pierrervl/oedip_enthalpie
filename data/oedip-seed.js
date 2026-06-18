@@ -1,7 +1,7 @@
 /* OEDIP — données initiales (catalogue) — ne pas modifier l'ordre de chargement dans oedip.html */
 const SEED = {
   meta:{ outil:"OEDIP", version:"v2.0 web", millesime:2025, utilisateur:"" },
-  reglages:{ tnc:14.58, baseFactorDJU:0.702, baseFactorDJU15:0.93, pasMatrice:1, djuAnnee:"moyenne", djuBase:17 }, // DJU SDES · "moyenne" = 1990–2025 ou année précise
+  reglages:{ tnc:14.58, baseFactorDJU:0.702, baseFactorDJU15:0.93, pasMatrice:1, djuAnnee:"moyenne", djuBase:17, selectionCouvMin:70 }, // DJU SDES · "moyenne" = 1990–2025 ou année précise
   prix:{ elec:0.2100, fuelL:1.10, rdtFuel:92, gazKwh:0.1200, rdtGaz:93, granKg:0.45, rdtGran:90, bucheKwh:0.075, rdtBuche:75 },
   pci:{ fuelL:9.97, granKg:4.8 }, // kWh par unité
   co2:{ pac:60, joule:60, fuel:324, gaz:227, gran:30, buche:30 }, // gCO2/kWh utile (élec FR ~60)

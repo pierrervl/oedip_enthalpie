@@ -550,6 +550,12 @@
   .zone-chauff-title{font-size:12px;font-weight:600;color:var(--ink-soft)}
   .zone-chauff-block .row{margin-bottom:4px}
   .zones-chauff-summary{font-size:12px;color:var(--ink-soft);margin:2px 0 6px}
+  .zone-rad-fields{margin-top:4px;padding-top:6px;border-top:1px dashed var(--line)}
+  .hydro-rad-tx-block{margin-top:12px;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--field)}
+  .hydro-rad-tx-warn{border-color:var(--bad);background:#fdf4f2}
+  .hydro-rad-tx-head{display:flex;flex-wrap:wrap;gap:6px;align-items:baseline;margin-bottom:6px}
+  .hydro-rad-tx-alert{color:var(--bad);margin:8px 0 0;font-size:11.5px}
+  .metric .v.warn-val{color:var(--bad)}
   #zones_chauff_add{margin:2px 0 8px}
   .zone-chauff-block .zone-volmode button{font-size:11px;padding:4px 8px}
   .hydro-zone-mini{font-size:11px;color:var(--ink-soft);padding:4px 0;border-top:1px dashed var(--line);margin-top:4px}

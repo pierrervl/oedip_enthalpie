@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=Saira+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/oedip.css?v=7">
+<link rel="stylesheet" href="css/oedip.css?v=8">
 <link rel="stylesheet" href="css/oedip-note.css">
 </head>
 <body>
@@ -165,6 +165,7 @@
         <div class="metric"><span class="k">Déperditions à T base</span><span class="v" id="r_dep">— <small>W</small></span></div>
         <div class="metric"><span class="k">Puissance ECS add.</span><span class="v" id="r_ecs">— <small>kW</small></span></div>
         <div class="metric big"><span class="k">Puissance à installer</span><span class="v" id="r_pinst">— <small>kW</small></span></div>
+        <div class="metric" id="r_rad_pmax_row"><span class="k">Puissance transmissible (radiateurs)</span><span class="v mono" id="r_rad_pmax" style="font-size:13px">—</span></div>
         <div class="metric geo"><span class="k">Besoin annuel (DJU intégrés)</span><span class="v" id="r_besoin">— <small>kWh</small></span></div>
         <div class="metric" style="padding:6px 16px 10px"><span class="k">DJU retenu</span><span class="v mono" id="r_djuMeta" style="font-size:12px">—</span></div>
         <div class="metric"><span class="k">Émetteur retenu</span><span class="v mono" id="r_emetteur" style="font-size:12px">—</span></div>
@@ -205,6 +206,11 @@
       <div style="text-align:center"><div class="v mono" id="res_regime" style="font-size:16px;font-weight:600"></div><div class="k" style="font-size:12px;color:var(--ink-soft)">régime évalué</div></div>
       <div style="text-align:center"><div class="v mono" id="res_biv" style="font-size:16px;font-weight:600"></div><div class="k" style="font-size:12px;color:var(--ink-soft)">point de bivalence</div></div>
       <span class="grow" style="flex:1"></span>
+      <label class="res-couv-min noprint" style="display:flex;align-items:center;gap:8px;font-size:13px">
+        Couv. min.
+        <input type="number" id="res_couv_min" min="50" max="100" step="5" value="70" style="width:4rem" oninput="onSelectionCouvMinChange()" title="Afficher et retenir les machines à partir de ce taux de couverture">
+        <span class="unit">%</span>
+      </label>
       <button class="btn-heat noprint" onclick="runSelection()">↻ Recalculer</button>
     </div></div>
   <div class="subhead" style="font-size:14px;margin:18px 0 6px">Mono-compresseur</div>
@@ -521,8 +527,8 @@
 <script src="data/oedip-demo-study.js"></script>
 <script src="data/oedip-circulateurs-wilo.js"></script>
 <script src="data/oedip-echangeurs-pdc.js"></script>
-<script src="js/oedip-hydro.js"></script>
-<script src="js/oedip-engine.js"></script>
+<script src="js/oedip-hydro.js?v=2"></script>
+<script src="js/oedip-engine.js?v=3"></script>
 <script src="js/oedip-chart.js"></script>
 <script src="js/oedip-composants.js?v=3"></script>
 <script src="js/oedip-outils.js"></script>
@@ -532,7 +538,7 @@
 <script src="js/oedip-media.js?v=8"></script>
 <script src="js/oedip-procedures.js?v=12"></script>
 <script src="js/oedip-procedure-print.js?v=3"></script>
-<script src="js/oedip-ui.js"></script>
+<script src="js/oedip-ui.js?v=3"></script>
 <script src="js/oedip-csv.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="js/oedip-supabase.js?v=10"></script>

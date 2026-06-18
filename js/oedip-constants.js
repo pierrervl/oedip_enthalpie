@@ -277,6 +277,13 @@ function findDeptByCode(code){
 }
 function ensureDepartements(){ state.departements=mergeDepartements(state.departements); }
 
+/** Seuil minimal de couverture affiché / sélectionnable (%, défaut 70). */
+function selectionCouvMinPct() {
+  const v = +(state.reglages?.selectionCouvMin ?? 70);
+  if (!Number.isFinite(v)) return 70;
+  return Math.max(50, Math.min(100, v));
+}
+
 /** DJU SDES + métadonnées pour le moteur (source unique : oedip-dju-departements.js). */
 function resolveProjectDju(deptCode){
   const rg=state?.reglages||{};

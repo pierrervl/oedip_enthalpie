@@ -10,6 +10,77 @@ const HYDRO_PDC_RAD_KPA = 18;
 const HYDRO_PDC_VENTILO_KPA = 14;
 const HYDRO_PC_PDC_COLLECTEUR_KPA = 3;
 const HYDRO_DEFAULT_SURFACE_PCT = 50;
+/** Puissance surfacique indicative @ ΔT50 (W/m²) selon type panneau acier. */
+const RAD_TYPE_Q50_WM2 = { 11: 1000, 21: 1600, 22: 2000, 33: 2500 };
+const RAD_DT_REF_K = 50;
+const RAD_DT_EXPONENT = 1.3;
+
+function emitterReturnTemp(regime) {
+  const m = String(regime || "").match(/(\d+)\s*\/\s*(\d+)/);
+  return m ? +m[1] : 40;
+}
+
+function radiatorDeltaTAct(regime, tint) {
+  const tmean = (emitterDepartureTemp(regime) + emitterReturnTemp(regime)) / 2;
+  return Math.max(0, tmean - (+tint || 20));
+}
+
+function radiatorPnomDt50FromDims(hMm, wMm, type) {
+  const h = Math.max(0, +(hMm || 0)) / 1000;
+  const w = Math.max(0, +(wMm || 0)) / 1000;
+  if (!h || !w) return 0;
+  const q = RAD_TYPE_Q50_WM2[type] || RAD_TYPE_Q50_WM2[21];
+  return (q * h * w) / 1000;
+}
+
+function radiatorUnitPnomDt50Kw(z) {
+  if (!z || z.radSizing !== "pnom" && z.radSizing !== "dims") return 0;
+  if (z.radSizing === "pnom") return Math.max(0, +(z.radPnomKw || 0));
+  return radiatorPnomDt50FromDims(z.radHeightMm, z.radWidthMm, z.radType || 21);
+}
+
+function radiatorPowerAtRegime(pnomDt50Kw, regime, tint) {
+  if (!pnomDt50Kw || pnomDt50Kw <= 0) return 0;
+  const dt = radiatorDeltaTAct(regime, tint);
+  if (!dt) return 0;
+  return pnomDt50Kw * Math.pow(dt / RAD_DT_REF_K, RAD_DT_EXPONENT);
+}
+
+function computeRadiatorTransmission(bs, projet, emetteurs) {
+  const tint = projet?.batiment?.tint ?? 20;
+  const zones = bs?.zones || [];
+  const rows = [];
+  let totalKw = 0;
+  zones.forEach((z, i) => {
+    const em = emetteurs?.[z.emIdx];
+    if (emitterHydroKind(em) !== "rad") return;
+    const nb = Math.max(0, +(z.nbEmetteurs || 0));
+    const pnomUnit = radiatorUnitPnomDt50Kw(z);
+    if (!pnomUnit || !nb) return;
+    const pUnit = radiatorPowerAtRegime(pnomUnit, em?.regime, tint);
+    const pZone = pUnit * nb;
+    totalKw += pZone;
+    rows.push({
+      index: i,
+      nom: zoneDisplayName(z, i),
+      nb,
+      pnomUnitDt50Kw: pnomUnit,
+      pUnitKw: pUnit,
+      pZoneKw: pZone,
+      regime: em?.regime,
+      deltaT: radiatorDeltaTAct(em?.regime, tint),
+      sizing: z.radSizing,
+    });
+  });
+  return { active: rows.length > 0, totalKw, zones: rows };
+}
+
+function renderRadiatorTypeOptions(selected) {
+  const sel = String(selected || 21);
+  return [11, 21, 22, 33].map((t) =>
+    `<option value="${t}"${String(t) === sel ? " selected" : ""}>Type ${t}</option>`
+  ).join("");
+}
 
 function defaultZoneChauff(emIdx, nom) {
   return {
@@ -19,7 +90,12 @@ function defaultZoneChauff(emIdx, nom) {
     hauteur: 2.5,
     volumeM3: 0,
     emIdx: emIdx ?? 3,
-    nbEmetteurs: 0
+    nbEmetteurs: 0,
+    radSizing: "",
+    radPnomKw: 0,
+    radHeightMm: 600,
+    radWidthMm: 1000,
+    radType: 21
   };
 }
 
@@ -128,7 +204,12 @@ function normalizeZonesChauffage(projet) {
       hauteur,
       volumeM3,
       emIdx: Math.min(Math.max(0, +(z.emIdx ?? 3)), n - 1),
-      nbEmetteurs: Math.max(0, +(z.nbEmetteurs || 0))
+      nbEmetteurs: Math.max(0, +(z.nbEmetteurs || 0)),
+      radSizing: z.radSizing === "pnom" || z.radSizing === "dims" ? z.radSizing : "",
+      radPnomKw: Math.max(0, +(z.radPnomKw || 0)),
+      radHeightMm: Math.max(0, +(z.radHeightMm || 0)),
+      radWidthMm: Math.max(0, +(z.radWidthMm || 0)),
+      radType: [11, 21, 22, 33].includes(+z.radType) ? +z.radType : 21
     };
   });
   if (projet.batiment) projet.batiment.vol = zonesVolumeM3(bs.zones);
@@ -144,7 +225,17 @@ function zoneChauffDetailLabel(z, em) {
     : `${nom} · ${fmt(z.surfaceM2 || 0, 0)} m² × ${fmt(z.hauteur || 0, 1)} m · ${fmt(vol, 1)} m³`;
   if (!em || em.absent) return base;
   const kind = emitterHydroKind(em);
-  if (kind === "rad" || kind === "ventilo") return `${base} · ${emetteurOptionLabel(em)} · ${fmt(z.nbEmetteurs || 0, 0)} u`;
+  if (kind === "ventilo") return `${base} · ${emetteurOptionLabel(em)} · ${fmt(z.nbEmetteurs || 0, 0)} u`;
+  if (kind === "rad") {
+    const nb = z.nbEmetteurs || 0;
+    const pnom = radiatorUnitPnomDt50Kw(z);
+    const tint = typeof projet !== "undefined" ? projet?.batiment?.tint : 20;
+    if (pnom && nb) {
+      const pZone = radiatorPowerAtRegime(pnom, em?.regime, tint) * nb;
+      return `${base} · ${fmt(nb, 0)} rad · ${fmt(pZone, 1)} kW transm. max`;
+    }
+    return `${base} · ${emetteurOptionLabel(em)} · ${fmt(nb, 0)} u`;
+  }
   return `${base} · ${emetteurOptionLabel(em)}`;
 }
 
@@ -549,7 +640,7 @@ function applyHydroEstimToMachine(pac) {
 
 function hydroZoneFieldVisibility(em) {
   const k = emitterHydroKind(em);
-  return { nb: k === "rad" || k === "ventilo" };
+  return { nb: k === "rad" || k === "ventilo", rad: k === "rad" };
 }
 
 function renderHydrauliqueFormulasNote(h) {
@@ -575,6 +666,7 @@ function renderHydrauliqueFormulasNote(h) {
       <ul>
         <li><b>Plancher chauffant</b> : boucles Ø13 mm (~80 m/boucle, 1 boucle / 10 m²) · Pdc tube (Darcy-Weisbach) + <b>N<sub>boucles</sub> × Pdc collecteur</b> (${escHtml(pdcCol)}/boucle, réglable) · Pdc zone = tube + Σ collecteur · total projet = Σ zones</li>
         <li><b>Radiateurs</b> : 18 kPa / unité · <b>Ventilo-convecteurs</b> : 14 kPa / unité</li>
+        <li><b>Puissance transmissible radiateurs</b> : P = P<sub>nom,ΔT50</sub> × (ΔT / 50)<sup>1,3</sup> · ΔT = T<sub>moy eau</sub> − T<sub>pièce</sub> · P<sub>nom</sub> depuis dimensions (type 11/21/22/33) ou saisie directe @ ΔT50</li>
         <li><b>Total distribution</b> = Σ Pdc zones (+ échangeur si renseigné) → <b>${escHtml(pdcTot)}</b></li>
       </ul>
       <p><b>Échangeurs SWEP B26 / F80 / FI22</b> — courbes ΔP=f(Q) importées depuis <code>circu.xlsx</code> : <b>B26 @ 50°C</b> (eau chauffage) · F80 @ 0°C/15% glycol (captage) · FI22 (glycol + 50°C).</p>
@@ -584,6 +676,22 @@ function renderHydrauliqueFormulasNote(h) {
       </ul>
     </div>
   </details>`;
+}
+
+function renderRadiatorTransmissionBreakdown(rad, pInst) {
+  if (!rad?.active) return "";
+  const ok = pInst <= 0 || rad.totalKw >= pInst;
+  const margin = rad.totalKw - (pInst || 0);
+  let html = `<div class="hydro-rad-tx-block${ok ? "" : " hydro-rad-tx-warn"}">
+    <div class="hydro-rad-tx-head"><b>Puissance transmissible radiateurs</b> <span class="mono">${fmt(rad.totalKw, 1)} kW</span>
+    ${pInst > 0 ? `<span class="hint">· à installer ${fmt(pInst, 1)} kW · marge ${margin >= 0 ? "+" : ""}${fmt(margin, 1)} kW</span>` : ""}</div>`;
+  rad.zones.forEach((z) => {
+    html += `<div class="hydro-zone-mini"><span class="hydro-zone-lbl">${escHtml(z.nom)}</span>
+      <span class="mono">${z.nb} × ${fmt(z.pUnitKw, 2)} kW · ΔT ${fmt(z.deltaT, 1)} K → ${fmt(z.pZoneKw, 1)} kW</span></div>`;
+  });
+  if (!ok) html += `<p class="hint hydro-rad-tx-alert">⚠ Puissance transmissible inférieure à la puissance à installer — augmenter les radiateurs ou le régime.</p>`;
+  html += `</div>`;
+  return html;
 }
 
 function renderHydrauliqueBreakdown(h) {
