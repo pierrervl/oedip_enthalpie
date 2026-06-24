@@ -111,9 +111,82 @@ function findProcedureEntry(procId) {
   if (!procId) return null;
   for (const cat of state.procedureCatalogs || []) {
     const proc = cat.procedures?.find((p) => p.id === procId);
-    if (proc) return { proc, catalogGammeCode: +cat.gammeCode };
+    if (proc) return { proc, catalogGammeCode: +cat.gammeCode, catalog: cat };
   }
   return null;
+}
+
+function procedureChildCount(procId) {
+  let n = 0;
+  (state.procedureCatalogs || []).forEach((cat) => {
+    (cat.procedures || []).forEach((p) => { if (p.parentProcId === procId) n++; });
+  });
+  return n;
+}
+
+function detachProcedureChildren(procId) {
+  (state.procedureCatalogs || []).forEach((cat) => {
+    (cat.procedures || []).forEach((p) => {
+      if (p.parentProcId === procId) delete p.parentProcId;
+    });
+  });
+}
+
+function cleanupProcedureMachineLinks(proc) {
+  if (!proc) return;
+  const procId = proc.id;
+  const tubeRef = proc.tubeRef;
+  (state.machines || []).forEach((m) => {
+    if (m.frigoProcDims?.[procId]) {
+      delete m.frigoProcDims[procId];
+      if (!Object.keys(m.frigoProcDims).length) delete m.frigoProcDims;
+    }
+    if (tubeRef && m.frigoTubeVariants?.[tubeRef] !== undefined) {
+      delete m.frigoTubeVariants[tubeRef];
+      if (!Object.keys(m.frigoTubeVariants).length) delete m.frigoTubeVariants;
+    }
+  });
+}
+
+function removeProcedureFromCatalogs(procId) {
+  let removed = false;
+  (state.procedureCatalogs || []).forEach((cat) => {
+    const idx = cat.procedures?.findIndex((p) => p.id === procId) ?? -1;
+    if (idx >= 0) {
+      cat.procedures.splice(idx, 1);
+      removed = true;
+    }
+  });
+  return removed;
+}
+
+function deleteProcedure(gammeCode, procId, opts) {
+  opts = opts || {};
+  if (!procedureEditAllowed()) {
+    toast("Suppression réservée aux techniciens et administrateurs OEDIP");
+    return false;
+  }
+  const entry = findProcedureEntry(procId);
+  if (!entry) return false;
+  const proc = entry.proc;
+  const label = procedureShortName(proc) || procedureRefPattern(proc) || proc.title || procId;
+  const childN = procedureChildCount(procId);
+  let msg = `Supprimer la procédure « ${label} » ? Cette action est irréversible.`;
+  if (childN) msg += `\n\n${childN} sous-procédure(s) liée(s) seront détachées.`;
+  if (!opts.skipConfirm && !confirm(msg)) return false;
+  if (procedureEditDraft?.procId === procId) closeProcedureEditor();
+  detachProcedureChildren(procId);
+  cleanupProcedureMachineLinks(proc);
+  if (!removeProcedureFromCatalogs(procId)) return false;
+  renderProceduresTab();
+  if (typeof markCatalogDirty === "function") markCatalogDirty();
+  toast(`Procédure « ${label} » supprimée`);
+  return true;
+}
+
+function deleteProcedureFromEditor() {
+  if (!procedureEditDraft) return;
+  deleteProcedure(procedureEditDraft.gammeCode, procedureEditDraft.procId);
 }
 
 function frigoPipeDef(pipeId) {
@@ -2480,6 +2553,7 @@ function renderProceduresTab() {
         ${renderProcedureGalleryGammes(p, code, gamCodes)}
         <div class="proc-gallery-actions noprint" onclick="event.stopPropagation()">
           ${!reorder && canEdit ? `<button type="button" class="btn-heat" onclick="openProcedureEditor(${code},'${idAttr}')">Édition</button>` : ""}
+          ${!reorder && canEdit ? `<button type="button" class="btn-ghost proc-del-btn" onclick="deleteProcedure(${code},'${idAttr}')">Supprimer</button>` : ""}
           ${!reorder ? `<button type="button" class="btn-soft" onclick="printSingleProcedure(${code},'${idAttr}')">🖶</button>` : ""}
           ${!reorder && previewPac ? `<button type="button" class="btn-soft" onclick="openProcedureViewer('${idAttr}','${pacAttr}')">Aperçu</button>` : ""}
         </div>

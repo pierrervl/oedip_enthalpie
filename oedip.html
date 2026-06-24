@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=Saira+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/oedip.css?v=10">
+<link rel="stylesheet" href="css/oedip.css?v=11">
 <link rel="stylesheet" href="css/oedip-note.css?v=4">
 </head>
 <body>
@@ -477,6 +477,7 @@
 </div></div>
 <div class="modal" id="modalProcedureEdit"><div class="card proc-edit-card">
   <div class="mhead"><h3 id="procedureEditHead">Édition procédure</h3><span class="grow" style="flex:1"></span>
+    <button type="button" class="btn-ghost proc-del-btn" onclick="deleteProcedureFromEditor()">Supprimer</button>
     <button type="button" class="btn-soft" onclick="closeProcedureEditor()">Annuler</button>
     <button type="button" class="btn-heat" onclick="saveProcedureEditor()">Enregistrer</button></div>
   <div class="mbody" id="procedureEditBody"></div>
@@ -539,7 +540,7 @@
 <script src="js/oedip-schemas.js"></script>
 <script src="js/oedip-supabase-config.js?v=7"></script>
 <script src="js/oedip-media.js?v=8"></script>
-<script src="js/oedip-procedures.js?v=16"></script>
+<script src="js/oedip-procedures.js?v=17"></script>
 <script src="js/oedip-procedure-print.js?v=3"></script>
 <script src="js/oedip-ui.js?v=15"></script>
 <script src="js/oedip-csv.js"></script>
