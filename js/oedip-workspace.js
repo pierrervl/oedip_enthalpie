@@ -142,10 +142,12 @@ async function syncNotePrintPresetsToCloud() {
   }
 }
 
-const INSTALLER_PROFILE_LS = "oedip_installer_profile";
+const INSTALLER_PROFILE_LS = "oedip_installer_profile"; // legacy (entreprise unique)
+const INSTALLER_COMPANIES_LS = "oedip_installer_companies"; // { companies, activeId }
 
 function defaultInstallerProfile() {
   return {
+    id: "",
     company: "",
     adr: "",
     cp: "",
@@ -160,33 +162,131 @@ function defaultInstallerProfile() {
   };
 }
 
-function ensureInstallerProfile() {
-  if (!state.installerProfile || typeof state.installerProfile !== "object") {
-    state.installerProfile = defaultInstallerProfile();
+function genInstallerCompanyId() {
+  return "co_" + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+}
+
+function normalizeInstallerCompany(obj) {
+  const c = { ...defaultInstallerProfile(), ...(obj && typeof obj === "object" ? obj : {}) };
+  if (!c.id) c.id = genInstallerCompanyId();
+  return c;
+}
+
+/** Garantit la liste d'entreprises + une entreprise active valide (migre l'ancien profil unique). */
+function ensureInstallerCompanies() {
+  if (!Array.isArray(state.installerCompanies)) state.installerCompanies = [];
+  if (
+    !state.installerCompanies.length &&
+    state.installerProfile &&
+    typeof state.installerProfile === "object"
+  ) {
+    state.installerCompanies = [normalizeInstallerCompany(state.installerProfile)];
   }
-  return state.installerProfile;
+  if (!state.installerCompanies.length) {
+    state.installerCompanies = [normalizeInstallerCompany({})];
+  } else {
+    state.installerCompanies = state.installerCompanies.map(normalizeInstallerCompany);
+  }
+  if (
+    !state.activeInstallerCompanyId ||
+    !state.installerCompanies.some((c) => c.id === state.activeInstallerCompanyId)
+  ) {
+    state.activeInstallerCompanyId = state.installerCompanies[0].id;
+  }
+  return state.installerCompanies;
+}
+
+function getActiveInstallerCompany() {
+  const list = ensureInstallerCompanies();
+  return list.find((c) => c.id === state.activeInstallerCompanyId) || list[0];
+}
+
+function getInstallerCompanyById(id) {
+  ensureInstallerCompanies();
+  return state.installerCompanies.find((c) => c.id === id) || null;
+}
+
+function addInstallerCompany(makeActive) {
+  ensureInstallerCompanies();
+  const c = normalizeInstallerCompany({ id: genInstallerCompanyId() });
+  state.installerCompanies.push(c);
+  if (makeActive) state.activeInstallerCompanyId = c.id;
+  return c;
+}
+
+function deleteInstallerCompany(id) {
+  ensureInstallerCompanies();
+  if (state.installerCompanies.length <= 1) return false;
+  const i = state.installerCompanies.findIndex((c) => c.id === id);
+  if (i < 0) return false;
+  state.installerCompanies.splice(i, 1);
+  if (state.activeInstallerCompanyId === id) {
+    state.activeInstallerCompanyId = state.installerCompanies[0].id;
+  }
+  return true;
+}
+
+function setActiveInstallerCompany(id) {
+  ensureInstallerCompanies();
+  if (state.installerCompanies.some((c) => c.id === id)) state.activeInstallerCompanyId = id;
+  return getActiveInstallerCompany();
+}
+
+/** Rétrocompat : renvoie l'entreprise active (utilisé par toute la note). */
+function ensureInstallerProfile() {
+  const active = getActiveInstallerCompany();
+  state.installerProfile = active;
+  return active;
+}
+
+function getInstallerProfile() {
+  return ensureInstallerProfile();
 }
 
 function loadInstallerProfileFromLocal() {
   try {
-    const raw = localStorage.getItem(INSTALLER_PROFILE_LS);
-    if (!raw) return false;
-    const parsed = JSON.parse(raw);
-    if (!parsed || typeof parsed !== "object") return false;
-    state.installerProfile = { ...defaultInstallerProfile(), ...parsed };
-    return true;
+    const raw = localStorage.getItem(INSTALLER_COMPANIES_LS);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed && Array.isArray(parsed.companies) && parsed.companies.length) {
+        state.installerCompanies = parsed.companies.map(normalizeInstallerCompany);
+        state.activeInstallerCompanyId = parsed.activeId || null;
+        ensureInstallerCompanies();
+        return true;
+      }
+    }
   } catch (e) {
-    return false;
+    /* ignore, tente le format hérité */
   }
+  try {
+    const raw = localStorage.getItem(INSTALLER_PROFILE_LS);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed && typeof parsed === "object") {
+        state.installerCompanies = [normalizeInstallerCompany(parsed)];
+        ensureInstallerCompanies();
+        saveInstallerProfileLocal();
+        return true;
+      }
+    }
+  } catch (e) {
+    /* ignore */
+  }
+  ensureInstallerCompanies();
+  return false;
 }
 
 function saveInstallerProfileLocal() {
-  ensureInstallerProfile();
+  ensureInstallerCompanies();
   try {
-    localStorage.setItem(INSTALLER_PROFILE_LS, JSON.stringify(state.installerProfile));
+    localStorage.setItem(
+      INSTALLER_COMPANIES_LS,
+      JSON.stringify({ companies: state.installerCompanies, activeId: state.activeInstallerCompanyId })
+    );
+    localStorage.setItem(INSTALLER_PROFILE_LS, JSON.stringify(getActiveInstallerCompany()));
     return true;
   } catch (e) {
-    console.warn("Profil installateur local:", e.message);
+    console.warn("Entreprises (local):", e.message);
     return false;
   }
 }
@@ -196,12 +296,22 @@ async function loadInstallerProfileFromCloud() {
   if (!(await sbCloudActiveAsync())) return false;
   try {
     const prefs = await sbLoadProfilePreferences();
-    if (!prefs?.installerProfile || typeof prefs.installerProfile !== "object") return false;
-    state.installerProfile = { ...defaultInstallerProfile(), ...prefs.installerProfile };
-    saveInstallerProfileLocal();
-    return true;
+    if (Array.isArray(prefs?.installerCompanies) && prefs.installerCompanies.length) {
+      state.installerCompanies = prefs.installerCompanies.map(normalizeInstallerCompany);
+      state.activeInstallerCompanyId = prefs.activeInstallerCompanyId || null;
+      ensureInstallerCompanies();
+      saveInstallerProfileLocal();
+      return true;
+    }
+    if (prefs?.installerProfile && typeof prefs.installerProfile === "object") {
+      state.installerCompanies = [normalizeInstallerCompany(prefs.installerProfile)];
+      ensureInstallerCompanies();
+      saveInstallerProfileLocal();
+      return true;
+    }
+    return false;
   } catch (e) {
-    console.warn("Chargement profil installateur:", e.message);
+    console.warn("Chargement entreprises:", e.message);
     return false;
   }
 }
@@ -210,17 +320,17 @@ async function syncInstallerProfileToCloud() {
   if (typeof sbSaveProfilePreferences !== "function") return false;
   if (!(await sbCloudActiveAsync())) return false;
   try {
-    ensureInstallerProfile();
-    await sbSaveProfilePreferences({ installerProfile: state.installerProfile });
+    ensureInstallerCompanies();
+    await sbSaveProfilePreferences({
+      installerCompanies: state.installerCompanies,
+      activeInstallerCompanyId: state.activeInstallerCompanyId,
+      installerProfile: getActiveInstallerCompany(),
+    });
     return true;
   } catch (e) {
-    console.warn("Sync profil installateur:", e.message);
+    console.warn("Sync entreprises:", e.message);
     return false;
   }
-}
-
-function getInstallerProfile() {
-  return ensureInstallerProfile();
 }
 
 function isLegacyFullProjectExport(obj) {
@@ -268,6 +378,7 @@ const CATALOG_STATE_KEYS = [
 function applyProjetPayload(p) {
   if (!p) return;
   projet = p;
+  if (typeof resetFormDomHydration === "function") resetFormDomHydration();
   if (projet.batiment) {
     delete projet.batiment.tbaseMode;
     delete projet.batiment.tbase;
@@ -287,9 +398,9 @@ function finishCatalogLoad(opts) {
   migratePerformances();
   normalizeGammes();
   normalizeEmetteurs();
+  if (!opts.skipForm && typeof writeForm === "function") writeForm();
   fillSelects();
   fillDbPerfSelects();
-  if (!opts.skipForm) writeForm();
   renderGammes();
   syncDeptFromCp(true);
   if (state.meta) {
@@ -303,9 +414,9 @@ function finishCatalogLoad(opts) {
 
 function finishStudyLoad(opts) {
   opts = opts || {};
+  if (typeof writeForm === "function") writeForm();
   fillSelects();
   fillDbPerfSelects();
-  writeForm();
   recalc();
   renderGammes();
   syncDeptFromCp(true);
@@ -628,11 +739,14 @@ function showNewStudyModal(mode){
   _newStudyModalMode=mode||"create";
   const m=$("modalNewStudy"), inp=$("newStudyName"), title=$("newStudyModalTitle"), btn=$("newStudyConfirmBtn");
   if(!m||!inp) return;
-  if(title) title.textContent=mode==="save"?"Nommer l'étude":"Nouvelle étude";
-  if(btn) btn.textContent=mode==="save"?"Enregistrer":"Créer";
-  inp.value=mode==="save"?(currentStudyName||studyDisplayLabelFromProjet()||""):"";
+  if(title) title.textContent=mode==="rename"?"Renommer l'étude":(mode==="save"?"Nommer l'étude":"Nouvelle étude");
+  if(btn) btn.textContent=mode==="rename"?"Renommer":(mode==="save"?"Enregistrer":"Créer");
+  inp.value=(mode==="save"||mode==="rename")?(currentStudyName||studyDisplayLabelFromProjet()||""):"";
   m.classList.add("show");
   setTimeout(()=>{ inp.focus(); if(mode!=="create") inp.select(); }, 50);
+}
+function renameCurrentStudy(){
+  showNewStudyModal("rename");
 }
 function closeNewStudyModal(){ $("modalNewStudy")?.classList.remove("show"); }
 
@@ -651,6 +765,12 @@ async function confirmNewStudy(){
   if(!name){ alert("Indiquez un nom pour l'étude."); $("newStudyName")?.focus(); return; }
   closeNewStudyModal();
   if(_newStudyModalMode==="create") startNewStudyWithName(name);
+  else if(_newStudyModalMode==="rename"){
+    currentStudyName=name;
+    updateStudyUI();
+    markDirty();
+    toast("Étude renommée « "+name+" »");
+  }
   else{
     currentStudyName=name;
     updateStudyUI();
@@ -1152,7 +1272,8 @@ async function bootApp(){
   if(sbCloudActive()) await loadInstallerProfileFromCloud();
   await bootstrapWorkspace();
   if(!currentStudyCloudId&&!currentStudyFile) applyBundledDemoStudySync();
-  fillSelects(); fillDbPerfSelects(); writeForm(); recalc(); renderGammes(); syncDeptFromCp(true);
+  if(typeof writeForm==="function") writeForm();
+  fillSelects(); fillDbPerfSelects(); recalc(); renderGammes(); syncDeptFromCp(true);
   if(typeof ensureBundledComposants==="function") ensureBundledComposants();
   $("verLabel").textContent=`${state.meta.outil} ${state.meta.version} · ${state.meta.millesime||""}`;
   updateWsStatus();

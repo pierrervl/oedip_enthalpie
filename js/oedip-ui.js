@@ -15,7 +15,10 @@ function fillDjuYearSelect(){
   const ref=state.reglages?.djuAnnee??OEDIP_DJU_DEFAULT_REF??"moyenne";
   sel.value=String(ref);
 }
+let formDomHydrated=false;
+function resetFormDomHydration(){ formDomHydrated=false; }
 function fillSelects(){
+  if(formDomHydrated&&typeof readForm==="function"&&typeof projet!=="undefined") readForm();
   normalizeGammes();
   normalizeEmetteurs();
   const opt=g=>(`${g.nom} · ${fonctionLabel(g.fonction)}`);
@@ -25,7 +28,19 @@ function fillSelects(){
   $('b_dept').innerHTML=state.departements.map(d=>`<option value="${d.code}">${d.code} · ${d.nom}</option>`).join('');
   $('b_isotype').innerHTML=state.isolationTypes.map((t,i)=>`<option value="${i}">${t.nom} (G=${t.g})</option>`).join('');
   $('s_capt').innerHTML=state.captages.map((c,i)=>`<option value="${i}">${c.nom}</option>`).join('');
+  restoreStudyFormSelects();
   renderZonesChauffUI();
+}
+function restoreStudyFormSelects(){
+  if(typeof projet==="undefined") return;
+  const b=projet.batiment, s=projet.source;
+  if($('b_dept')&&b.dept) $('b_dept').value=b.dept;
+  if($('b_isotype')!=null) $('b_isotype').value=b.isoType??0;
+  if($('s_gamme')!=null&&s.gamme!=null){
+    $('s_gamme').value=s.gamme;
+    refreshGammeSourceUi(s.gamme, s.regimeSource);
+  }
+  if($('s_capt')!=null) $('s_capt').value=s.captage??0;
 }
 function emetteurSelectOptions(selectedIdx){
   return state.emetteurs
@@ -45,8 +60,10 @@ function readZonesFromDom(){
   const bs=projet.besoin;
   const list=$('zones_chauff_list');
   if(!list) return;
+  const blocks=list.querySelectorAll('.zone-chauff-block');
+  if(!blocks.length) return;
   const zones=[];
-  list.querySelectorAll('.zone-chauff-block').forEach((block,i)=>{
+  blocks.forEach((block,i)=>{
     const idx=+block.dataset.idx;
     const ii=Number.isFinite(idx)?idx:i;
     const volMode=readZoneVolMode(block,ii);
@@ -295,30 +312,66 @@ function removeZoneChauff(idx){
   renderZonesChauffUI();
   recalc();
 }
-function onGammeChange(){ const g=state.gammes[+$('s_gamme').value];
+function onGammeChange(){ const gi=+$('s_gamme').value;
+  const g=state.gammes[gi];
   if(!g) return;
-  $('s_source').innerHTML=g.sources.map((s,i)=>`<option value="${i}">${s}</option>`).join('');
+  projet.source.gamme=gi;
+  projet.source.regimeSource=0;
+  refreshGammeSourceUi(gi, 0);
+  recalc(); }
+function refreshGammeSourceUi(gammeIdx, regimeIdx){
+  const g=state.gammes[gammeIdx];
+  if(!g) return;
+  const sel=$('s_source');
+  if(sel){
+    sel.innerHTML=g.sources.map((s,i)=>`<option value="${i}">${s}</option>`).join('');
+    const ri=regimeIdx??0;
+    if(ri>=0&&ri<g.sources.length) sel.value=ri;
+  }
   const info=$('s_gammeInfo');
   const gwp=gammeGwp(g);
-  if(g.desc||g.fonction||g.fluide){ info.style.display='block';
+  if(!info) return;
+  if(g.desc||g.fonction||g.fluide){
+    info.style.display='block';
     const fl=g.fluide==="custom"?(g.fluideLabel||"Autre")+` (PRP ${fmt(gwp,0)})`:refrigerantLabel(g.fluide)+(gwp!=null?` · PRP ${fmt(gwp,0)}`:'');
-    info.innerHTML=`<b>${fonctionLabel(g.fonction)}</b> · <b>${fl}</b>${g.desc?' — '+g.desc:''}`; } else info.style.display='none';
-  projet.source.gamme=+$('s_gamme').value; projet.source.regimeSource=0; recalc(); }
+    info.innerHTML=`<b>${fonctionLabel(g.fonction)}</b> · <b>${fl}</b>${g.desc?' — '+g.desc:''}`;
+  } else info.style.display='none';
+}
 function bindSeg(id,cb){ const el=$(id); el.querySelectorAll('button').forEach(btn=>btn.onclick=()=>{el.querySelectorAll('button').forEach(b=>b.classList.remove('on'));btn.classList.add('on');cb(btn.dataset.v);}); }
 function setSeg(id,v){ $(id).querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.v==String(v))); }
 
 function readForm(){
+  if(!formDomHydrated) return;
   const c=projet.client,b=projet.batiment,bs=projet.besoin,e=projet.ecs;
-  c.ref=$('p_ref').value;c.type=$('p_type').value;c.nom=$('p_nom').value;c.adr=$('p_adr').value;c.cp=$('p_cp').value;c.ville=$('p_ville').value;c.installateur=$('p_inst').value;c.referent=$('p_referent').value;
-  b.dept=$('b_dept').value;b.alt=+$('b_alt').value;b.tint=+$('b_tint').value;b.isoType=+$('b_isotype').value;b.gman=+$('b_gman').value;
-  bs.pDir=+$('b_pdir').value;bs.rdt=+$('b_rdt').value;bs.surp=+$('b_surp').value;
+  const g=id=>$(id);
+  const sel=id=>{ const el=g(id); return el&&el.options.length?el.value:null; };
+  if(g("p_ref")) c.ref=g("p_ref").value;
+  if(g("p_type")) c.type=g("p_type").value;
+  if(g("p_nom")) c.nom=g("p_nom").value;
+  if(g("p_adr")) c.adr=g("p_adr").value;
+  if(g("p_cp")) c.cp=g("p_cp").value;
+  if(g("p_ville")) c.ville=g("p_ville").value;
+  if(g("p_inst")) c.installateur=g("p_inst").value;
+  if(g("p_referent")) c.referent=g("p_referent").value;
+  if(sel("b_dept")!=null) b.dept=sel("b_dept");
+  if(g("b_alt")) b.alt=+g("b_alt").value;
+  if(g("b_tint")) b.tint=+g("b_tint").value;
+  if(sel("b_isotype")!=null) b.isoType=+sel("b_isotype");
+  if(g("b_gman")) b.gman=+g("b_gman").value;
+  if(g("b_pdir")) bs.pDir=+g("b_pdir").value;
+  if(g("b_rdt")) bs.rdt=+g("b_rdt").value;
+  if(g("b_surp")) bs.surp=+g("b_surp").value;
   readZonesFromDom();
   const hy=ensureProjetHydraulique(projet);
-  if(hy.pdcEchangeurAuto===false&&$('b_hydro_pdc_ech')) hy.pdcEchangeurKpa=+$('b_hydro_pdc_ech').value||0;
-  if($('b_hydro_pdc_coll')) hy.pdcCollecteurBoucleKpa=+$('b_hydro_pdc_coll').value||0;
-  e.nb=+$('e_nb').value;e.volPers=+$('e_vol').value;
-  projet.source.gamme=+$('s_gamme').value;projet.source.regimeSource=+$('s_source').value;projet.source.captage=+$('s_capt').value;
-  if(typeof readInstallForm==='function') readInstallForm();
+  if(hy.pdcEchangeurAuto===false&&g("b_hydro_pdc_ech")) hy.pdcEchangeurKpa=+g("b_hydro_pdc_ech").value||0;
+  if(g("b_hydro_pdc_coll")) hy.pdcCollecteurBoucleKpa=+g("b_hydro_pdc_coll").value||0;
+  if(g("e_nb")) e.nb=+g("e_nb").value;
+  if(g("e_vol")) e.volPers=+g("e_vol").value;
+  if(sel("s_gamme")!=null) projet.source.gamme=+sel("s_gamme");
+  if(sel("s_source")!=null) projet.source.regimeSource=+sel("s_source");
+  if(sel("s_capt")!=null) projet.source.captage=+sel("s_capt");
+  if(g("s_forage_wml")) projet.source.forageWml=+g("s_forage_wml").value||0;
+  if(typeof readInstallForm==="function") readInstallForm();
 }
 function writeForm(){
   const c=projet.client,b=projet.batiment,bs=projet.besoin,e=projet.ecs,s=projet.source;
@@ -330,12 +383,17 @@ function writeForm(){
   if($('b_hydro_pdc_coll')) $('b_hydro_pdc_coll').value=hy.pdcCollecteurBoucleKpa??3;
   updatePdcEchangeurAutoUi();
   $('e_nb').value=e.nb;$('e_vol').value=e.volPers;
-  $('s_gamme').value=s.gamme;onGammeChange();$('s_source').value=s.regimeSource;$('s_capt').value=s.captage;
+  $('s_gamme').value=s.gamme;
+  refreshGammeSourceUi(s.gamme, s.regimeSource);
+  if($('s_source')) $('s_source').value=s.regimeSource;
+  $('s_capt').value=s.captage;
+  if($('s_forage_wml')) $('s_forage_wml').value=(typeof forageWmlValue==='function'?forageWmlValue():(s.forageWml||50));
   renderZonesChauffUI();
   setSeg('seg_littoral',b.littoral);setSeg('seg_isomode',b.isoMode);setSeg('seg_pdirect',bs.pDirectMode);setSeg('seg_ecs',e.present);setSeg('seg_tension',s.tension);setSeg('seg_rev',s.reversible);
   // prix
   const p=state.prix; $('c_pelec').value=p.elec;$('c_pfuel').value=p.fuelL;$('c_rfuel').value=p.rdtFuel;$('c_pgaz').value=p.gazKwh;$('c_rgaz').value=p.rdtGaz;$('c_pgran').value=p.granKg;$('c_rgran').value=p.rdtGran;$('c_pbuche').value=p.bucheKwh;$('c_rbuche').value=p.rdtBuche;
   toggleGroups();
+  formDomHydrated=true;
 }
 function toggleGroups(){
   $('grp_isoauto').style.display=projet.batiment.isoMode==="auto"?"grid":"none";
@@ -353,6 +411,10 @@ function onDjuAnneeChange(){
 }
 function onDeptChange(){ syncDeptFromCp(true); recalc(); }
 function syncDeptFromCp(fromDeptOnly){
+  if(typeof projet!=="undefined"){
+    if($('p_cp')) projet.client.cp=$('p_cp').value;
+    if($('b_dept')) projet.batiment.dept=$('b_dept').value;
+  }
   const d=findDeptByCode($('b_dept').value);
   if(d){
     projet.batiment.dept=d.code;
@@ -613,23 +675,17 @@ function dupGamme(i) {
   });
 
   const idMap = new Map();
-  const procCat = (state.procedureCatalogs || []).find((c) => +c.gammeCode === srcCode);
+  const procCat = typeof getProcedureCatalog === "function"
+    ? getProcedureCatalog(srcCode)
+    : (state.procedureCatalogs || []).find((c) => +c.gammeCode === srcCode);
   if (procCat?.procedures?.length) {
-    const newCat = JSON.parse(JSON.stringify(procCat));
-    newCat.gammeCode = newCode;
-    newCat.procedures.forEach((p) => {
-      const newId = uniqueProcedureId(p.id);
-      idMap.set(p.id, newId);
-      p.id = newId;
-    });
-    newCat.procedures.forEach((p) => {
-      if (p.parentProcId && idMap.has(p.parentProcId)) p.parentProcId = idMap.get(p.parentProcId);
-      (p.variants || []).forEach((v) => {
-        v.machines = [...new Set((v.machines || []).map((pac) => pacMap.get(pac)).filter(Boolean))];
-      });
-    });
-    if (!Array.isArray(state.procedureCatalogs)) state.procedureCatalogs = [];
-    state.procedureCatalogs.push(newCat);
+    const codes = typeof procedureCatalogGammeCodes === "function"
+      ? procedureCatalogGammeCodes(procCat)
+      : [+procCat.gammeCode];
+    if (!codes.includes(newCode)) {
+      procCat.gammeCodes = [...codes, newCode].sort((a, b) => a - b);
+      if (typeof normalizeProcedureCatalog === "function") normalizeProcedureCatalog(procCat);
+    }
   }
 
   if (idMap.size) {
@@ -1252,10 +1308,24 @@ function setAllNoteLines(on){
 function ensureNotePrintPresets(){
   if(!state.notePrintPresets||!Array.isArray(state.notePrintPresets)) state.notePrintPresets=[];
 }
+/** Entreprise utilisée pour la note courante : choix par étude sinon entreprise par défaut. */
+function getNoteInstallerProfile(){
+  const ni=projet.noteInstaller;
+  if(ni&&ni.companyId&&Array.isArray(state.installerCompanies)){
+    const c=state.installerCompanies.find(x=>x.id===ni.companyId);
+    if(c) return c;
+  }
+  return typeof getInstallerProfile==="function"?getInstallerProfile():{};
+}
 function ensureProjetNoteInstaller(){
-  const ip=typeof getInstallerProfile==="function"?getInstallerProfile():{};
   if(!projet.noteInstaller||typeof projet.noteInstaller!=="object") projet.noteInstaller={};
   const ni=projet.noteInstaller;
+  if(typeof ensureInstallerCompanies==="function") ensureInstallerCompanies();
+  if(ni.companyId==null) ni.companyId=state.activeInstallerCompanyId||null;
+  else if(Array.isArray(state.installerCompanies)&&state.installerCompanies.length&&!state.installerCompanies.some(c=>c.id===ni.companyId)){
+    ni.companyId=state.activeInstallerCompanyId||null;
+  }
+  const ip=getNoteInstallerProfile();
   if(ni.showLogo==null) ni.showLogo=ip.showLogoOnNote!==false;
   if(ni.showCompany==null) ni.showCompany=ip.showCompanyOnNote!==false;
   return ni;
@@ -1266,6 +1336,17 @@ function syncNoteInstallerToolbar(){
   const co=$("noteShowInstallerCo");
   if(lg) lg.checked=!!ni.showLogo;
   if(co) co.checked=!!ni.showCompany;
+  const sel=$("noteInstallerCompany");
+  if(sel){
+    const list=state.installerCompanies||[];
+    sel.innerHTML=list.map((c,i)=>`<option value="${escAttr(c.id)}"${c.id===ni.companyId?" selected":""}>${escHtml((c.company&&c.company.trim())||`Entreprise ${i+1}`)}</option>`).join("");
+  }
+}
+function onNoteInstallerCompanyChange(id){
+  const ni=ensureProjetNoteInstaller();
+  ni.companyId=id;
+  markDirty();
+  if($("doc")?.innerHTML) renderNote();
 }
 function toggleNoteInstallerDisplay(){
   const ni=ensureProjetNoteInstaller();
@@ -1274,8 +1355,9 @@ function toggleNoteInstallerDisplay(){
   if($("doc")?.innerHTML) renderNote();
   else markDirty();
 }
-function noteInstallerSectionHtml(c){
-  const ip=typeof getInstallerProfile==="function"?getInstallerProfile():{};
+function noteInstallerSectionHtml(c,opts){
+  opts=opts||{};
+  const ip=getNoteInstallerProfile();
   const ni=ensureProjetNoteInstaller();
   if(!ni.showCompany) return "";
   const addr=[ip.adr,ip.cp,ip.ville].filter(Boolean).join(" ");
@@ -1288,7 +1370,7 @@ function noteInstallerSectionHtml(c){
   if(ip.siret) body+=noteRow("install.siret","SIRET","",ip.siret);
   if(c.referent) body+=noteRow("install.referent","Référent chantier","",c.referent);
   if(!body) return "";
-  return noteSection("—","Installateur",body);
+  return noteSection("—","Installateur",body,opts);
 }
 function captureNotePrintConfig(){
   ensureNoteLines();
@@ -1387,8 +1469,8 @@ function renderNote(){
   ensureProjetHydraulique(projet);
   ensureNoteLines();
   const fnGam=r.gamme?.fonction?fonctionLabel(r.gamme.fonction):"géothermie";
-  const ip=typeof getInstallerProfile==="function"?getInstallerProfile():{};
   const ni=ensureProjetNoteInstaller();
+  const ip=getNoteInstallerProfile();
   const ref=c.ref||"—";
   const dateStr=new Date().toLocaleDateString("fr-FR");
   const pageFootCo=ip.company||c.installateur||state.meta.outil;
@@ -1402,7 +1484,7 @@ function renderNote(){
   const installClientLine=!installSec
     ?noteRow("client.installateur","Installateur","",c.installateur||"—",{muted:true})
       +noteRow("client.referent","Référent","",c.referent||"—")
-    :noteRow("client.installateur","Installateur","",ip.company||c.installateur||"—",{muted:true});
+    :"";
   const clientBody=
     noteRow("client.ref","Référence dossier","",c.ref||"—")
     +noteRow("client.type","Type de chantier","",c.type||"—")
@@ -1439,11 +1521,22 @@ function renderNote(){
   const surpTxt=besoinPwr>0
     ?`${surpKw>=0?"+":""}${fmt(surpKw,1)} kW (${surpPct>=0?"+":""}${fmt(surpPct,0)} %)`
     :"—";
+  const isGeoForage=/geo|hybride/i.test(r.gamme?.fonction||"");
+  const copForage=(chosen&&chosen.cop)?chosen.cop:r.cop;
+  const wMlForage=typeof forageWmlValue==="function"?forageWmlValue():50;
+  const pExtrForage=(copForage>1&&pInstShown>0)?pInstShown*(1-1/copForage):null;
+  const lForage=(pExtrForage>0&&wMlForage>0)?pExtrForage*1000/wMlForage:null;
+  const forageRows=(isGeoForage&&lForage)
+    ?noteRow("power.forageWml","Extraction sol retenue","W/ml",fmt(wMlForage,0))
+      +noteRow("power.forageExtr","Puissance d'extraction sol","kW",fmt(pExtrForage,2))
+      +noteRow("power.forage","Longueur de forage estimée","ml",fmt(lForage,0))
+    :"";
   const powerBody=
     noteRow("power.dep","Déperditions (T base)","kW",fmt(r.dep,2))
     +noteRow("power.pECS","Puissance ECS","kW",fmt(r.pECS,2))
     +noteRow("power.surp","Surpuissance","",surpTxt)
-    +noteReadout("power.pInst","Puissance installée",fmt(pInstShown,1),"kW",pInstSub);
+    +noteReadout("power.pInst","Puissance installée",fmt(pInstShown,1),"kW",pInstSub)
+    +forageRows;
   const nrgBody=
     noteRow("nrg.dju","DJU (intégrés par tranches)","",fmt(r.dju,0))
     +noteRow("nrg.tnc","T° de non-chauffage","°C",fmt(state.reglages.tnc,1))
@@ -1493,9 +1586,9 @@ function renderNote(){
   h+=`<div class="note-cols"><div class="note-col">`;
   h+=noteSection("01","Opération &amp; client",clientBody,{first:true});
   h+=noteSection("02","Données d'entrée de l'étude",inputBody);
-  h+=installSec;
   h+=`</div><div class="note-col">`;
-  h+=noteSection("03","Besoins en puissance",powerBody,{first:true});
+  if(installSec) h+=noteInstallerSectionHtml(c,{first:true});
+  h+=noteSection("03","Besoins en puissance",powerBody,{first:!installSec});
   h+=noteSection("04","Étude énergétique annuelle",nrgBody);
   h+=`</div></div>`;
   h+=solutionSec;
@@ -1535,20 +1628,47 @@ function printNote(){
   window.print();
 }
 
-/* ---------- TAB : Mon entreprise ---------- */
+/* ---------- TAB : Mon entreprise (multi-entreprises) ---------- */
+let currentEntrepriseEditId=null;
+function companyDisplayName(c,idx){
+  return (c&&c.company&&c.company.trim())||`Entreprise ${idx+1}`;
+}
+function getEditedInstallerCompany(){
+  if(typeof ensureInstallerCompanies==="function") ensureInstallerCompanies();
+  let c=(state.installerCompanies||[]).find(x=>x.id===currentEntrepriseEditId);
+  if(!c){ c=typeof getActiveInstallerCompany==="function"?getActiveInstallerCompany():(state.installerCompanies||[])[0]; currentEntrepriseEditId=c?.id||null; }
+  return c||{};
+}
 function renderEntrepriseTab(){
   const root=$('v-entreprise');
   if(!root) return;
-  const ip=typeof getInstallerProfile==="function"?getInstallerProfile():{};
+  if(typeof ensureInstallerCompanies==="function") ensureInstallerCompanies();
+  const list=state.installerCompanies||[];
+  const ip=getEditedInstallerCompany();
+  const isActive=ip.id===state.activeInstallerCompanyId;
+  const options=list.map((c,i)=>`<option value="${escAttr(c.id)}"${c.id===ip.id?" selected":""}>${escHtml(companyDisplayName(c,i))}${c.id===state.activeInstallerCompanyId?" ★":""}</option>`).join("");
   const logoPreview=ip.logoUrl
     ? `<img src="${escAttr(ip.logoUrl)}" alt="">`
     : `<span class="hint">Aucun logo</span>`;
   root.innerHTML=`<div class="panel inst-company-panel" style="max-width:720px;margin:0 auto">
-    <div class="head"><h3>Mon entreprise</h3><span class="tag">Commercial · note de dimensionnement</span></div>
+    <div class="head"><h3>Mes entreprises</h3><span class="tag">Commercial · note de dimensionnement</span></div>
     <div class="body">
-      <div class="hint">Logo et coordonnées de votre société — enregistrés sur ce poste et sur votre profil ☁ Cloud si connecté. Affichés sur la note de dimensionnement (onglet Note).</div>
+      <div class="hint">Enregistrez plusieurs sociétés (logo + coordonnées). L'entreprise marquée ★ <b>par défaut</b> est utilisée sur les nouvelles notes ; chaque étude peut choisir la sienne dans l'onglet Note. Données conservées sur ce poste et sur votre profil ☁ Cloud si connecté.</div>
+      <div class="inst-company-pick">
+        <div class="grow"><label class="subhead">Entreprise</label>
+          <select id="instCompanySelect" onchange="onEntrepriseSelectChange(this.value)">${options}</select></div>
+        <div class="inst-company-pick-btns">
+          <button type="button" class="btn-soft" onclick="entrepriseAddNew()">+ Nouvelle</button>
+          <button type="button" class="btn-ghost" onclick="entrepriseDeleteCurrent()"${list.length<=1?" disabled":""}>Supprimer</button>
+        </div>
+      </div>
+      <div class="inst-company-default">
+        ${isActive
+          ? `<span class="inst-default-badge">★ Entreprise par défaut</span>`
+          : `<button type="button" class="btn-ghost" onclick="entrepriseSetDefault()">★ Définir comme entreprise par défaut</button>`}
+      </div>
       <div class="inst-company-grid">
-        <div class="full"><label class="subhead">Raison sociale</label><input type="text" id="instCoName" value="${escHtml(ip.company||"")}" placeholder="SARL Chauffage Plus"></div>
+        <div class="full"><label class="subhead">Raison sociale</label><input type="text" id="instCoName" value="${escHtml(ip.company||"")}" placeholder="SARL Chauffage Plus" oninput="entrepriseNameLive(this.value)"></div>
         <div class="full"><label class="subhead">Adresse</label><input type="text" id="instCoAdr" value="${escHtml(ip.adr||"")}" placeholder="12 rue des Artisans"></div>
         <div><label class="subhead">Code postal</label><input type="text" id="instCoCp" value="${escHtml(ip.cp||"")}" maxlength="5"></div>
         <div><label class="subhead">Ville</label><input type="text" id="instCoVille" value="${escHtml(ip.ville||"")}"></div>
@@ -1575,14 +1695,14 @@ function renderEntrepriseTab(){
         <label class="inst-check"><input type="checkbox" id="instCoShowCo" ${ip.showCompanyOnNote!==false?"checked":""}> Afficher les coordonnées sur la note</label>
       </div>
       <div class="inst-company-actions">
-        <button type="button" class="btn-heat" onclick="saveInstallerProfileForm()">Enregistrer mon entreprise</button>
+        <button type="button" class="btn-heat" onclick="saveInstallerProfileForm()">Enregistrer</button>
         <button type="button" class="btn-soft" onclick="applyInstallerToProject()">→ Reprendre la raison sociale dans le projet</button>
       </div>
     </div>
   </div>`;
 }
 function readInstallerProfileForm(){
-  const ip=typeof getInstallerProfile==="function"?getInstallerProfile():{};
+  const ip=getEditedInstallerCompany();
   const g=(id)=>$(id);
   ip.company=g("instCoName")?.value?.trim()||"";
   ip.adr=g("instCoAdr")?.value?.trim()||"";
@@ -1597,6 +1717,51 @@ function readInstallerProfileForm(){
   const urlIn=g("instCoLogoUrl")?.value?.trim();
   if(urlIn) ip.logoUrl=urlIn;
   return ip;
+}
+function entrepriseNameLive(val){
+  const sel=$("instCompanySelect");
+  if(!sel) return;
+  const opt=sel.selectedOptions?.[0];
+  if(opt){
+    const idx=sel.selectedIndex;
+    opt.textContent=((val&&val.trim())||`Entreprise ${idx+1}`)+(sel.value===state.activeInstallerCompanyId?" ★":"");
+  }
+}
+function onEntrepriseSelectChange(id){
+  readInstallerProfileForm();
+  currentEntrepriseEditId=id;
+  renderEntrepriseTab();
+}
+function entrepriseAddNew(){
+  readInstallerProfileForm();
+  const c=typeof addInstallerCompany==="function"?addInstallerCompany(false):null;
+  if(c) currentEntrepriseEditId=c.id;
+  renderEntrepriseTab();
+  $("instCoName")?.focus();
+}
+function entrepriseDeleteCurrent(){
+  const ip=getEditedInstallerCompany();
+  if(!confirm(`Supprimer « ${ip.company||"cette entreprise"} » ?`)) return;
+  if(typeof deleteInstallerCompany==="function"&&deleteInstallerCompany(ip.id)){
+    currentEntrepriseEditId=state.activeInstallerCompanyId;
+    if(typeof saveInstallerProfileLocal==="function") saveInstallerProfileLocal();
+    if(typeof syncInstallerProfileToCloud==="function") syncInstallerProfileToCloud();
+    renderEntrepriseTab();
+    syncNoteInstallerToolbar();
+    if(document.querySelector("#v-note.active")) renderNote();
+    toast("Entreprise supprimée");
+  } else {
+    toast("Impossible de supprimer la dernière entreprise");
+  }
+}
+function entrepriseSetDefault(){
+  readInstallerProfileForm();
+  const ip=getEditedInstallerCompany();
+  if(typeof setActiveInstallerCompany==="function") setActiveInstallerCompany(ip.id);
+  if(typeof saveInstallerProfileLocal==="function") saveInstallerProfileLocal();
+  if(typeof syncInstallerProfileToCloud==="function") syncInstallerProfileToCloud();
+  renderEntrepriseTab();
+  toast("Entreprise par défaut définie");
 }
 function previewInstallerLogoUrl(){
   const url=$("instCoLogoUrl")?.value?.trim();
@@ -1615,7 +1780,7 @@ function onInstallerLogoFile(ev){
   }
   const reader=new FileReader();
   reader.onload=()=>{
-    const ip=typeof getInstallerProfile==="function"?getInstallerProfile():{};
+    const ip=getEditedInstallerCompany();
     ip.logoUrl=reader.result;
     const prev=$("instLogoPreview");
     if(prev) prev.innerHTML=`<img src="${escAttr(ip.logoUrl)}" alt="">`;
@@ -1627,7 +1792,7 @@ function onInstallerLogoFile(ev){
   ev.target.value="";
 }
 function clearInstallerLogo(){
-  const ip=typeof getInstallerProfile==="function"?getInstallerProfile():{};
+  const ip=getEditedInstallerCompany();
   ip.logoUrl="";
   const prev=$("instLogoPreview");
   if(prev) prev.innerHTML=`<span class="hint">Aucun logo</span>`;
@@ -1638,28 +1803,34 @@ async function saveInstallerProfileForm(){
   readInstallerProfileForm();
   if(typeof saveInstallerProfileLocal==="function") saveInstallerProfileLocal();
   const cloudOk=typeof syncInstallerProfileToCloud==="function"?await syncInstallerProfileToCloud():false;
+  renderEntrepriseTab();
   syncNoteInstallerToolbar();
   if(document.querySelector("#v-note.active")) renderNote();
   toast("Entreprise enregistrée"+(cloudOk?" · profil cloud":""));
 }
 function applyInstallerToProject(){
   readInstallerProfileForm();
-  const ip=typeof getInstallerProfile==="function"?getInstallerProfile():{};
+  const ip=getEditedInstallerCompany();
   if(!ip.company){ toast("Renseignez la raison sociale"); return; }
   if(typeof projet!=="undefined"&&projet.client){
     projet.client.installateur=ip.company;
+    const ni=ensureProjetNoteInstaller();
+    if(ni) ni.companyId=ip.id;
     writeForm();
     markDirty();
   }
   toast(`Installateur : ${ip.company}`);
 }
 function initEntrepriseTab(){
-  if(typeof ensureInstallerProfile==="function") ensureInstallerProfile();
+  if(typeof ensureInstallerCompanies==="function") ensureInstallerCompanies();
+  currentEntrepriseEditId=state.activeInstallerCompanyId;
   renderEntrepriseTab();
 }
 
 /* ---------- NAV ---------- */
-function goTab(t){ document.querySelectorAll('nav.tabs button').forEach(b=>b.classList.toggle('active',b.dataset.tab===t));
+function goTab(t){
+  if(formDomHydrated&&typeof readForm==="function"&&typeof projet!=="undefined") readForm();
+  document.querySelectorAll('nav.tabs button').forEach(b=>b.classList.toggle('active',b.dataset.tab===t));
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active')); $('v-'+t).classList.add('active');
   if(t==='result')runSelection(); if(t==='note')renderNote(); if(t==='db')renderGammes(); if(t==='compare')renderCompare();
   if(t==='composants') initComposantsTab();

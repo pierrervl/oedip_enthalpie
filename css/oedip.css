@@ -18,6 +18,9 @@
   header.bar .logo b{color:var(--heat)}
   header.bar .spark{width:13px;height:13px;border-radius:50%;background:radial-gradient(circle at 30% 30%,var(--heat),#7d2306)}
   header.bar .ver{font-family:var(--mono);font-size:11px;color:#9aa1a6}
+  header.bar .ws-study-label{color:#d7dde0;cursor:pointer;border-bottom:1px dotted transparent}
+  header.bar .ws-study-label:hover{color:#fff;border-bottom-color:#9aa1a6}
+  header.bar .ws-study-rename{padding:2px 6px;font-size:12px;line-height:1;margin-left:-4px}
   header.bar .grow{flex:1}
   .iobtns{display:flex;gap:8px}
   button{font-family:var(--sans);font-size:13px;font-weight:500;cursor:pointer;border:none;border-radius:5px;padding:8px 13px;transition:.12s}
@@ -269,7 +272,9 @@
   .proc-var-machine-gamme{font-size:10.5px;color:var(--ink-soft)}
   .proc-var-machines-tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
   .proc-var-machine-tag{font-size:11px;padding:2px 8px;border-radius:999px;background:var(--geo-soft);color:var(--geo);border:1px solid #b8d8de}
+  .proc-edit-step-dims-host{max-width:100%;overflow-x:auto}
   .proc-edit-step-dims-tbl{width:auto;min-width:240px;border-collapse:collapse;font-size:12px}
+  .proc-edit-step-dims-tbl .proc-edit-step-dim-inp{width:72px}
   .proc-edit-step-dims-tbl th,.proc-edit-step-dims-tbl td{border:1px solid var(--line);padding:4px 8px;text-align:left;vertical-align:middle}
   .proc-edit-step-dims-tbl th{background:var(--geo-soft);font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-soft)}
   .proc-edit-step-dim-key{white-space:nowrap;color:var(--geo);font-weight:600}
@@ -431,6 +436,12 @@
   .inst-logo-preview img{max-width:100%;max-height:100%;object-fit:contain}
   .inst-logo-preview .hint{font-size:11px;text-align:center;padding:6px}
   .inst-company-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+  .inst-company-pick{display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;margin-top:6px}
+  .inst-company-pick .grow{flex:1 1 240px;min-width:200px}
+  .inst-company-pick select{width:100%}
+  .inst-company-pick-btns{display:flex;gap:8px;flex-wrap:wrap}
+  .inst-company-default{margin-top:10px}
+  .inst-default-badge{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--geo);background:var(--geo-soft);border:1px solid #b8d8de;border-radius:999px;padding:4px 12px}
   .inst-panel{max-width:720px}
   .inst-calc-tbl,.inst-vol-tbl{width:100%;border-collapse:collapse;font-size:13px;margin-top:8px}
   .inst-calc-tbl td,.inst-vol-tbl td,.inst-vol-tbl th{padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:middle}
@@ -626,4 +637,4 @@
   .new-study-card{max-width:440px}
   .new-study-card #newStudyName{width:100%;margin-top:6px;font-size:14px}
   .new-study-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
-  @media print{header.bar,nav.tabs,.noprint{display:none!important}body{background:#fff}.app{padding:0}#v-note .note-page-wrap{box-shadow:none;max-width:100%}.view{display:none!important}.view#v-note{display:block!important;padding:0}}
+  @media print{html,body{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;color-adjust:exact!important}header.bar,nav.tabs,.noprint{display:none!important}body{background:#fff}.app{padding:0}#v-note .note-page-wrap{box-shadow:none;max-width:100%}.view{display:none!important}.view#v-note{display:block!important;padding:0}}

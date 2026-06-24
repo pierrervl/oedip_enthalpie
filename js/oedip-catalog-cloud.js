@@ -33,12 +33,15 @@ async function loadReferenceCatalogFromCloud() {
 
     if (map.catalog_procedures_geo && Array.isArray(state.procedureCatalogs)) {
       const geo = map.catalog_procedures_geo;
-      const idx = state.procedureCatalogs.findIndex((c) => +c.gammeCode === +geo.gammeCode);
-      if (idx >= 0) state.procedureCatalogs[idx] = geo;
+      const cur = typeof getProcedureCatalog === "function"
+        ? getProcedureCatalog(geo.gammeCode)
+        : state.procedureCatalogs.find((c) => +c.gammeCode === +geo.gammeCode);
+      if (cur) Object.assign(cur, geo);
       else state.procedureCatalogs.push(geo);
     }
 
     if (typeof ensureProcedureCatalogPhotos === "function") ensureProcedureCatalogPhotos();
+    if (typeof migrateProcedureCatalogSharing === "function") migrateProcedureCatalogSharing();
     if (typeof ensureBundledComposants === "function") ensureBundledComposants();
 
     ensureDepartements();

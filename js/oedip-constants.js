@@ -277,6 +277,13 @@ function findDeptByCode(code){
 }
 function ensureDepartements(){ state.departements=mergeDepartements(state.departements); }
 
+/** Puissance d'extraction du sol par mètre linéaire de forage (W/ml, défaut 50). */
+function forageWmlValue() {
+  const v = +(typeof projet !== "undefined" ? projet?.source?.forageWml : null);
+  if (!Number.isFinite(v) || v <= 0) return 50;
+  return Math.max(10, Math.min(120, v));
+}
+
 /** Seuil minimal de couverture affiché / sélectionnable (%, défaut 70). */
 function selectionCouvMinPct() {
   const v = +(state.reglages?.selectionCouvMin ?? 70);

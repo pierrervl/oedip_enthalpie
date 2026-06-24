@@ -7,14 +7,15 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=Saira+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/oedip.css?v=8">
-<link rel="stylesheet" href="css/oedip-note.css">
+<link rel="stylesheet" href="css/oedip.css?v=9">
+<link rel="stylesheet" href="css/oedip-note.css?v=4">
 </head>
 <body>
 <header class="bar">
   <div class="logo"><span class="spark"></span><b>OEDIP</b></div>
   <span class="ver mono" id="verLabel">v2.0 web · 2025</span>
-  <span class="ver mono noprint" id="wsStudyLabel" title="Étude en cours"></span>
+  <span class="ver mono noprint ws-study-label" id="wsStudyLabel" title="Cliquer pour renommer l'étude" onclick="renameCurrentStudy()"></span>
+  <button class="btn-ghost noprint ws-study-rename" id="btnRenameStudy" onclick="renameCurrentStudy()" title="Renommer l'étude">✎</button>
   <span class="ver mono noprint" id="wsStatus" title="État d'enregistrement">● …</span>
   <div class="grow"></div>
   <div class="iobtns noprint">
@@ -157,6 +158,7 @@
         <div class="row"><label>Alimentation électrique</label><div class="seg" style="grid-column:2/4" id="seg_tension"><button data-v="2" class="on">Indiff.</button><button data-v="0">Mono 230V</button><button data-v="1">Tri 400V</button></div></div>
         <div class="row"><label>Besoin de rafraîchissement</label><div class="seg" style="grid-column:2/4" id="seg_rev"><button data-v="0" class="on">Non</button><button data-v="1">Oui</button></div></div>
         <div class="row"><label>Type de captage</label><select id="s_capt" oninput="recalc()" style="grid-column:2/4"></select></div>
+        <div class="row"><label>Extraction sol (forage)</label><input type="number" id="s_forage_wml" value="50" min="10" max="120" step="1" oninput="recalc()"><span class="unit">W/ml</span></div>
       </div></div>
     </div>
 
@@ -325,6 +327,7 @@
 <section class="view" id="v-note">
   <div class="toolbar noprint note-print-toolbar">
     <label class="note-print-opt"><input type="checkbox" id="notePrintCharts" checked onchange="toggleNotePrintChartsPreview()"> Page 2 (graphiques &amp; comparaison)</label>
+    <select id="noteInstallerCompany" class="note-print-preset-sel" onchange="onNoteInstallerCompanyChange(this.value)" title="Entreprise affichée sur cette note"></select>
     <label class="note-print-opt"><input type="checkbox" id="noteShowInstallerLogo" checked onchange="toggleNoteInstallerDisplay()"> Logo installateur</label>
     <label class="note-print-opt"><input type="checkbox" id="noteShowInstallerCo" checked onchange="toggleNoteInstallerDisplay()"> Coordonnées entreprise</label>
     <select id="notePrintPresetSel" class="note-print-preset-sel" onchange="loadNotePrintPreset(this.value)" title="Configuration d'impression enregistrée">
@@ -520,7 +523,7 @@
 <div class="toast" id="toast"></div>
 
 <script src="data/oedip-dju-departements.js"></script>
-<script src="js/oedip-constants.js"></script>
+<script src="js/oedip-constants.js?v=2"></script>
 <script src="js/oedip-perf.js?v=3"></script>
 <script src="data/oedip-seed.js"></script>
 <script src="data/oedip-catalog.js?v=3"></script>
@@ -536,13 +539,13 @@
 <script src="js/oedip-schemas.js"></script>
 <script src="js/oedip-supabase-config.js?v=7"></script>
 <script src="js/oedip-media.js?v=8"></script>
-<script src="js/oedip-procedures.js?v=13"></script>
+<script src="js/oedip-procedures.js?v=15"></script>
 <script src="js/oedip-procedure-print.js?v=3"></script>
-<script src="js/oedip-ui.js?v=8"></script>
+<script src="js/oedip-ui.js?v=15"></script>
 <script src="js/oedip-csv.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="js/oedip-supabase.js?v=11"></script>
-<script src="js/oedip-catalog-cloud.js?v=10"></script>
-<script src="js/oedip-workspace.js?v=17"></script>
+<script src="js/oedip-catalog-cloud.js?v=11"></script>
+<script src="js/oedip-workspace.js?v=19"></script>
 </body>
 </html>

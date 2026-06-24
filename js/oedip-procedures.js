@@ -15,10 +15,96 @@ function allProcedureEntries() {
   const out = [];
   (state.procedureCatalogs || []).forEach((cat) => {
     (cat.procedures || []).forEach((proc) => {
-      out.push({ proc, catalogGammeCode: +cat.gammeCode });
+      out.push({ proc, catalogGammeCode: +cat.gammeCode, catalog: cat });
     });
   });
   return out;
+}
+
+/** Codes gamme couverts par un catalogue procédures (partagé ou dédié). */
+function procedureCatalogGammeCodes(cat) {
+  if (!cat) return [];
+  const codes = new Set();
+  if (cat.gammeCode != null && cat.gammeCode !== "") codes.add(+cat.gammeCode);
+  (cat.gammeCodes || []).forEach((c) => {
+    if (c != null && c !== "") codes.add(+c);
+  });
+  return [...codes].sort((a, b) => a - b);
+}
+
+function normalizeProcedureCatalog(cat) {
+  if (!cat) return;
+  const codes = procedureCatalogGammeCodes(cat);
+  cat.gammeCodes = codes;
+  if (cat.gammeCode == null && codes.length) cat.gammeCode = codes[0];
+}
+
+function procedureCatalogSignature(cat) {
+  return (cat.procedures || [])
+    .map((p) => p.tubeRef || p.id)
+    .sort()
+    .join("\0");
+}
+
+/** Fusionne les catalogues identiques (ex. Géo R410 + R454C) en un catalogue partagé. */
+function migrateProcedureCatalogSharing() {
+  ensureProcedureCatalogs();
+  state.procedureCatalogs.forEach(normalizeProcedureCatalog);
+  const kept = [];
+  const mergeGroups = new Map();
+  state.procedureCatalogs.forEach((cat) => {
+    const sig = procedureCatalogSignature(cat);
+    if (!sig) {
+      kept.push(cat);
+      return;
+    }
+    if (!mergeGroups.has(sig)) mergeGroups.set(sig, []);
+    mergeGroups.get(sig).push(cat);
+  });
+  mergeGroups.forEach((cats) => {
+    if (cats.length === 1) {
+      kept.push(cats[0]);
+      return;
+    }
+    const master = cats.reduce((best, cur) =>
+      ((cur.procedures?.length || 0) > (best.procedures?.length || 0) ? cur : best)
+    );
+    const allCodes = new Set();
+    cats.forEach((cat) => procedureCatalogGammeCodes(cat).forEach((c) => allCodes.add(c)));
+    master.gammeCodes = [...allCodes].sort((a, b) => a - b);
+    master.gammeCode = master.gammeCodes[0];
+    normalizeProcedureCatalog(master);
+    kept.push(master);
+  });
+  state.procedureCatalogs = kept;
+}
+
+function procedureGalleryKey(proc) {
+  return proc.tubeRef || proc.id;
+}
+
+/** Une fiche galerie par tube — évite les doublons entre catalogues/gammes. */
+function galleryProcedureEntries() {
+  const byKey = new Map();
+  allProcedureEntries().forEach((entry) => {
+    const key = procedureGalleryKey(entry.proc);
+    const codes = procedureCatalogGammeCodes(entry.catalog);
+    if (!byKey.has(key)) {
+      byKey.set(key, {
+        proc: entry.proc,
+        catalogGammeCode: entry.catalogGammeCode,
+        catalogGammeCodes: [...codes],
+        catalog: entry.catalog,
+      });
+      return;
+    }
+    const ex = byKey.get(key);
+    codes.forEach((c) => {
+      if (!ex.catalogGammeCodes.includes(c)) ex.catalogGammeCodes.push(c);
+    });
+    ex.catalogGammeCodes.sort((a, b) => a - b);
+  });
+  return [...byKey.values()];
 }
 
 function findProcedureEntry(procId) {
@@ -101,11 +187,12 @@ function tubeProceduresForMachine(m) {
   const out = [];
   const seen = new Set();
   (state.procedureCatalogs || []).forEach((cat) => {
+    const catGammes = procedureCatalogGammeCodes(cat);
     (cat.procedures || []).forEach((p) => {
       if (!p.tubeRef || seen.has(p.id)) return;
       const hasMachineList = (p.variants || []).some((v) => (v.machines || []).length);
       const onMachine = (p.variants || []).some((v) => (v.machines || []).includes(pac));
-      const legacyGamme = +cat.gammeCode === +m.gammeCode && !hasMachineList;
+      const legacyGamme = catGammes.includes(+m.gammeCode) && !hasMachineList;
       if (onMachine || legacyGamme) {
         seen.add(p.id);
         out.push(p);
@@ -179,16 +266,19 @@ function procedureLinkedMachinePacs(proc) {
   return pacs;
 }
 
-function procedureAppliesToMachine(proc, catalogGammeCode, pac) {
+function procedureAppliesToMachine(proc, catalogGammeCode, pac, catalogGammeCodes) {
   if (!pac) return false;
   const m = machineByPac(pac);
   if (!m) return false;
   const linked = procedureLinkedMachinePacs(proc);
   if (linked.size) return linked.has(pac);
-  return +catalogGammeCode === +m.gammeCode;
+  const codes = catalogGammeCodes?.length
+    ? catalogGammeCodes
+    : procedureCatalogGammeCodes(getProcedureCatalog(catalogGammeCode));
+  return codes.includes(+m.gammeCode);
 }
 
-function procedureLinkedGammes(proc, catalogGammeCode) {
+function procedureLinkedGammes(proc, catalogGammeCode, catalogGammeCodes) {
   const map = new Map();
   const linked = procedureLinkedMachinePacs(proc);
   if (linked.size) {
@@ -202,34 +292,41 @@ function procedureLinkedGammes(proc, catalogGammeCode) {
       }
     });
   } else {
-    const code = +catalogGammeCode;
-    const g = gammeByCode(code);
-    map.set(code, g?.nom || `Gamme ${code}`);
+    const codes = catalogGammeCodes?.length
+      ? catalogGammeCodes
+      : procedureCatalogGammeCodes(getProcedureCatalog(catalogGammeCode));
+    codes.forEach((code) => {
+      const g = gammeByCode(code);
+      map.set(code, g?.nom || `Gamme ${code}`);
+    });
   }
   return [...map.entries()].sort((a, b) => a[0] - b[0]).map(([code, nom]) => ({ code, nom }));
 }
 
-function renderProcedureGalleryGammes(proc, catalogGammeCode) {
-  const gammes = procedureLinkedGammes(proc, catalogGammeCode);
+function renderProcedureGalleryGammes(proc, catalogGammeCode, catalogGammeCodes) {
+  const gammes = procedureLinkedGammes(proc, catalogGammeCode, catalogGammeCodes);
   if (!gammes.length) return "";
   return `<div class="proc-gallery-gammes noprint">${gammes.map((g) =>
     `<span class="proc-gallery-gamme" title="Gamme ${g.code}">${escHtml(g.nom)}</span>`
   ).join("")}</div>`;
 }
 
-function procedureMatchesProcFilter(proc, catalogGammeCode, filter) {
+function procedureMatchesProcFilter(proc, catalogGammeCode, filter, catalogGammeCodes) {
   if (!filter) return true;
   const machines = filter.machines || [];
   const gammeCode = filter.gammeCode != null && filter.gammeCode !== "" ? +filter.gammeCode : null;
   if (machines.length) {
-    return machines.some((pac) => procedureAppliesToMachine(proc, catalogGammeCode, pac));
+    return machines.some((pac) => procedureAppliesToMachine(proc, catalogGammeCode, pac, catalogGammeCodes));
   }
   if (gammeCode != null) {
     const linked = procedureLinkedMachinePacs(proc);
     if (linked.size) {
       return [...linked].some((pac) => +machineByPac(pac)?.gammeCode === gammeCode);
     }
-    return +catalogGammeCode === gammeCode;
+    const codes = catalogGammeCodes?.length
+      ? catalogGammeCodes
+      : procedureCatalogGammeCodes(getProcedureCatalog(catalogGammeCode));
+    return codes.includes(gammeCode);
   }
   return true;
 }
@@ -404,9 +501,11 @@ function ensureProcedureCatalogPhotos() {
   ensureProcedureCatalogs();
   const bundledList = (typeof OEDIP_DEFAULT_CATALOG !== "undefined" && OEDIP_DEFAULT_CATALOG?.data?.procedureCatalogs) || [];
   bundledList.forEach((bundled) => {
-    let cur = state.procedureCatalogs.find((c) => +c.gammeCode === +bundled.gammeCode);
+    let cur = getProcedureCatalog(bundled.gammeCode);
     if (!cur) {
-      state.procedureCatalogs.push(JSON.parse(JSON.stringify(bundled)));
+      const copy = JSON.parse(JSON.stringify(bundled));
+      normalizeProcedureCatalog(copy);
+      state.procedureCatalogs.push(copy);
       return;
     }
     mergeProcedureStepPhotos(bundled, cur);
@@ -415,17 +514,23 @@ function ensureProcedureCatalogPhotos() {
 
 function getProcedureCatalog(gammeCode) {
   ensureProcedureCatalogs();
-  return state.procedureCatalogs.find((c) => +c.gammeCode === +gammeCode) || null;
+  const code = +gammeCode;
+  return state.procedureCatalogs.find((c) => procedureCatalogGammeCodes(c).includes(code)) || null;
 }
 
 function ensureProcedureCatalogForGamme(gammeCode) {
   ensureProcedureCatalogs();
-  let cat = getProcedureCatalog(gammeCode);
+  const code = +gammeCode;
+  let cat = getProcedureCatalog(code);
   if (!cat) {
-    cat = { gammeCode: +gammeCode, procedures: [] };
+    cat = { gammeCode: code, gammeCodes: [code], procedures: [] };
     state.procedureCatalogs.push(cat);
   }
   if (!Array.isArray(cat.procedures)) cat.procedures = [];
+  if (!procedureCatalogGammeCodes(cat).includes(code)) {
+    cat.gammeCodes = [...procedureCatalogGammeCodes(cat), code].sort((a, b) => a - b);
+  }
+  normalizeProcedureCatalog(cat);
   return cat;
 }
 
@@ -1099,25 +1204,26 @@ function ensureProcedureVariants(proc) {
   proc.variants = [{ ver: "01", ref: `${proc.tubeRef}-01`, stepDims: {} }];
 }
 
-function getStepDimValue(proc, stepIndex, dimKey) {
+function getStepDimValue(proc, stepIndex, dimKey, variantIndex = 0) {
   if (procedureUsesVariants(proc)) {
-    return variantStepDims(getProcedureVariant(proc, "01"), stepIndex)[dimKey] ?? "";
+    const variant = proc.variants[variantIndex] || proc.variants[0];
+    return variantStepDims(variant, stepIndex)[dimKey] ?? "";
   }
   return proc.steps[stepIndex]?.dims?.[dimKey] ?? "";
 }
 
-function setStepDimInProc(proc, stepIndex, dimKey, value) {
+function setStepDimInProc(proc, stepIndex, dimKey, value, variantIndex = 0) {
   const sk = procedureStepKey(stepIndex);
   const v = String(value ?? "").trim();
   if (procedureUsesVariants(proc)) {
     ensureProcedureVariants(proc);
-    const v0 = proc.variants[0];
-    if (!v0.stepDims) v0.stepDims = {};
-    if (!v0.stepDims[sk]) v0.stepDims[sk] = {};
-    if (v) v0.stepDims[sk][dimKey] = v;
+    const variant = proc.variants[variantIndex] || proc.variants[0];
+    if (!variant.stepDims) variant.stepDims = {};
+    if (!variant.stepDims[sk]) variant.stepDims[sk] = {};
+    if (v) variant.stepDims[sk][dimKey] = v;
     else {
-      delete v0.stepDims[sk][dimKey];
-      if (!Object.keys(v0.stepDims[sk]).length) delete v0.stepDims[sk];
+      delete variant.stepDims[sk][dimKey];
+      if (!Object.keys(variant.stepDims[sk]).length) delete variant.stepDims[sk];
     }
     return;
   }
@@ -1134,7 +1240,9 @@ function setStepDimInProc(proc, stepIndex, dimKey, value) {
 function collectStepDimVars(proc, stepIndex, step) {
   const vars = new Set();
   if (procedureUsesVariants(proc)) {
-    Object.keys(variantStepDims(getProcedureVariant(proc, "01"), stepIndex)).forEach((k) => vars.add(k));
+    (proc.variants || []).forEach((v) => {
+      Object.keys(variantStepDims(v, stepIndex)).forEach((k) => vars.add(k));
+    });
   } else {
     Object.keys(step?.dims || {}).forEach((k) => vars.add(k));
   }
@@ -1150,15 +1258,28 @@ function renderProcedureDimChips(stepIdx) {
 
 function renderProcedureEditStepDimsInner(stepIdx, proc, step) {
   const vars = collectStepDimVars(proc, stepIdx, step);
-  const valLabel = procedureUsesVariants(proc) ? "Valeur (variante 01)" : "Valeur défaut";
   if (!vars.length) {
     return `<p class="proc-edit-step-dims-empty hint" style="margin:0">Insérez une variable (<span class="mono">{{L}}</span>, <span class="mono">{{diam}}</span>…) avec les puces ci-dessus pour saisir la cote ici.</p>`;
+  }
+  if (procedureUsesVariants(proc)) {
+    const variants = proc.variants || [];
+    const head = variants.map((v) =>
+      `<th class="mono" title="${escVal(v.ref || `${proc.tubeRef}-${v.ver}`)}">${escHtml(v.ver || "01")}</th>`
+    ).join("");
+    const rows = vars.map((dk) => {
+      const cells = variants.map((v, vi) =>
+        `<td><input type="text" class="mono proc-edit-step-dim-inp" data-proc-dim-key="${escVal(dk)}" data-var-i="${vi}" value="${escVal(getStepDimValue(proc, stepIdx, dk, vi))}" placeholder="—"></td>`
+      ).join("");
+      return `<tr><td class="mono proc-edit-step-dim-key">{{${escHtml(dk)}}}</td>${cells}</tr>`;
+    }).join("");
+    return `<table class="proc-edit-step-dims-tbl"><thead><tr><th>Variable</th>${head}</tr></thead><tbody>${rows}</tbody></table>
+      <p class="hint" style="margin:4px 0 0">Une colonne = une variante (<span class="mono">${escHtml(proc.tubeRef)}-01</span>, <span class="mono">-02</span>…).</p>`;
   }
   const rows = vars.map((dk) =>
     `<tr><td class="mono proc-edit-step-dim-key">{{${escHtml(dk)}}}</td>
       <td><input type="text" class="mono proc-edit-step-dim-inp" data-proc-dim-key="${escVal(dk)}" value="${escVal(getStepDimValue(proc, stepIdx, dk))}" placeholder="—"></td></tr>`
   ).join("");
-  return `<table class="proc-edit-step-dims-tbl"><thead><tr><th>Variable</th><th>${escHtml(valLabel)}</th></tr></thead><tbody>${rows}</tbody></table>`;
+  return `<table class="proc-edit-step-dims-tbl"><thead><tr><th>Variable</th><th>Valeur défaut</th></tr></thead><tbody>${rows}</tbody></table>`;
 }
 
 function refreshProcedureEditStepDims(stepIdx) {
@@ -1172,38 +1293,36 @@ function refreshProcedureEditStepDims(stepIdx) {
   host.style.display = "";
 }
 
-function findProcVarDimInput(stepKey, dimKey) {
-  return [...document.querySelectorAll('tr[data-var-i="0"] .proc-var-dim-inp')].find(
+function findProcVarDimInput(stepKey, dimKey, varI = 0) {
+  return [...document.querySelectorAll(`tr[data-var-i="${varI}"] .proc-var-dim-inp`)].find(
     (inp) => inp.dataset.stepKey === stepKey && inp.dataset.dimKey === dimKey
   );
 }
 
-function findProcStepDimInput(stepIdx, dimKey) {
-  return document.querySelector(`.proc-edit-step[data-step-i="${stepIdx}"]`)?.querySelector(
-    `.proc-edit-step-dim-inp[data-proc-dim-key="${CSS.escape(dimKey)}"]`
-  ) || [...document.querySelectorAll(`.proc-edit-step[data-step-i="${stepIdx}"] .proc-edit-step-dim-inp`)].find(
-    (inp) => inp.dataset.procDimKey === dimKey
+function findProcStepDimInput(stepIdx, dimKey, varI = 0) {
+  return [...document.querySelectorAll(`.proc-edit-step[data-step-i="${stepIdx}"] .proc-edit-step-dim-inp`)].find(
+    (inp) => inp.dataset.procDimKey === dimKey && (+(inp.dataset.varI ?? 0)) === varI
   );
 }
 
-function syncStepDimToVariantsTable(stepIdx, dimKey, value) {
+function syncStepDimToVariantsTable(stepIdx, dimKey, value, varI = 0) {
   const proc = procedureEditDraft?.proc;
   if (!proc) return;
-  setStepDimInProc(proc, stepIdx, dimKey, value);
+  setStepDimInProc(proc, stepIdx, dimKey, value, varI);
   if (!procedureUsesVariants(proc)) return;
   const sk = procedureStepKey(stepIdx);
-  const inp = findProcVarDimInput(sk, dimKey);
+  const inp = findProcVarDimInput(sk, dimKey, varI);
   if (inp && inp.value !== value) inp.value = value;
   else if (!inp) procedureEditRefreshDimsTable();
 }
 
-function syncVariantsTableToStepDim(stepIdx, dimKey, value) {
+function syncVariantsTableToStepDim(stepIdx, dimKey, value, varI = 0) {
   const proc = procedureEditDraft?.proc;
   if (!proc) return;
-  setStepDimInProc(proc, stepIdx, dimKey, value);
-  const inp = findProcStepDimInput(stepIdx, dimKey);
+  setStepDimInProc(proc, stepIdx, dimKey, value, varI);
+  const inp = findProcStepDimInput(stepIdx, dimKey, varI);
   if (inp && inp.value !== value) inp.value = value;
-  else refreshProcedureEditStepDims(stepIdx);
+  else if (!inp) refreshProcedureEditStepDims(stepIdx);
 }
 
 function procEditInsertVar(stepIdx, varKey) {
@@ -1279,17 +1398,19 @@ function ensureProcedureEditDimSync() {
     if (t.matches(".proc-edit-step-dim-inp")) {
       const stepIdx = +t.closest(".proc-edit-step")?.dataset.stepI;
       if (Number.isNaN(stepIdx)) return;
-      syncStepDimToVariantsTable(stepIdx, t.dataset.procDimKey, t.value.trim());
+      const varI = +(t.dataset.varI ?? 0);
+      syncStepDimToVariantsTable(stepIdx, t.dataset.procDimKey, t.value.trim(), varI);
       return;
     }
     if (t.matches(".proc-var-dim-inp")) {
       const row = t.closest("tr[data-var-i]");
-      if (row?.dataset.varI !== "0") return;
+      const varI = +(row?.dataset.varI ?? -1);
+      if (varI < 0) return;
       const sk = t.dataset.stepKey;
       const dimKey = t.dataset.dimKey;
       if (!sk || !dimKey) return;
       const stepIdx = parseInt(sk.slice(1), 10) - 1;
-      syncVariantsTableToStepDim(stepIdx, dimKey, t.value.trim());
+      syncVariantsTableToStepDim(stepIdx, dimKey, t.value.trim(), varI);
     }
   });
 }
@@ -1620,7 +1741,7 @@ function syncProcedureEditTextsOnly() {
     if (!step) return;
     step.text = el.querySelector(".proc-edit-step-text")?.value ?? "";
     el.querySelectorAll(".proc-edit-step-dim-inp").forEach((inp) => {
-      setStepDimInProc(proc, i, inp.dataset.procDimKey, inp.value.trim());
+      setStepDimInProc(proc, i, inp.dataset.procDimKey, inp.value.trim(), +(inp.dataset.varI ?? 0));
     });
     const media = ensureStepMedia(step);
     el.querySelectorAll(".proc-edit-photo-card").forEach((card, pi) => {
@@ -1828,7 +1949,8 @@ function gatherProcedureEditForm() {
   gatherProcedureVariantsFromForm(proc);
   stepEls.forEach((el, i) => {
     el.querySelectorAll(".proc-edit-step-dim-inp").forEach((inp) => {
-      setStepDimInProc(proc, i, inp.dataset.procDimKey, inp.value.trim());
+      const varI = +(inp.dataset.varI ?? 0);
+      setStepDimInProc(proc, i, inp.dataset.procDimKey, inp.value.trim(), varI);
     });
     if (!procedureUsesVariants(proc)) {
       const dims = {};
@@ -1864,13 +1986,19 @@ function renderProcedureEditor() {
   if (!d) return;
   const proc = d.proc;
   const gam = gammeByCode(d.gammeCode);
+  const cat = getProcedureCatalog(d.gammeCode);
+  const sharedGammes = procedureCatalogGammeCodes(cat);
+  const sharedLabel = sharedGammes.length > 1
+    ? sharedGammes.map((c) => escHtml(gammeByCode(c)?.nom || `Gamme ${c}`)).join(" · ")
+    : escHtml(gam?.nom || "—");
   const nbMachinesGamme = machinesInGamme(d.gammeCode).length;
   ensureProcFiche(proc, gam);
   $("procedureEditHead").textContent = `Édition · ${proc.title}`;
   $("procedureEditBody").innerHTML = `<div class="proc-edit-form">
     <div class="proc-edit-gamme-banner hint">
-      Gamme <b>${escHtml(gam?.nom || "—")}</b> <span class="mono">(${d.gammeCode})</span>
-      · ${nbMachinesGamme} machine${nbMachinesGamme !== 1 ? "s" : ""} dans la gamme
+      ${sharedGammes.length > 1 ? "Catalogue partagé" : "Gamme"} <b>${sharedLabel}</b>
+      ${sharedGammes.length > 1 ? "" : ` <span class="mono">(${d.gammeCode})</span>`}
+      · ${nbMachinesGamme} machine${nbMachinesGamme !== 1 ? "s" : ""} dans la gamme courante
       · ${(state.machines || []).length} au total
       ${proc.tubeRef ? ` · tube <span class="mono">${escHtml(proc.tubeRef)}</span>` : ""}
     </div>
@@ -2264,7 +2392,7 @@ function renderProceduresTab() {
   const filter = getProcFilter();
   const filterActive = !!(filter.gammeCode || filter.machines.length);
   const canEdit = procedureEditAllowed();
-  const entries = allProcedureEntries().sort((a, b) => {
+  const entries = galleryProcedureEntries().sort((a, b) => {
     const oa = a.proc.order ?? 999;
     const ob = b.proc.order ?? 999;
     if (oa !== ob) return oa - ob;
@@ -2273,8 +2401,8 @@ function renderProceduresTab() {
     if (pa !== pb) return pa - pb;
     return a.catalogGammeCode - b.catalogGammeCode;
   });
-  const filtered = entries.filter(({ proc, catalogGammeCode }) =>
-    procedureMatchesProcFilter(proc, catalogGammeCode, filter)
+  const filtered = entries.filter(({ proc, catalogGammeCode, catalogGammeCodes }) =>
+    procedureMatchesProcFilter(proc, catalogGammeCode, filter, catalogGammeCodes)
   );
   const reorder = procGalleryReorderMode && canEdit && !filterActive;
   const showing = reorder ? entries : filtered;
@@ -2301,7 +2429,7 @@ function renderProceduresTab() {
   const reorderHint = reorder
     ? `<p class="hint proc-reorder-hint noprint">Mode réorganisation — glissez les fiches. <button type="button" class="btn-ghost" onclick="toggleProcGalleryReorder()">Terminer</button></p>`
     : "";
-  list.innerHTML = `${reorderHint}<div class="proc-gallery">${showing.map(({ proc: p, catalogGammeCode: code }) => {
+  list.innerHTML = `${reorderHint}<div class="proc-gallery">${showing.map(({ proc: p, catalogGammeCode: code, catalogGammeCodes: gamCodes }) => {
     const previewPac = procedurePreviewPac(p, code, { preferPacs: filter.machines });
     const pacAttr = previewPac ? escAttr(previewPac) : "";
     const idAttr = escAttr(p.id);
@@ -2317,7 +2445,7 @@ function renderProceduresTab() {
     return `<article ${dragAttrs}>
       ${reorder ? `<span class="proc-gallery-drag-handle noprint" title="Glisser pour réordonner">⠿</span>` : ""}
       <div class="proc-gallery-cover">${renderProcedureCoverHtml(p)}
-        ${renderProcedureGalleryGammes(p, code)}
+        ${renderProcedureGalleryGammes(p, code, gamCodes)}
         <div class="proc-gallery-actions noprint" onclick="event.stopPropagation()">
           ${!reorder && canEdit ? `<button type="button" class="btn-heat" onclick="openProcedureEditor(${code},'${idAttr}')">Édition</button>` : ""}
           ${!reorder ? `<button type="button" class="btn-soft" onclick="printSingleProcedure(${code},'${idAttr}')">🖶</button>` : ""}
@@ -2336,6 +2464,7 @@ function renderProceduresTab() {
 
 function initProceduresTab() {
   ensureProcedureCatalogPhotos();
+  migrateProcedureCatalogSharing();
   state.procedureCatalogs.forEach(migrateProcedureCatalogVariants);
   ensureProcedureEditDimSync();
   ensureProcAnnotSync();
