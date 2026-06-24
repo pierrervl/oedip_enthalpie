@@ -304,6 +304,13 @@
   .proc-fiche-epi-chk{font-size:12px;display:flex;align-items:center;gap:6px;cursor:pointer}
   .proc-fiche-epi-chk input{width:auto;margin:0}
   .proc-var-ref-inp{font-size:11px;padding:4px 6px;border:1px solid var(--line);border-radius:4px;box-sizing:border-box}
+  .proc-var-ref-row{display:flex;align-items:center;gap:6px}
+  .proc-var-ref-row .proc-var-ref-inp{flex:1;min-width:0}
+  .proc-var-del-btn{color:var(--bad)!important;padding:2px 8px;font-size:11px}
+  .proc-var-col-del{margin-left:4px;padding:0 5px;border:none;background:transparent;color:var(--bad);cursor:pointer;font-size:15px;line-height:1;vertical-align:middle}
+  .proc-var-col-del:hover{opacity:.75}
+  .proc-var-del-col{width:28px;padding:0}
+  .proc-edit-var-col{white-space:nowrap}
   .schema-tube-vars-wrap{margin-top:12px}
   .schema-tube-var-sel{max-width:100%;font-size:12px;padding:4px 6px}
   .schema-proc-btn{align-self:flex-start;margin-left:auto;padding:2px 7px;font-size:14px;line-height:1;background:var(--paper);border:1px solid var(--line-strong);border-radius:4px;cursor:pointer;color:var(--ink)}

@@ -1263,8 +1263,9 @@ function renderProcedureEditStepDimsInner(stepIdx, proc, step) {
   }
   if (procedureUsesVariants(proc)) {
     const variants = proc.variants || [];
-    const head = variants.map((v) =>
-      `<th class="mono" title="${escVal(v.ref || `${proc.tubeRef}-${v.ver}`)}">${escHtml(v.ver || "01")}</th>`
+    const canDel = variants.length > 1;
+    const head = variants.map((v, vi) =>
+      `<th class="mono proc-edit-var-col" title="${escVal(v.ref || `${proc.tubeRef}-${v.ver}`)}">${escHtml(v.ver || "01")}${canDel ? `<button type="button" class="proc-var-col-del" onclick="procedureEditRemoveVariant(${vi})" title="Supprimer la variante">×</button>` : ""}</th>`
     ).join("");
     const rows = vars.map((dk) => {
       const cells = variants.map((v, vi) =>
@@ -1512,6 +1513,7 @@ function renderProcedureVariantMachinesHtml(proc, gammeCode, opts = {}) {
   const blocks = proc.variants.map((v, vi) => {
     const ver = normalizeVariantVer(v.ver);
     const selected = machinesOnVariant(proc, v);
+    const canDel = proc.variants.length > 1;
     const groupHtml = groups.map((g) => {
       const sameGamme = +g.gammeCode === +gammeCode;
       const items = g.machines.map((m) =>
@@ -1531,6 +1533,7 @@ function renderProcedureVariantMachinesHtml(proc, gammeCode, opts = {}) {
         <span class="mono proc-var-machines-ref">${escHtml(v.ref || `${proc.tubeRef}-${ver}`)}</span>
         <span class="proc-var-machines-count">${selected.size} machine${selected.size !== 1 ? "s" : ""}</span>
         <span class="grow"></span>
+        ${canDel ? `<button type="button" class="btn-ghost proc-var-del-btn" onclick="procedureEditRemoveVariant(${vi})" title="Supprimer la variante">✕ Variante</button>` : ""}
         <button type="button" class="btn-ghost proc-var-machines-all" data-var-i="${vi}">Tout</button>
         <button type="button" class="btn-ghost proc-var-machines-gamme-all" data-var-i="${vi}" data-gamme-code="${gammeCode}">Gamme proc.</button>
         <button type="button" class="btn-ghost proc-var-machines-none" data-var-i="${vi}">Aucune</button>
@@ -1614,14 +1617,16 @@ function renderProcedureVariantsTableHtml(proc, opts = {}) {
   }
   if (!cols.length) return `<p class="hint">Réf. <span class="mono">${escHtml(proc.tubeRef)}</span> — aucune cote dans les variantes.</p>`;
   const mode = opts.mode || "view";
-  const head = `<tr><th>Variante</th>${cols.map((c) => `<th>${escHtml(c.label)}</th>`).join("")}</tr>`;
+  const canDel = proc.variants.length > 1;
+  const head = `<tr><th>Variante</th>${cols.map((c) => `<th>${escHtml(c.label)}</th>`).join("")}${mode === "edit" && canDel ? `<th class="proc-var-del-col"></th>` : ""}</tr>`;
   if (mode === "edit") {
     const rows = proc.variants.map((v, vi) => `<tr data-var-i="${vi}">
-      <td class="mono"><input type="text" class="proc-var-ref-inp" value="${escVal(v.ref || "")}" style="width:100%"><input type="hidden" class="proc-var-ver-inp" value="${escVal(v.ver || "01")}"></td>
+      <td class="mono proc-var-ref-cell"><div class="proc-var-ref-row"><input type="text" class="proc-var-ref-inp" value="${escVal(v.ref || "")}">${canDel ? `<button type="button" class="btn-ghost proc-var-del-btn" onclick="procedureEditRemoveVariant(${vi})" title="Supprimer la variante">✕</button>` : ""}</div><input type="hidden" class="proc-var-ver-inp" value="${escVal(v.ver || "01")}"></td>
       ${cols.map((c) => {
         const val = effectiveDimFromVariant(v, c.stepIndex, c.dimKey);
         return `<td><input type="text" class="mono proc-var-dim-inp" data-step-key="${escVal(c.stepKey)}" data-dim-key="${escVal(c.dimKey)}" value="${escVal(val)}"></td>`;
       }).join("")}
+      ${canDel ? `<td class="proc-var-del-col"></td>` : ""}
     </tr>`).join("");
     return `<div class="proc-dims-wrap"><p class="hint">Base <span class="mono">${escHtml(proc.tubeRef)}</span> — une ligne = une variante (<span class="mono">${escHtml(proc.tubeRef)}-01</span>, <span class="mono">-02</span>…).</p>
       <table class="proc-dims-tbl proc-gamme-tbl proc-variants-tbl"><thead>${head}</thead><tbody>${rows}</tbody></table>
@@ -1897,6 +1902,33 @@ function procedureEditAddVariant() {
     machines: [],
   });
   renderProcedureEditor();
+}
+
+function procedureEditRemoveVariant(vi) {
+  if (!procedureEditDraft) return;
+  gatherProcedureEditForm();
+  const proc = procedureEditDraft.proc;
+  if (!proc?.tubeRef || !proc.variants?.length) return;
+  if (proc.variants.length <= 1) {
+    if (typeof toast === "function") toast("Impossible de supprimer la dernière variante.");
+    return;
+  }
+  const v = proc.variants[vi];
+  if (!v) return;
+  const label = v.ref || `${proc.tubeRef}-${normalizeVariantVer(v.ver)}`;
+  if (!confirm(`Supprimer la variante « ${label} » ?`)) return;
+  const removedVer = normalizeVariantVer(v.ver);
+  proc.variants.splice(vi, 1);
+  const tubeRef = proc.tubeRef;
+  const fallback = normalizeVariantVer(proc.variants[0]?.ver || "01");
+  (state.machines || []).forEach((m) => {
+    const branch = m.frigoTubeVariants;
+    if (!branch?.[tubeRef]) return;
+    if (normalizeVariantVer(branch[tubeRef]) === removedVer) branch[tubeRef] = fallback;
+  });
+  applyProcedureVariantMachinesToMachines(proc);
+  renderProcedureEditor();
+  if (typeof toast === "function") toast(`Variante ${label} supprimée`);
 }
 
 function gatherProcedureEditForm() {
