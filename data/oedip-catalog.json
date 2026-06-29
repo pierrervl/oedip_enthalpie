@@ -9498,6 +9498,182 @@
           "modele": "ZH15K1P-TFM-524",
           "typeComp": "scroll",
           "fluide": "R410A"
+        },
+        {
+          "id": "cmp_yh04k1e_pfj_77ef16d26c",
+          "type": "compresseur",
+          "ref": "YH04K1E-PFJ",
+          "fabricant": "Copeland",
+          "modele": "YH04K1E-PFJ",
+          "typeComp": "scroll",
+          "fluide": "R454C",
+          "pFroidKW": 5.03,
+          "pChaudKW": 6.35,
+          "debitMh": 124.92,
+          "cop": 4.8,
+          "iMaxA": 11.4,
+          "tension": "0",
+          "notes": "Série YH A2L · Déplacement 4 m³/h @ 50 Hz · Perf. Te=3°C Tc=40°C SH/SC=5K · FI22 44 plq"
+        },
+        {
+          "id": "cmp_yh04k1e_tfd_ee0f7b95bf",
+          "type": "compresseur",
+          "ref": "YH04K1E-TFD",
+          "fabricant": "Copeland",
+          "modele": "YH04K1E-TFD",
+          "typeComp": "scroll",
+          "fluide": "R454C",
+          "pFroidKW": 5.12,
+          "pChaudKW": 6.46,
+          "debitMh": 126,
+          "cop": 4.83,
+          "iMaxA": 4.6,
+          "tension": "1",
+          "notes": "Série YH A2L · Déplacement 4 m³/h @ 50 Hz · Perf. Te=3°C Tc=40°C SH/SC=5K · FI22 44 plq"
+        },
+        {
+          "id": "cmp_yh06k1e_pfj_3b29146c17",
+          "type": "compresseur",
+          "ref": "YH06K1E-PFJ",
+          "fabricant": "Copeland",
+          "modele": "YH06K1E-PFJ",
+          "typeComp": "scroll",
+          "fluide": "R454C",
+          "pFroidKW": 6.99,
+          "pChaudKW": 8.79,
+          "debitMh": 173.52,
+          "cop": 4.9,
+          "iMaxA": 16.2,
+          "tension": "0",
+          "notes": "Série YH A2L · Déplacement 6.1 m³/h @ 50 Hz · Perf. Te=3°C Tc=40°C SH/SC=5K · FI22 56 plq"
+        },
+        {
+          "id": "cmp_yh06k1e_tfd_82c4e058ad",
+          "type": "compresseur",
+          "ref": "YH06K1E-TFD",
+          "fabricant": "Copeland",
+          "modele": "YH06K1E-TFD",
+          "typeComp": "scroll",
+          "fluide": "R454C",
+          "pFroidKW": 7.25,
+          "pChaudKW": 9.01,
+          "debitMh": 178.92,
+          "cop": 5.12,
+          "iMaxA": 6.2,
+          "tension": "1",
+          "notes": "Série YH A2L · Déplacement 6.1 m³/h @ 50 Hz · Perf. Te=3°C Tc=40°C SH/SC=5K · FI22 56 plq"
+        },
+        {
+          "id": "cmp_yh07k1e_pfj_184e103229",
+          "type": "compresseur",
+          "ref": "YH07K1E-PFJ",
+          "fabricant": "Copeland",
+          "modele": "YH07K1E-PFJ",
+          "typeComp": "scroll",
+          "fluide": "R454C",
+          "pFroidKW": 8.7,
+          "pChaudKW": 10.9,
+          "debitMh": 212.04,
+          "cop": 4.95,
+          "iMaxA": 20.6,
+          "tension": "0",
+          "notes": "Série YH A2L · Déplacement 7.2 m³/h @ 50 Hz · Perf. Te=3°C Tc=40°C SH/SC=5K · FI22 68 plq"
+        },
+        {
+          "id": "cmp_yh07k1e_tfd_52827fda48",
+          "type": "compresseur",
+          "ref": "YH07K1E-TFD",
+          "fabricant": "Copeland",
+          "modele": "YH07K1E-TFD",
+          "typeComp": "scroll",
+          "fluide": "R454C",
+          "pFroidKW": 9.11,
+          "pChaudKW": 11.3,
+          "debitMh": 224.28,
+          "cop": 5.18,
+          "iMaxA": 7.7,
+          "tension": "1",
+          "notes": "Série YH A2L · Déplacement 7.2 m³/h @ 50 Hz · Perf. Te=3°C Tc=40°C SH/SC=5K · FI22 68 plq"
+        },
+        {
+          "id": "cmp_yh09k1e_pfj_5a83cc7fcf",
+          "type": "compresseur",
+          "ref": "YH09K1E-PFJ",
+          "fabricant": "Copeland",
+          "modele": "YH09K1E-PFJ",
+          "typeComp": "scroll",
+          "fluide": "R454C",
+          "pFroidKW": 10.03,
+          "pChaudKW": 12.45,
+          "debitMh": 246.96,
+          "cop": 5.14,
+          "iMaxA": 23.5,
+          "tension": "0",
+          "notes": "Série YH A2L · Déplacement 9.1 m³/h @ 50 Hz · Perf. Te=3°C Tc=40°C SH/SC=5K · FI22 78 plq"
+        },
+        {
+          "id": "cmp_yh09k1e_tfd_1c4fb1b5f6",
+          "type": "compresseur",
+          "ref": "YH09K1E-TFD",
+          "fabricant": "Copeland",
+          "modele": "YH09K1E-TFD",
+          "typeComp": "scroll",
+          "fluide": "R454C",
+          "pFroidKW": 10.33,
+          "pChaudKW": 12.8,
+          "debitMh": 254.88,
+          "cop": 5.18,
+          "iMaxA": 8.8,
+          "tension": "1",
+          "notes": "Série YH A2L · Déplacement 9.1 m³/h @ 50 Hz · Perf. Te=3°C Tc=40°C SH/SC=5K · FI22 78 plq"
+        },
+        {
+          "id": "cmp_yh11k1e_tfd_c66d81b4bf",
+          "type": "compresseur",
+          "ref": "YH11K1E-TFD",
+          "fabricant": "Copeland",
+          "modele": "YH11K1E-TFD",
+          "typeComp": "scroll",
+          "fluide": "R454C",
+          "pFroidKW": 12.84,
+          "pChaudKW": 15.95,
+          "debitMh": 319.32,
+          "cop": 5.14,
+          "iMaxA": 11.3,
+          "tension": "1",
+          "notes": "Série YH A2L · Déplacement 11.4 m³/h @ 50 Hz · Perf. Te=3°C Tc=40°C SH/SC=5K · FI22 90 plq"
+        },
+        {
+          "id": "cmp_yh13k1e_tfd_4bf7f20bf6",
+          "type": "compresseur",
+          "ref": "YH13K1E-TFD",
+          "fabricant": "Copeland",
+          "modele": "YH13K1E-TFD",
+          "typeComp": "scroll",
+          "fluide": "R454C",
+          "pFroidKW": 15.19,
+          "pChaudKW": 18.8,
+          "debitMh": 378,
+          "cop": 5.21,
+          "iMaxA": 12.9,
+          "tension": "1",
+          "notes": "Série YH A2L · Déplacement 13.5 m³/h @ 50 Hz · Perf. Te=3°C Tc=40°C SH/SC=5K · FI22 116 plq"
+        },
+        {
+          "id": "cmp_yh16k1e_tfd_32219aa7df",
+          "type": "compresseur",
+          "ref": "YH16K1E-TFD",
+          "fabricant": "Copeland",
+          "modele": "YH16K1E-TFD",
+          "typeComp": "scroll",
+          "fluide": "R454C",
+          "pFroidKW": 19.24,
+          "pChaudKW": 23.9,
+          "debitMh": 478.8,
+          "cop": 5.14,
+          "iMaxA": 15.9,
+          "tension": "1",
+          "notes": "Série YH A2L · Déplacement 16.2 m³/h @ 50 Hz · Perf. Te=3°C Tc=40°C SH/SC=5K · FI22 — plq"
         }
       ],
       "echangeur_plaques": [
@@ -10314,6 +10490,84 @@
             }
           ],
           "plaques": 116
+        },
+        {
+          "id": "cmp_fi22asmx44_9e94f80522",
+          "type": "echangeur_plaques",
+          "ref": "FI22ASMX44",
+          "fabricant": "SWEP",
+          "modele": "FI22ASMX44",
+          "materiau": "Cu brasé",
+          "courbesPdc": [
+            {
+              "regime": "0°C/15% glycol",
+              "points": [
+                {
+                  "debit": 0.5,
+                  "pdcKpa": 3.47
+                },
+                {
+                  "debit": 1,
+                  "pdcKpa": 9.26
+                },
+                {
+                  "debit": 2,
+                  "pdcKpa": 33.05
+                },
+                {
+                  "debit": 5,
+                  "pdcKpa": 178.15
+                },
+                {
+                  "debit": 8,
+                  "pdcKpa": 423.2
+                },
+                {
+                  "debit": 11,
+                  "pdcKpa": 762.97
+                },
+                {
+                  "debit": 13,
+                  "pdcKpa": 1039.91
+                }
+              ]
+            },
+            {
+              "regime": "50°C",
+              "points": [
+                {
+                  "debit": 0.5,
+                  "pdcKpa": 1.89
+                },
+                {
+                  "debit": 1,
+                  "pdcKpa": 6.76
+                },
+                {
+                  "debit": 2,
+                  "pdcKpa": 24.3
+                },
+                {
+                  "debit": 5,
+                  "pdcKpa": 133.09
+                },
+                {
+                  "debit": 8,
+                  "pdcKpa": 318.76
+                },
+                {
+                  "debit": 11,
+                  "pdcKpa": 576.46
+                },
+                {
+                  "debit": 13,
+                  "pdcKpa": 786.81
+                }
+              ]
+            }
+          ],
+          "plaques": 44,
+          "notes": "Courbes Pdc extrapolées depuis FI22ASMX46 (46 plq) — ratio 46/44"
         }
       ],
       "detendeur": [

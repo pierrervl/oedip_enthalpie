@@ -750,6 +750,78 @@
           ]
         }
       ]
+    },
+    "FI22ASMX44": {
+      "ref": "FI22ASMX44",
+      "plaques": 44,
+      "courbesPdc": [
+        {
+          "regime": "0°C/15% glycol",
+          "points": [
+            {
+              "debit": 0.5,
+              "pdcKpa": 3.47
+            },
+            {
+              "debit": 1,
+              "pdcKpa": 9.26
+            },
+            {
+              "debit": 2,
+              "pdcKpa": 33.05
+            },
+            {
+              "debit": 5,
+              "pdcKpa": 178.15
+            },
+            {
+              "debit": 8,
+              "pdcKpa": 423.2
+            },
+            {
+              "debit": 11,
+              "pdcKpa": 762.97
+            },
+            {
+              "debit": 13,
+              "pdcKpa": 1039.91
+            }
+          ]
+        },
+        {
+          "regime": "50°C",
+          "points": [
+            {
+              "debit": 0.5,
+              "pdcKpa": 1.89
+            },
+            {
+              "debit": 1,
+              "pdcKpa": 6.76
+            },
+            {
+              "debit": 2,
+              "pdcKpa": 24.3
+            },
+            {
+              "debit": 5,
+              "pdcKpa": 133.09
+            },
+            {
+              "debit": 8,
+              "pdcKpa": 318.76
+            },
+            {
+              "debit": 11,
+              "pdcKpa": 576.46
+            },
+            {
+              "debit": 13,
+              "pdcKpa": 786.81
+            }
+          ]
+        }
+      ]
     }
   }
 }
