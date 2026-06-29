@@ -1,6 +1,6 @@
 /* OEDIP — dossier & import/export — ne pas modifier l'ordre de chargement dans oedip.html */
 /* ---------- DOSSIER DE TRAVAIL · IMPORT / EXPORT ---------- */
-const WS_PREFIX={project:"oedip_projet",machines:"oedip_machines"};
+const WS_PREFIX={project:"oedip_projet",machines:"oedip_machines",config:"oedip_config"};
 const WS_IDB="oedip-workspace-v1";
 const CATALOG_DRAFT_LS="oedip_catalog_draft";
 const FS_SUPPORTED=typeof window.showDirectoryPicker==="function";
@@ -14,7 +14,7 @@ function wsTimestampFilename(kind,d){
   d=d||new Date();
   const jj=wsPad2(d.getDate()), mm=wsPad2(d.getMonth()+1), aa=wsPad2(d.getFullYear()%100);
   const hh=wsPad2(d.getHours()), mi=wsPad2(d.getMinutes());
-  const base=kind==="db"?WS_PREFIX.machines:WS_PREFIX.project;
+  const base=kind==="db"?WS_PREFIX.machines:kind==="config"?WS_PREFIX.config:WS_PREFIX.project;
   return `${base}_${jj}-${mm}-${aa}_${hh}-${mi}.json`;
 }
 function wsFmtFileDate(ts){
@@ -22,7 +22,7 @@ function wsFmtFileDate(ts){
   return `${wsPad2(d.getDate())}/${wsPad2(d.getMonth()+1)}/${wsPad2(d.getFullYear()%100)} à ${wsPad2(d.getHours())}:${wsPad2(d.getMinutes())}`;
 }
 function wsMatchesKind(name,kind){
-  const prefix=kind==="db"?WS_PREFIX.machines:WS_PREFIX.project;
+  const prefix=kind==="db"?WS_PREFIX.machines:kind==="config"?WS_PREFIX.config:WS_PREFIX.project;
   return name.endsWith(".json")&&(name===`${prefix}.json`||name.startsWith(`${prefix}_`));
 }
 async function listWsFiles(dir,kind){
@@ -111,6 +111,25 @@ function buildDbExport() {
     pci: state.pci,
     co2: state.co2,
     notePrintPresets: state.notePrintPresets || [],
+  };
+}
+
+/** Export JSON complet : catalogue machines + étude + entreprises installateur. */
+function buildFullConfigExport() {
+  readForm();
+  readPrix();
+  ensureInstallerCompanies();
+  return {
+    type: "oedip-config",
+    version: 1,
+    date: new Date().toISOString(),
+    etudeNom: currentStudyName || studyDisplayLabelFromProjet?.() || "",
+    catalog: buildDbExport(),
+    study: buildStudyExport(),
+    preferences: {
+      installerCompanies: state.installerCompanies.map((c) => ({ ...c })),
+      activeInstallerCompanyId: state.activeInstallerCompanyId,
+    },
   };
 }
 
@@ -336,6 +355,7 @@ async function syncInstallerProfileToCloud() {
 function isLegacyFullProjectExport(obj) {
   if (!obj || typeof obj !== "object") return false;
   if (obj.type === "oedip-study") return false;
+  if (obj.type === "oedip-config") return false;
   if (obj.type === "oedip-db" || obj.type === "geoselect-db") return false;
   return !!(
     obj.data?.gammes?.length ||
@@ -929,6 +949,27 @@ async function exportProject(opts){
   markSaved(); updateStudyUI();
   toast(session?"Téléchargé · "+fname:"Téléchargé · "+fname+" — connectez ☁ Cloud pour sync en ligne");
 }
+async function exportFullConfig(){
+  const obj=buildFullConfigExport();
+  const slug=currentStudyName?wsSlugify(currentStudyName):"";
+  const fname=slug?`${WS_PREFIX.config}_${slug}.json`:wsTimestampFilename("config");
+  if(workspaceDirHandle&&await ensureDirPermission(workspaceDirHandle,true)){
+    await writeFileToDir(workspaceDirHandle,fname,obj);
+    markSaved();
+    clearCatalogDraftLocal();
+    toast("Configuration enregistrée · "+fname);
+    return;
+  }
+  download(obj,fname);
+  markSaved();
+  clearCatalogDraftLocal();
+  toast("Configuration téléchargée · "+fname);
+}
+
+function importFullConfig(){
+  fileImport("config");
+}
+
 async function exportDB(){
   const obj=buildDbExport();
   const session=typeof sbEnsureSession==="function"?await sbEnsureSession():null;
@@ -1016,8 +1057,9 @@ function fileImport(kind){
     const f=e.target.files[0]; if(!f) return;
     const rd=new FileReader();
     rd.onload=()=>{ try{
-      applyImport(JSON.parse(rd.result),kind);
-      if(kind==="project"){
+      const obj=JSON.parse(rd.result);
+      applyImport(obj,kind,{filename:f.name});
+      if(kind==="project"||kind==="config"||obj.type==="oedip-config"){
         currentStudyFile=f.name; currentStudyHandle=null;
         currentStudyCloudId=""; persistCurrentStudyCloudId("");
         persistCurrentStudyFile(f.name);
@@ -1029,6 +1071,33 @@ function fileImport(kind){
     rd.readAsText(f);
   };
   inp.click();
+}
+
+function applyFullConfigImport(obj,opts){
+  opts=opts||{};
+  if(!obj||obj.type!=="oedip-config") return false;
+  if(!opts.silent&&!confirm("Importer cette configuration remplace le catalogue machines, l'étude en cours et les entreprises installateur.\n\nContinuer ?")) return false;
+  if(obj.catalog) applyCatalogImport(obj.catalog,{silent:true,skipForm:true,markDirty:false});
+  const studyName=obj.etudeNom||obj.study?.etudeNom;
+  if(studyName) currentStudyName=studyName;
+  if(obj.study) applyStudyImport(obj.study,{silent:true,keepStudyName:true});
+  if(obj.preferences){
+    if(Array.isArray(obj.preferences.installerCompanies)&&obj.preferences.installerCompanies.length){
+      state.installerCompanies=obj.preferences.installerCompanies.map(normalizeInstallerCompany);
+      state.activeInstallerCompanyId=obj.preferences.activeInstallerCompanyId||null;
+      ensureInstallerCompanies();
+      saveInstallerProfileLocal();
+    }
+  }
+  finishCatalogLoad({silent:true});
+  finishStudyLoad({silent:true});
+  if(typeof renderEntrepriseTab==="function") renderEntrepriseTab();
+  if(typeof fillNotePrintPresetSelect==="function") fillNotePrintPresetSelect();
+  updateStudyUI();
+  markSaved();
+  clearCatalogDraftLocal();
+  if(!opts.silent) toast("Configuration importée · "+(studyName||opts.filename||"sans nom"));
+  return true;
 }
 
 function applyGammePackImport(obj){
@@ -1086,6 +1155,7 @@ function applyImport(obj,kind,opts){
   opts=opts||{};
   if(!obj) return;
   if(obj.type==="oedip-gamme-pack"){ applyGammePackImport(obj); return; }
+  if(obj.type==="oedip-config"){ applyFullConfigImport(obj,opts); return; }
 
   if(kind==="db"||obj.type==="oedip-db"||obj.type==="geoselect-db"||obj.type==="oedip-catalog"){
     applyCatalogImport(obj,{...opts,markDirty:kind==="db"&&!opts.silent});

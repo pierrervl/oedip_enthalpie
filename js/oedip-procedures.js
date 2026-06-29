@@ -825,7 +825,15 @@ function getProcedureVariant(proc, ver) {
 
 function getMachineTubeVariantVer(m, tubeRef) {
   if (!tubeRef) return "01";
-  return normalizeVariantVer(ensureFrigoTubeVariants(m)[tubeRef]);
+  const explicit = m?.frigoTubeVariants?.[tubeRef];
+  if (explicit != null && explicit !== "") return normalizeVariantVer(explicit);
+  return "01";
+}
+
+/** Machine rattachée à une variante tube (frigoTubeVariants explicite, sinon variante 01 par défaut). */
+function machineBelongsToVariant(m, tubeRef, ver) {
+  if (!m || !tubeRef) return false;
+  return normalizeVariantVer(getMachineTubeVariantVer(m, tubeRef)) === normalizeVariantVer(ver);
 }
 
 function tubeProceduresForGamme(gammeCode) {
@@ -1533,19 +1541,23 @@ function ensureProcedureVariantMachines(proc, gammeCode) {
   if (!proc?.tubeRef || !proc.variants?.length) return;
   const tubeRef = proc.tubeRef;
   proc.variants.forEach((v) => {
-    if (Array.isArray(v.machines)) return;
     const ver = normalizeVariantVer(v.ver);
     v.machines = (state.machines || [])
-      .filter((m) => {
-        const explicit = m.frigoTubeVariants?.[tubeRef];
-        return explicit && normalizeVariantVer(explicit) === ver;
-      })
+      .filter((m) => machineBelongsToVariant(m, tubeRef, ver))
       .map((m) => m.pac);
   });
 }
 
 function machinesOnVariant(proc, variant) {
-  return new Set(Array.isArray(variant?.machines) ? variant.machines : []);
+  const ver = normalizeVariantVer(variant?.ver);
+  const fromList = Array.isArray(variant?.machines) ? variant.machines : [];
+  if (fromList.length) return new Set(fromList);
+  if (!proc?.tubeRef) return new Set();
+  return new Set(
+    (state.machines || [])
+      .filter((m) => machineBelongsToVariant(m, proc.tubeRef, ver))
+      .map((m) => m.pac)
+  );
 }
 
 function renderProcedureVariantMachinesHtml(proc, gammeCode, opts = {}) {
@@ -1557,8 +1569,9 @@ function renderProcedureVariantMachinesHtml(proc, gammeCode, opts = {}) {
   }
   if (mode === "view") {
     const blocks = proc.variants.map((v) => {
+      const pacs = [...machinesOnVariant(proc, v)];
       const byGamme = new Map();
-      (v.machines || []).forEach((pac) => {
+      pacs.forEach((pac) => {
         const m = machineByPac(pac);
         const code = m ? +m.gammeCode : 0;
         if (!byGamme.has(code)) {
@@ -2089,6 +2102,7 @@ function applyProcedureEditMachineDims() {
 function renderProcedureEditor() {
   const d = procedureEditDraft;
   if (!d) return;
+  ensureProcedureVariantMachines(d.proc, d.gammeCode);
   const proc = d.proc;
   const gam = gammeByCode(d.gammeCode);
   const cat = getProcedureCatalog(d.gammeCode);
@@ -2206,6 +2220,7 @@ function procedureEditMoveStep(i, dir) {
 
 function procedureEditRefreshDimsTable() {
   gatherProcedureEditForm();
+  if (procedureEditDraft) ensureProcedureVariantMachines(procedureEditDraft.proc, procedureEditDraft.gammeCode);
   const el = $("procEditDims");
   if (el && procedureEditDraft) {
     el.innerHTML = renderProcedureVariantsTableHtml(procedureEditDraft.proc, {

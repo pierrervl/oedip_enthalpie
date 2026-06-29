@@ -270,8 +270,9 @@
   .proc-var-machines-gamme-lbl{font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-soft);margin-bottom:6px}
   .proc-var-machines-grid{display:flex;flex-wrap:wrap;gap:6px 12px}
   .proc-var-machine-chk{display:inline-flex;align-items:center;gap:5px;font-size:12.5px;cursor:pointer;padding:4px 8px;border:1px solid var(--line);border-radius:6px;background:var(--paper)}
-  .proc-var-machine-chk-gamme{border-color:#b8d8de;background:var(--geo-soft)}
-  .proc-var-machine-chk:has(input:checked){border-color:var(--geo);box-shadow:inset 0 0 0 1px var(--geo)}
+  .proc-var-machine-chk-gamme{border-color:#b8d8de}
+  .proc-var-machine-chk:has(input:checked){border-color:var(--geo);box-shadow:inset 0 0 0 1px var(--geo);background:var(--geo-soft)}
+  .proc-var-machine-chk-gamme:has(input:checked){border-color:var(--geo)}
   .proc-var-machine-chk input{margin:0;width:14px;height:14px;accent-color:var(--geo)}
   .proc-var-machine-gamme{font-size:10.5px;color:var(--ink-soft)}
   .proc-var-machines-tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
