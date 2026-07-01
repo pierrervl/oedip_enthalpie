@@ -1,4 +1,12 @@
 /* OEDIP — Certification : EPREL & dossiers FDES */
+if (typeof escVal !== "function") {
+  globalThis.escVal = (s) =>
+    String(s ?? "").replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
+}
+if (typeof escAttr !== "function") {
+  globalThis.escAttr = (s) => String(s ?? "").replace(/\\/g, "\\\\").replace(/'/g, "\\'");
+}
+
 let CERT_SUBVIEW = "eprel";
 let EPREL_EDIT_IDX = null;
 
@@ -53,7 +61,12 @@ function renderCertTabs() {
 function renderCertPanel() {
   const el = $("certPanel");
   if (!el) return;
-  el.innerHTML = CERT_SUBVIEW === "eprel" ? renderEprelPanel() : renderFdesPanel();
+  try {
+    el.innerHTML = CERT_SUBVIEW === "eprel" ? renderEprelPanel() : renderFdesPanel();
+  } catch (err) {
+    console.error("Certification render:", err);
+    el.innerHTML = `<div class="empty" style="color:var(--bad)">Erreur d'affichage Certification : ${escHtml(err.message)}</div>`;
+  }
 }
 
 /* ---------- EPREL ---------- */

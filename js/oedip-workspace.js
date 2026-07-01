@@ -403,6 +403,38 @@ const CATALOG_STATE_KEYS = [
   "fournisseurSettings",
 ];
 
+const BUNDLED_MERGE_ARRAY_KEYS = ["eprelFiches", "fdesDossiers", "fournisseurs"];
+
+function catalogPayloadData(obj) {
+  if (!obj || typeof obj !== "object") return null;
+  if (obj.type === "oedip-catalog") return obj.data || null;
+  if (obj.type === "oedip-db" || obj.type === "geoselect-db") return obj;
+  return obj.data || obj;
+}
+
+/** Complète EPREL / FDES / fournisseurs depuis le catalogue embarqué si le cloud ne les fournit pas. */
+function mergeBundledCatalogExtras() {
+  const bd = catalogPayloadData(catalogObjectFromBundled());
+  if (!bd) return;
+  BUNDLED_MERGE_ARRAY_KEYS.forEach((k) => {
+    const from = bd[k];
+    if (!Array.isArray(from) || !from.length) return;
+    const cur = state[k];
+    if (!Array.isArray(cur) || !cur.length) state[k] = JSON.parse(JSON.stringify(from));
+  });
+  if (bd.fournisseurSettings && (!state.fournisseurSettings || typeof state.fournisseurSettings !== "object")) {
+    state.fournisseurSettings = JSON.parse(JSON.stringify(bd.fournisseurSettings));
+  }
+  if (typeof ensureCertification === "function") ensureCertification();
+  if (typeof ensureFournisseurs === "function") ensureFournisseurs();
+  if (typeof ensureFournisseurSettings === "function") ensureFournisseurSettings();
+}
+
+function refreshCertificationTabIfNeeded() {
+  if (!$("v-certification")?.classList.contains("active")) return;
+  if (typeof initCertificationTab === "function") initCertificationTab();
+}
+
 function applyProjetPayload(p) {
   if (!p) return;
   projet = p;
@@ -439,6 +471,8 @@ function finishCatalogLoad(opts) {
   if ($("v-composants")?.classList.contains("active") && typeof renderComposants === "function") {
     renderComposants();
   }
+  mergeBundledCatalogExtras();
+  refreshCertificationTabIfNeeded();
   if (!opts.silent) toast(opts.toast || "Catalogue chargé");
 }
 
@@ -880,6 +914,7 @@ async function ensureDefaultCatalogLoaded(){
   if(typeof ensureComposants==="function") ensureComposants();
   if(typeof ensureBundledComposants==="function") ensureBundledComposants();
   if(typeof ensureProcedureCatalogPhotos==="function") ensureProcedureCatalogPhotos();
+  mergeBundledCatalogExtras();
   if(loadCatalogDraftLocal()) console.info("Catalogue local (brouillon) restauré");
   return ok||catalogComposantCount()>0;
 }
@@ -1360,6 +1395,7 @@ async function bootApp(){
   updateWsStatus();
   updateStudyUI();
   if (typeof initComposantsTab === "function") initComposantsTab();
+  if (typeof initCertificationTab === "function") initCertificationTab();
 }
 bootApp();
 
