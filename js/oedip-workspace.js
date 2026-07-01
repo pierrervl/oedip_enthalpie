@@ -111,6 +111,10 @@ function buildDbExport() {
     pci: state.pci,
     co2: state.co2,
     notePrintPresets: state.notePrintPresets || [],
+    eprelFiches: state.eprelFiches || [],
+    fdesDossiers: state.fdesDossiers || [],
+    fournisseurs: state.fournisseurs || [],
+    fournisseurSettings: state.fournisseurSettings || (typeof defaultFournisseurSettings === "function" ? defaultFournisseurSettings() : {}),
   };
 }
 
@@ -393,6 +397,10 @@ const CATALOG_STATE_KEYS = [
   "hydroLayoutPresets",
   "notePrintPresets",
   "procedureCatalogs",
+  "eprelFiches",
+  "fdesDossiers",
+  "fournisseurs",
+  "fournisseurSettings",
 ];
 
 function applyProjetPayload(p) {
@@ -412,6 +420,8 @@ function finishCatalogLoad(opts) {
   opts = opts || {};
   ensureDepartements();
   ensureComposants();
+  if (typeof ensureFournisseurs === "function") ensureFournisseurs();
+  if (typeof ensureFournisseurSettings === "function") ensureFournisseurSettings();
   if (typeof ensureBundledComposants === "function") ensureBundledComposants();
   if (typeof ensureProcedureCatalogPhotos === "function") ensureProcedureCatalogPhotos();
   if (typeof ensureOutils === "function") ensureOutils();
@@ -1337,6 +1347,7 @@ async function bootApp(){
     try{ await sbLoadProfile(); }catch(e){}
   }
   await ensureDefaultCatalogLoaded();
+  if (typeof ensureCertification === "function") ensureCertification();
   loadInstallerProfileFromLocal();
   if(sbCloudActive()) await loadNotePrintPresetsFromCloud();
   if(sbCloudActive()) await loadInstallerProfileFromCloud();

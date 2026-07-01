@@ -1838,6 +1838,7 @@ function goTab(t){
   if(t==='installation'&&typeof initInstallationTab==='function') initInstallationTab();
   if(t==='entreprise') initEntrepriseTab();
   if(t==='procedures'&&typeof initProceduresTab==='function') initProceduresTab();
+  if(t==='certification'&&typeof initCertificationTab==='function') initCertificationTab();
   if(t==='projet') setTimeout(()=>renderDjuChart(LAST), 50);
   window.scrollTo(0,0); }
 document.querySelectorAll('nav.tabs button').forEach(b=>b.onclick=()=>goTab(b.dataset.tab));

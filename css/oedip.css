@@ -403,6 +403,24 @@
   .note-chart-wrap{overflow:hidden}
   .note-chart-wrap svg{min-width:0!important;width:100%;max-width:100%}
   .dju-chart-wrap .empty{padding:28px;text-align:center;color:var(--ink-soft);font-size:13px}
+  .comp-main-seg{display:flex;gap:6px;margin:12px 0 4px}
+  .comp-main-seg button{font-family:var(--sans);font-size:12.5px;padding:8px 14px;border-radius:6px;border:1px solid var(--line-strong);background:var(--field);color:var(--ink-soft);cursor:pointer}
+  .comp-main-seg button.on{background:var(--geo);color:#fff;border-color:var(--geo);font-weight:600}
+  .frn-site-readout{font-size:13px;line-height:1.5;margin:8px 0}
+  .frn-transport-tbl{font-size:12.5px;margin-top:8px}
+  .frn-transport-tbl .frn-km-ok{color:var(--geo);font-weight:600}
+  .frn-card{border-left:3px solid var(--line-strong)}
+  .frn-comp-hint{font-size:12.5px;line-height:1.5}
+  .comp-family-tabs{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+  .comp-family-tab{font-family:var(--sans);font-size:13px;font-weight:600;padding:10px 16px;border-radius:8px;border:2px solid var(--line-strong);background:var(--field);color:var(--ink-soft);cursor:pointer;transition:background .15s,border-color .15s}
+  .comp-family-tab:hover{background:var(--paper)}
+  .comp-family-tab.on{background:var(--geo-soft);color:var(--geo);border-color:var(--geo)}
+  .comp-family-tab .n{font-family:var(--mono);font-size:10px;background:rgba(0,0,0,.08);padding:1px 6px;border-radius:3px;margin-left:6px}
+  .comp-family-tab.on .n{background:var(--geo);color:#fff}
+  .comp-ouvrage-tabs{display:none;flex-wrap:wrap;gap:6px;margin-top:12px;padding:8px 0;border-bottom:1px dashed var(--line)}
+  .comp-ouvrage-tab{font-family:var(--sans);font-size:12px;padding:6px 14px;border-radius:6px;border:1px solid var(--line);background:var(--paper);color:var(--ink-soft);cursor:pointer}
+  .comp-ouvrage-tab:hover{background:var(--field)}
+  .comp-ouvrage-tab.on{background:var(--ink);color:#fff;border-color:var(--ink);font-weight:600}
   .comp-tabs{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
   .comp-tab{font-family:var(--sans);font-size:12.5px;padding:8px 12px;border-radius:6px;border:1px solid var(--line-strong);background:var(--field);color:var(--ink-soft);cursor:pointer}
   .comp-tab:hover{background:var(--paper)}
@@ -413,6 +431,12 @@
   .comp-subtab{font-family:var(--sans);font-size:12px;padding:6px 12px;border-radius:6px;border:1px solid var(--line);background:var(--paper);color:var(--ink-soft);cursor:pointer}
   .comp-subtab:hover{background:var(--field)}
   .comp-subtab.on{background:var(--geo-soft);color:var(--geo);border-color:var(--geo);font-weight:600}
+  .ccard-ouvrage{border-left:3px solid var(--geo)}
+  .ccard-bom{font-size:11.5px;margin-top:6px;padding-top:6px;border-top:1px dashed var(--line);line-height:1.45}
+  .ouv-lignes-wrap{margin-top:16px;padding-top:14px;border-top:1px solid var(--line)}
+  .ouv-lignes-tbl{width:100%;margin:8px 0}
+  .ouv-lignes-tbl select,.ouv-lignes-tbl input{font-size:12px}
+  .ouv-lignes-tbl td{padding:4px 6px;vertical-align:middle}
   .comp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
   .comp-grid.comp-grid-curves{display:block}
   .circ-curves-panel{background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:14px 16px 18px}
@@ -650,4 +674,37 @@
   .new-study-card{max-width:440px}
   .new-study-card #newStudyName{width:100%;margin-top:6px;font-size:14px}
   .new-study-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
+  /* Certification EPREL / FDES */
+  .cert-tabs{margin-top:10px}
+  .cert-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px 16px}
+  .eprel-reg-row{display:flex;gap:8px;align-items:center}
+  .eprel-reg-row input{flex:1;min-width:0}
+  .cert-import-panel textarea{font-size:13px;padding:8px 10px;border:1px solid var(--line);border-radius:6px;background:var(--field);resize:vertical}
+  .cert-form-grid label{display:flex;flex-direction:column;gap:4px;font-size:12.5px}
+  .cert-form-grid label>span{font-weight:500;color:var(--ink-soft)}
+  .cert-form-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:8px}
+  .cert-machine-grid{display:flex;flex-wrap:wrap;gap:8px 14px;margin-top:8px;max-height:220px;overflow:auto;padding:8px;border:1px solid var(--line);border-radius:8px;background:var(--field)}
+  .cert-machine-chk{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;cursor:pointer;padding:4px 8px;border:1px solid var(--line);border-radius:6px;background:var(--paper)}
+  .cert-machine-chk-dis{opacity:.45;cursor:not-allowed}
+  .cert-machine-gamme{font-size:10.5px;color:var(--ink-soft)}
+  .cert-tags{display:flex;flex-wrap:wrap;gap:5px;margin:8px 0}
+  .cert-tag{font-size:11px;padding:2px 8px;border-radius:999px;background:var(--geo-soft);color:var(--geo);border:1px solid #b8d8de}
+  .cert-link{font-size:12px;color:var(--geo);display:inline-block;margin-top:6px}
+  .cert-warn{color:var(--heat);font-size:12.5px}
+  .cert-badge-energy{background:#2e7d32;color:#fff}
+  .cert-badge-acv{background:var(--geo);color:#fff}
+  .cert-card-ok{border-color:#b8d8de}
+  .cert-fdes-totals{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:16px}
+  .cert-fdes-totals>div{padding:12px 16px;background:var(--field);border:1px solid var(--line);border-radius:8px;min-width:140px}
+  .cert-total-main{background:var(--geo-soft)!important;border-color:#b8d8de!important}
+  .cert-total-lbl{display:block;font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-soft)}
+  .cert-total-val{display:block;font-size:20px;font-weight:600;margin-top:4px}
+  .cert-total-unit{font-size:11px;color:var(--ink-soft)}
+  .cert-fdes-table-wrap{overflow:auto}
+  .cert-fdes-tbl{font-size:11.5px}
+  .cert-fdes-tbl tr.cert-ok td:last-child{color:var(--geo);font-weight:600}
+  .cert-fdes-tbl tr.cert-warn td{background:#fff8e6}
+  .cert-fdes-tbl tr.cert-bad td{background:#fdecea}
+  .cert-fdes-tbl tr.cert-ref td{background:var(--field);font-style:italic}
+  .comp-modal-seg{margin-bottom:14px}
   @media print{html,body{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;color-adjust:exact!important}header.bar,nav.tabs,.noprint{display:none!important}body{background:#fff}.app{padding:0}#v-note .note-page-wrap{box-shadow:none;max-width:100%}.view{display:none!important}.view#v-note{display:block!important;padding:0}}

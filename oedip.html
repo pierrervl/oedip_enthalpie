@@ -35,6 +35,7 @@
     <button data-tab="composants">Composants</button>
     <button data-tab="outils">Outils</button>
     <button data-tab="procedures">Procédures</button>
+    <button data-tab="certification">Certification</button>
   </div>
   <div class="tab-group tab-group-install">
     <span class="tab-group-label">Installation</span>
@@ -261,11 +262,17 @@
   <div class="panel blk-geo" style="margin-bottom:18px">
     <div class="head"><h3>Bibliothèque composants</h3><span class="tag mono" id="compTotalCount">0</span></div>
     <div class="body">
-      <div class="hint">Référencez vos circulateurs, compresseurs, échangeurs, détendeurs et accessoires frigorifiques. Les fiches sont enregistrées avec le projet (<b>oedip_projet_jj-mm-aa_hh-mm.json</b>) pour les calculs à venir.</div>
+      <div class="hint" id="compFamilyHint">Compresseurs, échangeurs, détendeurs et accessoires du circuit frigorifique.</div>
+      <div class="seg comp-main-seg" id="compMainSeg"></div>
+      <div id="compCatalogueNav">
+      <div class="comp-family-tabs" id="compFamilyTabs"></div>
+      <div class="comp-ouvrage-tabs" id="compOuvrageTabs"></div>
       <div class="comp-tabs" id="compTabs"></div>
       <div class="comp-subtabs" id="compSubTabs"></div>
+      </div>
     </div>
   </div>
+  <div id="compCatalogueView">
   <div class="toolbar" id="compToolbar">
     <span class="grow"><b id="compTypeTitle">—</b> <span class="tag mono" id="compTypeCount"></span></span>
     <button class="btn-soft" onclick="openCompModal(COMP_TYPE_ACTIVE)">+ Ajouter</button>
@@ -273,6 +280,8 @@
     <button class="btn-soft" onclick="importComposantsJson()">⤓ Importer bibliothèque</button>
   </div>
   <div class="comp-grid" id="compList"></div>
+  </div>
+  <div id="compFournisseursView" hidden></div>
 </section>
 
 <!-- ============ TAB OUTILS ============ -->
@@ -322,6 +331,18 @@
     </div>
   </div>
   <div id="procList"></div>
+</section>
+
+<!-- ============ TAB CERTIFICATION ============ -->
+<section class="view" id="v-certification">
+  <div class="panel blk-geo" style="margin-bottom:18px">
+    <div class="head"><h3>Certification produit</h3></div>
+    <div class="body">
+      <div class="hint">Gérez vos fiches <b>EPREL</b> (étiquetage énergétique UE) et générez des dossiers <b>FDES</b> (ACV produit) à partir des composants liés à chaque machine.</div>
+      <div class="comp-tabs cert-tabs" id="certTabs"></div>
+    </div>
+  </div>
+  <div id="certPanel"></div>
 </section>
 
 <!-- ============ TAB ENTREPRISE ============ -->
@@ -417,6 +438,12 @@
     <button class="btn-soft" onclick="closeOutilModal()">Fermer</button>
     <button class="btn-heat" onclick="saveOutilModal()">Enregistrer</button></div>
   <div class="mbody" id="outilModalBody"></div>
+</div></div>
+<div class="modal" id="modalFournisseur"><div class="card" style="max-width:640px">
+  <div class="mhead"><h3 id="frnModalTitle">Fournisseur</h3><span class="grow" style="flex:1"></span>
+    <button class="btn-soft" onclick="closeFournisseurModal()">Fermer</button>
+    <button class="btn-heat" onclick="saveFournisseurModal()">Enregistrer</button></div>
+  <div class="mbody" id="frnModalBody"></div>
 </div></div>
 <div class="modal" id="modalComp"><div class="card" style="max-width:640px">
   <div class="mhead"><h3 id="compModalTitle">Composant</h3><span class="grow" style="flex:1"></span>
@@ -539,7 +566,8 @@
 <script src="js/oedip-hydro.js?v=2"></script>
 <script src="js/oedip-engine.js?v=4"></script>
 <script src="js/oedip-chart.js"></script>
-<script src="js/oedip-composants.js?v=4"></script>
+<script src="js/oedip-composants.js?v=6"></script>
+<script src="js/oedip-fournisseurs.js?v=1"></script>
 <script src="js/oedip-outils.js"></script>
 <script src="js/oedip-installation.js?v=4"></script>
 <script src="js/oedip-schemas.js"></script>
@@ -548,6 +576,7 @@
 <script src="js/oedip-procedures.js?v=17"></script>
 <script src="js/oedip-procedure-print.js?v=3"></script>
 <script src="js/oedip-ui.js?v=15"></script>
+<script src="js/oedip-certification.js?v=3"></script>
 <script src="js/oedip-csv.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="js/oedip-supabase.js?v=11"></script>

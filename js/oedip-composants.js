@@ -3,6 +3,7 @@ const COMP_TYPES = {
   circulateur: {
     label: "Circulateur",
     icon: "⟳",
+    family: "hydrau",
     fields: [
       { key: "ref", label: "Référence interne", type: "text", full: true },
       { key: "fabricant", label: "Fabricant", type: "text" },
@@ -29,6 +30,7 @@ const COMP_TYPES = {
   compresseur: {
     label: "Compresseur",
     icon: "⚙",
+    family: "frigo",
     fields: [
       { key: "ref", label: "Référence interne", type: "text", full: true },
       { key: "fabricant", label: "Fabricant", type: "text" },
@@ -55,6 +57,7 @@ const COMP_TYPES = {
   echangeur_plaques: {
     label: "Échangeur à plaques",
     icon: "▦",
+    family: "frigo",
     fields: [
       { key: "ref", label: "Référence interne", type: "text", full: true },
       { key: "fabricant", label: "Fabricant", type: "text" },
@@ -84,6 +87,7 @@ const COMP_TYPES = {
   detendeur: {
     label: "Détendeur",
     icon: "◇",
+    family: "frigo",
     fields: [
       { key: "ref", label: "Référence interne", type: "text", full: true },
       { key: "fabricant", label: "Fabricant", type: "text" },
@@ -106,6 +110,7 @@ const COMP_TYPES = {
   reservoir_liquide: {
     label: "Réservoir liquide",
     icon: "▣",
+    family: "frigo",
     fields: [
       { key: "ref", label: "Référence interne", type: "text", full: true },
       { key: "fabricant", label: "Fabricant", type: "text" },
@@ -127,6 +132,7 @@ const COMP_TYPES = {
   filtre: {
     label: "Filtre",
     icon: "▥",
+    family: "hydrau",
     fields: [
       { key: "ref", label: "Référence interne", type: "text", full: true },
       { key: "fabricant", label: "Fabricant", type: "text" },
@@ -147,6 +153,7 @@ const COMP_TYPES = {
   pot_boue: {
     label: "Pot à boue",
     icon: "◎",
+    family: "hydrau",
     fields: [
       { key: "ref", label: "Référence interne", type: "text", full: true },
       { key: "fabricant", label: "Fabricant", type: "text" },
@@ -167,6 +174,7 @@ const COMP_TYPES = {
   bouteille_anticoup: {
     label: "Bouteille anticoup de liquide",
     icon: "◆",
+    family: "frigo",
     fields: [
       { key: "ref", label: "Référence interne", type: "text", full: true },
       { key: "fabricant", label: "Fabricant", type: "text" },
@@ -182,6 +190,168 @@ const COMP_TYPES = {
       if (c.dnMm) p.push("DN " + fmt(c.dnMm, 0));
       if (c.fluide) p.push(c.fluide);
       return p.join(" · ") || "—";
+    }
+  },
+  raccord_hydraulique: {
+    label: "Raccord",
+    icon: "⬡",
+    family: "hydrau",
+    fields: [
+      { key: "ref", label: "Référence interne", type: "text", full: true },
+      { key: "fabricant", label: "Fabricant", type: "text" },
+      { key: "modele", label: "Modèle", type: "text" },
+      { key: "typeRaccord", label: "Type", type: "select", options: [["coude", "Coude"], ["te", "Té"], ["reduction", "Réduction"], ["mamelon", "Mamelon"], ["autre", "Autre"]] },
+      { key: "dnMm", label: "Diamètre nominal", unit: "mm", type: "number" },
+      { key: "materiau", label: "Matériau", type: "text", placeholder: "laiton, acier, inox…" },
+      { key: "notes", label: "Notes", type: "textarea", full: true }
+    ],
+    summary(c) {
+      const p = [];
+      if (c.typeRaccord) p.push(c.typeRaccord);
+      if (c.dnMm) p.push("DN " + fmt(c.dnMm, 0));
+      return p.join(" · ") || "—";
+    }
+  },
+  vanne_hydraulique: {
+    label: "Vanne",
+    icon: "◉",
+    family: "hydrau",
+    fields: [
+      { key: "ref", label: "Référence interne", type: "text", full: true },
+      { key: "fabricant", label: "Fabricant", type: "text" },
+      { key: "modele", label: "Modèle", type: "text" },
+      { key: "typeVanne", label: "Type", type: "select", options: [["iso", "Isolement"], ["3voies", "3 voies"], ["melangeuse", "Mélangeuse"], ["clapet", "Clapet"], ["autre", "Autre"]] },
+      { key: "dnMm", label: "Diamètre nominal", unit: "mm", type: "number" },
+      { key: "pMaxBar", label: "Pression max", unit: "bar", type: "number", step: 0.1 },
+      { key: "notes", label: "Notes", type: "textarea", full: true }
+    ],
+    summary(c) {
+      const p = [];
+      if (c.typeVanne) p.push(c.typeVanne);
+      if (c.dnMm) p.push("DN " + fmt(c.dnMm, 0));
+      return p.join(" · ") || "—";
+    }
+  },
+  groupe_securite: {
+    label: "Groupe de sécurité",
+    icon: "⚠",
+    family: "hydrau",
+    fields: [
+      { key: "ref", label: "Référence interne", type: "text", full: true },
+      { key: "fabricant", label: "Fabricant", type: "text" },
+      { key: "modele", label: "Modèle", type: "text" },
+      { key: "dnMm", label: "Diamètre nominal", unit: "mm", type: "number" },
+      { key: "pOuvBar", label: "Pression ouverture", unit: "bar", type: "number", step: 0.1 },
+      { key: "debitEvac", label: "Débit évacuation", unit: "l/min", type: "number", step: 0.1 },
+      { key: "notes", label: "Notes", type: "textarea", full: true }
+    ],
+    summary(c) {
+      const p = [];
+      if (c.dnMm) p.push("DN " + fmt(c.dnMm, 0));
+      if (c.pOuvBar) p.push(fmt(c.pOuvBar, 1) + " bar");
+      return p.join(" · ") || "—";
+    }
+  },
+  prequipement_hydraulique: {
+    label: "Prééquipement hydraulique",
+    icon: "⊞",
+    family: "hydrau",
+    isOuvrage: true,
+    fields: [
+      { key: "ref", label: "Référence interne", type: "text", full: true },
+      { key: "designation", label: "Désignation", type: "text", full: true },
+      { key: "circuit", label: "Circuit", type: "select", options: [["captage", "Captage / froid"], ["chauffage", "Chauffage"], ["ecs", "ECS"], ["general", "Général"]] },
+      { key: "dnMm", label: "DN principal", unit: "mm", type: "number" },
+      { key: "notes", label: "Notes", type: "textarea", full: true }
+    ],
+    summary(c) {
+      const n = (c.lignes || []).length;
+      const q = (c.lignes || []).reduce((s, l) => s + (+l.qty || 1), 0);
+      const p = [c.designation || c.ref];
+      if (c.circuit) p.push(c.circuit);
+      if (n) p.push(n + " ref · " + q + " pcs");
+      return p.filter(Boolean).join(" · ") || "—";
+    }
+  },
+  disjoncteur: {
+    label: "Disjoncteur / protection",
+    icon: "▭",
+    family: "elec",
+    fields: [
+      { key: "ref", label: "Référence interne", type: "text", full: true },
+      { key: "fabricant", label: "Fabricant", type: "text" },
+      { key: "modele", label: "Modèle", type: "text" },
+      { key: "typeProt", label: "Type", type: "select", options: [["disj", "Disjoncteur"], ["diff", "Différentiel"], ["fusible", "Fusible"], ["sectionneur", "Sectionneur"], ["autre", "Autre"]] },
+      { key: "iNomA", label: "Courant nominal", unit: "A", type: "number", step: 0.1 },
+      { key: "pdcKa", label: "Pouvoir coupure", unit: "kA", type: "number", step: 0.1 },
+      { key: "notes", label: "Notes", type: "textarea", full: true }
+    ],
+    summary(c) {
+      const p = [];
+      if (c.typeProt) p.push(c.typeProt);
+      if (c.iNomA) p.push(fmt(c.iNomA, 1) + " A");
+      return p.join(" · ") || "—";
+    }
+  },
+  contacteur: {
+    label: "Contacteur / relais",
+    icon: "⌁",
+    family: "elec",
+    fields: [
+      { key: "ref", label: "Référence interne", type: "text", full: true },
+      { key: "fabricant", label: "Fabricant", type: "text" },
+      { key: "modele", label: "Modèle", type: "text" },
+      { key: "typeApp", label: "Type", type: "select", options: [["contacteur", "Contacteur"], ["relais", "Relais"], ["telerupteur", "Télérupteur"], ["autre", "Autre"]] },
+      { key: "iNomA", label: "Courant nominal", unit: "A", type: "number", step: 0.1 },
+      { key: "bobineV", label: "Tension bobine", unit: "V", type: "number" },
+      { key: "notes", label: "Notes", type: "textarea", full: true }
+    ],
+    summary(c) {
+      const p = [];
+      if (c.typeApp) p.push(c.typeApp);
+      if (c.iNomA) p.push(fmt(c.iNomA, 1) + " A");
+      return p.join(" · ") || "—";
+    }
+  },
+  cable: {
+    label: "Câble / fil",
+    icon: "∿",
+    family: "elec",
+    fields: [
+      { key: "ref", label: "Référence interne", type: "text", full: true },
+      { key: "fabricant", label: "Fabricant", type: "text" },
+      { key: "modele", label: "Modèle / section", type: "text" },
+      { key: "sectionMm2", label: "Section", unit: "mm²", type: "number", step: 0.1 },
+      { key: "nbConducteurs", label: "Conducteurs", type: "number" },
+      { key: "notes", label: "Notes", type: "textarea", full: true }
+    ],
+    summary(c) {
+      const p = [];
+      if (c.sectionMm2) p.push(fmt(c.sectionMm2, 1) + " mm²");
+      if (c.nbConducteurs) p.push(c.nbConducteurs + "C");
+      return p.join(" · ") || "—";
+    }
+  },
+  tableau_electrique: {
+    label: "Tableau électrique",
+    icon: "▣",
+    family: "elec",
+    isOuvrage: true,
+    fields: [
+      { key: "ref", label: "Référence interne", type: "text", full: true },
+      { key: "designation", label: "Désignation", type: "text", full: true },
+      { key: "tension", label: "Alimentation", type: "select", options: [["0", "Mono 230V"], ["1", "Tri 400V"], ["2", "Indiff."]] },
+      { key: "iMaxA", label: "Courant max", unit: "A", type: "number", step: 0.1 },
+      { key: "indiceIP", label: "Indice IP", type: "text", placeholder: "IP54…" },
+      { key: "notes", label: "Notes", type: "textarea", full: true }
+    ],
+    summary(c) {
+      const n = (c.lignes || []).length;
+      const q = (c.lignes || []).reduce((s, l) => s + (+l.qty || 1), 0);
+      const p = [c.designation || c.ref];
+      if (c.iMaxA) p.push(fmt(c.iMaxA, 1) + " A");
+      if (n) p.push(n + " ref · " + q + " pcs");
+      return p.filter(Boolean).join(" · ") || "—";
     }
   }
 };
@@ -205,6 +375,7 @@ function formatCompDiamInch(val) {
 }
 
 Object.values(COMP_TYPES).forEach((def) => {
+  if (def.isOuvrage || def.family === "elec") return;
   const notesIdx = def.fields.findIndex((f) => f.key === "notes");
   const at = notesIdx >= 0 ? notesIdx : def.fields.length;
   def.fields.splice(at, 0, ...COMP_CONN_FIELDS.map((f) => ({ ...f })));
@@ -353,18 +524,254 @@ function nextCompId() {
   return "cmp_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2, 6);
 }
 
+function findCompById(id) {
+  if (!id) return null;
+  for (const type of Object.keys(COMP_TYPES)) {
+    const hit = (state.composants[type] || []).find((c) => c.id === id);
+    if (hit) return { ...hit, _type: type };
+  }
+  return null;
+}
+
+function ouvrageLignesPreview(c) {
+  const lignes = c.lignes || [];
+  if (!lignes.length) return "";
+  return lignes
+    .map((ln) => {
+      const comp = findCompById(ln.compId);
+      const label = comp ? comp.ref || comp.modele || comp.id : "—";
+      return (ln.qty > 1 ? ln.qty + "× " : "") + label;
+    })
+    .join(" · ");
+}
+
 function emptyCompItem(type) {
   const item = { id: nextCompId(), type };
   COMP_TYPES[type].fields.forEach((f) => {
     if (f.type === "select" && f.options) item[f.key] = f.options[0][0];
     else item[f.key] = "";
   });
+  if (COMP_TYPES[type].isOuvrage) item.lignes = [];
+  item.fournisseurId = item.fournisseurId || "";
   return item;
 }
 
 let COMP_EDIT = null;
-let COMP_TYPE_ACTIVE = "circulateur";
+let COMP_TYPE_ACTIVE = "compresseur";
+let COMP_FAMILY_ACTIVE = "frigo";
+let COMP_OUVRAGE_VIEW = "elements";
 let COMP_SUBVIEW = "list";
+let COMP_MODAL_VIEW = "fiche";
+
+const COMP_FAMILIES = {
+  frigo: { label: "Frigo", icon: "❄", hint: "Compresseurs, échangeurs, détendeurs et accessoires du circuit frigorifique." },
+  hydrau: { label: "Hydraulique", icon: "💧", hint: "Circulateurs, filtres, raccords, vannes, groupes de sécurité et prééquipements hydrauliques." },
+  elec: { label: "Électrique", icon: "⚡", hint: "Protections, contacteurs, câbles et tableaux électriques assemblés." },
+};
+
+function compTypesInFamily(family, ouvrageView) {
+  return Object.keys(COMP_TYPES).filter((k) => {
+    const t = COMP_TYPES[k];
+    if ((t.family || "frigo") !== family) return false;
+    if (family === "frigo") return !t.isOuvrage;
+    if (ouvrageView === "ouvrages") return !!t.isOuvrage;
+    return !t.isOuvrage;
+  });
+}
+
+function compElementTypesInFamily(family) {
+  return compTypesInFamily(family, "elements");
+}
+
+function setCompFamily(f) {
+  COMP_FAMILY_ACTIVE = f;
+  COMP_OUVRAGE_VIEW = "elements";
+  COMP_SUBVIEW = "list";
+  const types = compTypesInFamily(f, "elements");
+  COMP_TYPE_ACTIVE = types[0] || "compresseur";
+  renderCompFamilyTabs();
+  renderCompOuvrageTabs();
+  renderCompTypeTabs();
+  renderCompSubTabs();
+  renderComposants();
+}
+
+function setCompOuvrageView(v) {
+  COMP_OUVRAGE_VIEW = v;
+  COMP_SUBVIEW = "list";
+  const types = compTypesInFamily(COMP_FAMILY_ACTIVE, v);
+  COMP_TYPE_ACTIVE = types[0] || COMP_TYPE_ACTIVE;
+  renderCompOuvrageTabs();
+  renderCompTypeTabs();
+  renderCompSubTabs();
+  renderComposants();
+}
+
+function renderCompFamilyTabs() {
+  const el = $("compFamilyTabs");
+  if (!el) return;
+  el.innerHTML = Object.keys(COMP_FAMILIES).map((k) => {
+    const f = COMP_FAMILIES[k];
+    const n = compTypesInFamily(k, "elements").reduce((s, t) => s + (state.composants[t]?.length || 0), 0)
+      + compTypesInFamily(k, "ouvrages").reduce((s, t) => s + (state.composants[t]?.length || 0), 0);
+    return `<button type="button" class="comp-family-tab${COMP_FAMILY_ACTIVE === k ? " on" : ""}" onclick="setCompFamily('${k}')">${f.icon} ${f.label}${n ? ` <span class="n">${n}</span>` : ""}</button>`;
+  }).join("");
+  const hint = $("compFamilyHint");
+  if (hint) hint.textContent = COMP_FAMILIES[COMP_FAMILY_ACTIVE]?.hint || "";
+}
+
+function renderCompOuvrageTabs() {
+  const el = $("compOuvrageTabs");
+  if (!el) return;
+  if (COMP_FAMILY_ACTIVE === "frigo") {
+    el.style.display = "none";
+    el.innerHTML = "";
+    return;
+  }
+  el.style.display = "flex";
+  el.innerHTML = [
+    `<button type="button" class="comp-ouvrage-tab${COMP_OUVRAGE_VIEW === "elements" ? " on" : ""}" onclick="setCompOuvrageView('elements')">Éléments</button>`,
+    `<button type="button" class="comp-ouvrage-tab${COMP_OUVRAGE_VIEW === "ouvrages" ? " on" : ""}" onclick="setCompOuvrageView('ouvrages')">Ouvrages</button>`,
+  ].join("");
+}
+
+function renderCompTypeTabs() {
+  const tabs = $("compTabs");
+  if (!tabs) return;
+  const types = compTypesInFamily(COMP_FAMILY_ACTIVE, COMP_OUVRAGE_VIEW);
+  tabs.innerHTML = types.map((k) =>
+    `<button type="button" class="comp-tab${COMP_TYPE_ACTIVE === k ? " on" : ""}" data-comp="${k}" onclick="setCompType('${k}')">${COMP_TYPES[k].icon} ${COMP_TYPES[k].label}</button>`
+  ).join("");
+}
+
+function compEscVal(s) {
+  return String(s ?? "").replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
+}
+
+function ouvrageElementOptions(family, selectedId) {
+  const types = compElementTypesInFamily(family);
+  const groups = types.map((type) => {
+    const items = state.composants[type] || [];
+    if (!items.length) return "";
+    const opts = items.map((c) =>
+      `<option value="${compEscVal(c.id)}"${c.id === selectedId ? " selected" : ""}>${escHtml(c.ref || c.modele || c.id)}</option>`
+    ).join("");
+    return `<optgroup label="${escHtml(COMP_TYPES[type].label)}">${opts}</optgroup>`;
+  }).filter(Boolean).join("");
+  return groups || '<option value="">— Aucun élément dans le catalogue —</option>';
+}
+
+function renderOuvrageLignesEditor(lignes, family) {
+  const rows = (lignes || []).map((ln, i) => `<tr data-ligne-i="${i}">
+    <td><select class="ouv-ligne-comp" data-ligne-i="${i}">${ouvrageElementOptions(family, ln.compId)}</select></td>
+    <td><input type="number" class="ouv-ligne-qty mono" data-ligne-i="${i}" min="1" step="1" value="${ln.qty ?? 1}" style="width:4rem"></td>
+    <td><input type="text" class="ouv-ligne-note" data-ligne-i="${i}" value="${compEscVal(ln.note || "")}" placeholder="Optionnel"></td>
+    <td><button type="button" class="btn-ghost" onclick="removeOuvrageLigne(${i})">✕</button></td>
+  </tr>`).join("");
+  return `<div class="ouv-lignes-wrap">
+    <span class="subhead">Nomenclature (assemblage)</span>
+    <table class="proc-dims-tbl ouv-lignes-tbl"><thead><tr><th>Composant</th><th>Qté</th><th>Remarque</th><th></th></tr></thead>
+    <tbody id="ouvLignesBody">${rows}</tbody></table>
+    <button type="button" class="btn-ghost" onclick="addOuvrageLigne()">+ Ajouter un élément</button>
+  </div>`;
+}
+
+function gatherOuvrageLignesFromForm() {
+  const body = $("ouvLignesBody");
+  if (!body) return [];
+  return [...body.querySelectorAll("tr[data-ligne-i]")].map((row) => ({
+    compId: row.querySelector(".ouv-ligne-comp")?.value || "",
+    qty: Math.max(1, +(row.querySelector(".ouv-ligne-qty")?.value || 1)),
+    note: row.querySelector(".ouv-ligne-note")?.value.trim() || "",
+  })).filter((ln) => ln.compId);
+}
+
+function addOuvrageLigne() {
+  if (!COMP_EDIT) return;
+  gatherCompModalPartial();
+  const draft = COMP_EDIT._draft || {};
+  if (!draft.lignes) draft.lignes = [];
+  draft.lignes.push({ compId: "", qty: 1, note: "" });
+  COMP_EDIT._draft = draft;
+  const { type } = COMP_EDIT;
+  const prev = COMP_EDIT.idx != null ? { ...state.composants[type][COMP_EDIT.idx] } : emptyCompItem(type);
+  const c = { ...prev, ...draft };
+  if (draft.fdes) c.fdes = { ...ensureCompFdes(prev), ...draft.fdes };
+  renderCompModalBody(c, type);
+}
+
+function removeOuvrageLigne(i) {
+  if (!COMP_EDIT) return;
+  gatherCompModalPartial();
+  const draft = COMP_EDIT._draft || {};
+  draft.lignes = (draft.lignes || []).filter((_, j) => j !== i);
+  COMP_EDIT._draft = draft;
+  const { type } = COMP_EDIT;
+  const prev = COMP_EDIT.idx != null ? { ...state.composants[type][COMP_EDIT.idx] } : emptyCompItem(type);
+  const c = { ...prev, ...draft };
+  renderCompModalBody(c, type);
+}
+
+const COMP_FDES_FIELDS = [
+  { key: "iniesRef", label: "Réf. FDES / INIES", type: "text", full: true },
+  { key: "url", label: "URL fiche FDES", type: "text", full: true },
+  { key: "origine", label: "Origine fabrication", type: "text", placeholder: "Pays, site usine…" },
+  { key: "poidsKg", label: "Poids pièce", unit: "kg", type: "number", step: 0.01 },
+  { key: "transportKm", label: "Transport jusqu'au site", unit: "km", type: "number", step: 1 },
+  { key: "transportMode", label: "Mode transport", type: "select", options: [["route", "Route (camion)"], ["mer", "Maritime"], ["fer", "Ferroviaire"], ["air", "Aérien"]] },
+  { key: "materiauPrincipal", label: "Matériau principal", type: "text" },
+  { key: "contenuRecyclePct", label: "Contenu recyclé", unit: "%", type: "number", step: 1 },
+  { key: "acvA1A3", label: "ACV A1-A3 (production)", unit: "kgCO₂eq", type: "number", step: 0.01 },
+  { key: "acvA4", label: "ACV A4 (transport)", unit: "kgCO₂eq", type: "number", step: 0.01 },
+  { key: "acvA5", label: "ACV A5 (installation)", unit: "kgCO₂eq", type: "number", step: 0.01 },
+  { key: "acvC1C4", label: "ACV C1-C4 (fin de vie)", unit: "kgCO₂eq", type: "number", step: 0.01 },
+  { key: "acvTotal", label: "ACV total déclaré", unit: "kgCO₂eq", type: "number", step: 0.01 },
+  { key: "notes", label: "Notes FDES", type: "textarea", full: true },
+];
+
+function defaultCompFdes() {
+  return {
+    iniesRef: "",
+    url: "",
+    origine: "",
+    poidsKg: null,
+    transportKm: null,
+    transportMode: "route",
+    acvA1A3: null,
+    acvA4: null,
+    acvA5: null,
+    acvC1C4: null,
+    acvTotal: null,
+    materiauPrincipal: "",
+    contenuRecyclePct: null,
+    notes: "",
+  };
+}
+
+function ensureCompFdes(c) {
+  if (!c) return defaultCompFdes();
+  if (!c.fdes || typeof c.fdes !== "object") c.fdes = defaultCompFdes();
+  return c.fdes;
+}
+
+function compFdesTotal(fdes) {
+  if (!fdes) return null;
+  if (fdes.acvTotal != null && fdes.acvTotal !== "") return +fdes.acvTotal;
+  const parts = [fdes.acvA1A3, fdes.acvA4, fdes.acvA5, fdes.acvC1C4].filter((v) => v != null && v !== "" && Number.isFinite(+v));
+  if (!parts.length) return null;
+  return parts.reduce((s, v) => s + +v, 0);
+}
+
+function compFdesSummary(c) {
+  const f = ensureCompFdes(c);
+  const total = compFdesTotal(f);
+  const p = [];
+  if (f.iniesRef) p.push(f.iniesRef);
+  if (f.origine) p.push(f.origine);
+  if (f.poidsKg) p.push(fmt(f.poidsKg, 2) + " kg");
+  if (total != null) p.push(fmt(total, 2) + " kgCO₂eq");
+  return p.join(" · ") || "—";
+}
 
 const CIRC_CURVE_COLORS = [
   "#0c7a8c", "#cf4310", "#2f7d3b", "#6b4c9a", "#b5740c", "#c41e6a",
@@ -375,6 +782,7 @@ function setCompType(t) {
   COMP_TYPE_ACTIVE = t;
   COMP_SUBVIEW = "list";
   document.querySelectorAll(".comp-tab").forEach((b) => b.classList.toggle("on", b.dataset.comp === t));
+  renderCompSubTabs();
   renderComposants();
 }
 
@@ -392,10 +800,17 @@ function circulateursWithCurve() {
 function renderCompSubTabs() {
   const el = $("compSubTabs");
   if (!el) return;
+  if (COMP_TYPES[COMP_TYPE_ACTIVE]?.isOuvrage && COMP_OUVRAGE_VIEW === "ouvrages") {
+    el.style.display = "none";
+    el.innerHTML = "";
+    return;
+  }
+  const fdesBtn = `<button type="button" class="comp-subtab${COMP_SUBVIEW === "fdes" ? " on" : ""}" onclick="setCompSubView('fdes')">FDES ACV</button>`;
   if (COMP_TYPE_ACTIVE === "circulateur") {
     el.style.display = "flex";
     el.innerHTML = `
     <button type="button" class="comp-subtab${COMP_SUBVIEW === "list" ? " on" : ""}" onclick="setCompSubView('list')">Fiches</button>
+    ${fdesBtn}
     <button type="button" class="comp-subtab${COMP_SUBVIEW === "curves" ? " on" : ""}" onclick="setCompSubView('curves')">Courbes HMT</button>`;
     return;
   }
@@ -403,10 +818,14 @@ function renderCompSubTabs() {
     el.style.display = "flex";
     el.innerHTML = `
     <button type="button" class="comp-subtab${COMP_SUBVIEW === "list" ? " on" : ""}" onclick="setCompSubView('list')">Fiches</button>
+    ${fdesBtn}
     <button type="button" class="comp-subtab${COMP_SUBVIEW === "curves" ? " on" : ""}" onclick="setCompSubView('curves')">Courbes Pdc</button>`;
     return;
   }
-  el.style.display = "none";
+  el.style.display = "flex";
+  el.innerHTML = `
+    <button type="button" class="comp-subtab${COMP_SUBVIEW === "list" ? " on" : ""}" onclick="setCompSubView('list')">Fiches</button>
+    ${fdesBtn}`;
 }
 
 function echangeurPdcSeries() {
@@ -937,6 +1356,8 @@ function renderComposants() {
   const list = state.composants[type] || [];
   const total = Object.keys(COMP_TYPES).reduce((n, k) => n + (state.composants[k]?.length || 0), 0);
   $("compTotalCount").textContent = total + " composant(s) au total";
+  renderCompFamilyTabs();
+  renderCompOuvrageTabs();
 
   document.querySelectorAll(".comp-tab").forEach((b) => {
     const k = b.dataset.comp;
@@ -969,23 +1390,59 @@ function renderComposants() {
     return;
   }
 
-  if (addBtn) addBtn.style.display = "";
+  if (COMP_SUBVIEW === "fdes") {
+    $("compTypeTitle").textContent = def.label + " — FDES ACV";
+    const withFdes = list.filter((c) => compFdesTotal(ensureCompFdes(c)) != null).length;
+    $("compTypeCount").textContent = withFdes + "/" + list.length + " avec ACV";
+    if (addBtn) addBtn.style.display = "";
+    $("compList").className = "comp-grid";
+    $("compList").innerHTML = list.length
+      ? list.map((c, i) => {
+          const f = ensureCompFdes(c);
+          const total = compFdesTotal(f);
+          const title = c.ref || c.modele || c.fabricant || "Sans nom";
+          return `<div class="ccard${total != null ? " cert-card-ok" : ""}">
+        <div class="ccard-top"><h4>${escHtml(title)}</h4>
+          ${total != null ? `<span class="badge cert-badge-acv mono">${fmt(total, 2)} kgCO₂eq</span>` : `<span class="badge">Incomplet</span>`}</div>
+        <div class="ccard-sub">${escHtml(compFdesSummary(c))}</div>
+        <div class="ccard-spec mono">${escHtml([f.origine, f.poidsKg ? fmt(f.poidsKg, 2) + " kg" : "", f.iniesRef].filter(Boolean).join(" · ") || "—")}</div>
+        <div class="ccard-acts">
+          <button class="btn-soft" onclick="openCompModal('${type}',${i},'fdes')">FDES</button>
+          <button class="btn-soft" onclick="openCompModal('${type}',${i})">Fiche</button>
+        </div>
+      </div>`;
+        }).join("")
+      : `<div class="empty" style="grid-column:1/-1">Aucun composant — les données FDES alimentent le dossier produit (Certification → FDES).</div>`;
+    return;
+  }
+
+  if (addBtn) {
+    addBtn.style.display = "";
+    addBtn.textContent = def.isOuvrage ? "+ Ajouter un ouvrage" : "+ Ajouter";
+  }
   $("compList").className = "comp-grid";
   $("compTypeTitle").textContent = def.label;
-  $("compTypeCount").textContent = list.length + " fiche(s)";
+  $("compTypeCount").textContent = list.length + (def.isOuvrage ? " ouvrage(s)" : " fiche(s)");
 
   $("compList").innerHTML = list.length
     ? list
         .map((c, i) => {
-          const title = c.ref || c.modele || c.fabricant || "Sans nom";
-          const sub = [c.fabricant, c.modele].filter(Boolean).join(" · ");
-          return `<div class="ccard">
+          const title = c.designation || c.ref || c.modele || c.fabricant || "Sans nom";
+          const sub = def.isOuvrage
+            ? [c.ref, c.circuit].filter(Boolean).join(" · ")
+            : [c.fabricant, c.modele].filter(Boolean).join(" · ");
+          const frnHint = c.fournisseurId && typeof findFournisseurById === "function"
+            ? findFournisseurById(c.fournisseurId)?.nom
+            : "";
+          const bom = def.isOuvrage ? ouvrageLignesPreview(c) : "";
+          return `<div class="ccard${def.isOuvrage ? " ccard-ouvrage" : ""}">
         <div class="ccard-top">
           <h4>${escHtml(title)}</h4>
-          <span class="badge mono">${def.label}</span>
+          <span class="badge mono">${def.isOuvrage ? "Ouvrage" : def.label}</span>
         </div>
-        <div class="ccard-sub">${escHtml(sub || "—")}</div>
+        <div class="ccard-sub">${escHtml(sub || "—")}${frnHint ? ` · <span class="hint">${escHtml(frnHint)}</span>` : ""}</div>
         <div class="ccard-spec mono">${escHtml(def.summary(c))}</div>
+        ${bom ? `<div class="ccard-bom hint">${escHtml(bom)}</div>` : ""}
         ${c.notes ? `<div class="ccard-note">${escHtml(c.notes)}</div>` : ""}
         <div class="ccard-acts">
           <button class="btn-soft" onclick="openCompModal('${type}',${i})">Modifier</button>
@@ -995,22 +1452,99 @@ function renderComposants() {
       </div>`;
         })
         .join("")
-    : `<div class="empty" style="grid-column:1/-1">Aucun ${def.label.toLowerCase()} — ajoutez une fiche pour constituer votre bibliothèque.</div>`;
+    : `<div class="empty" style="grid-column:1/-1">Aucun ${def.label.toLowerCase()} — ${def.isOuvrage ? "créez un ouvrage en assemblant des éléments du catalogue." : "ajoutez une fiche pour constituer votre bibliothèque."}</div>`;
 }
 
-function openCompModal(type, idx) {
+function openCompModal(type, idx, view) {
   ensureComposants();
   const def = COMP_TYPES[type];
-  COMP_EDIT = { type, idx: idx != null ? idx : null };
+  COMP_EDIT = { type, idx: idx != null ? idx : null, _draft: {} };
+  COMP_MODAL_VIEW = view === "fdes" ? "fdes" : "fiche";
   const c =
     idx != null ? { ...state.composants[type][idx] } : emptyCompItem(type);
+  ensureCompFdes(c);
   $("compModalTitle").textContent =
     (idx != null ? "Modifier" : "Ajouter") + " — " + def.label;
-  $("compModalBody").innerHTML =
-    `<div class="comp-form">${def.fields
-      .map((f) => compFieldHtml(f, c))
-      .join("")}</div>`;
+  renderCompModalBody(c, type);
   $("modalComp").classList.add("show");
+}
+
+function setCompModalView(v) {
+  COMP_MODAL_VIEW = v;
+  if (!COMP_EDIT) return;
+  gatherCompModalPartial();
+  const { type, idx } = COMP_EDIT;
+  const prev = idx != null ? { ...state.composants[type][idx] } : emptyCompItem(type);
+  const draft = COMP_EDIT._draft || {};
+  const c = { ...prev };
+  Object.keys(draft).forEach((k) => { if (k !== "fdes") c[k] = draft[k]; });
+  if (draft.fdes) c.fdes = { ...ensureCompFdes(prev), ...draft.fdes };
+  renderCompModalBody(c, type);
+}
+
+function gatherCompModalPartial() {
+  if (!COMP_EDIT) return;
+  const draft = COMP_EDIT._draft || {};
+  $("compModalBody")?.querySelectorAll("[data-k]").forEach((el) => {
+    draft[el.dataset.k] = el.tagName === "SELECT" ? el.value : el.value.trim();
+  });
+  $("compModalBody")?.querySelectorAll("[data-fdes-k]").forEach((el) => {
+    if (!draft.fdes) draft.fdes = {};
+    draft.fdes[el.dataset.fdesK] = el.tagName === "SELECT" ? el.value : el.value.trim();
+  });
+  if (COMP_TYPES[COMP_EDIT.type]?.isOuvrage) {
+    if ($("ouvLignesBody")) draft.lignes = gatherOuvrageLignesFromForm();
+    else if (!draft.lignes) {
+      const prev = COMP_EDIT.idx != null ? state.composants[COMP_EDIT.type][COMP_EDIT.idx] : null;
+      draft.lignes = prev?.lignes ? [...prev.lignes] : [];
+    }
+  }
+  COMP_EDIT._draft = draft;
+}
+
+function renderCompModalBody(c, type) {
+  const def = COMP_TYPES[type];
+  const seg = `<div class="seg comp-modal-seg" style="margin-bottom:14px">
+    <button type="button" class="${COMP_MODAL_VIEW === "fiche" ? "on" : ""}" onclick="setCompModalView('fiche')">Fiche technique</button>
+    <button type="button" class="${COMP_MODAL_VIEW === "fdes" ? "on" : ""}" onclick="setCompModalView('fdes')">FDES / ACV</button>
+  </div>`;
+  if (COMP_MODAL_VIEW === "fdes") {
+    const f = ensureCompFdes(c);
+    const frn = typeof findFournisseurById === "function" ? findFournisseurById(c.fournisseurId) : null;
+    const kmCalc = frn && typeof calcFournisseurTransportKm === "function" ? calcFournisseurTransportKm(c.fournisseurId) : null;
+    const frnBlock = frn
+      ? `<div class="frn-comp-hint hint" style="margin-bottom:12px;padding:10px;background:var(--field);border-radius:6px">
+          <b>Fournisseur :</b> ${escHtml(fournisseurLabel(frn))}<br>
+          ${escHtml(fournisseurAddressLine(frn) || "")}
+          ${kmCalc != null ? `<br>Distance calculée : <span class="mono">${fmt(kmCalc, 0)} km</span>` : ""}
+          ${COMP_EDIT?.idx != null ? `<br><button type="button" class="btn-ghost" style="margin-top:6px" onclick="applyTransportToSingleComp('${type}',${COMP_EDIT.idx})">Appliquer la distance au transport FDES</button>` : ""}
+        </div>`
+      : c.fournisseurId
+        ? `<p class="hint">Fournisseur introuvable — vérifiez le registre fournisseurs.</p>`
+        : `<p class="hint">Liez un fournisseur sur la fiche technique pour calculer automatiquement le transport.</p>`;
+    $("compModalBody").innerHTML = seg + frnBlock + `<div class="comp-form">${COMP_FDES_FIELDS.map((fld) => compFdesFieldHtml(fld, f)).join("")}</div>
+      <p class="hint">Ces données alimentent le dossier FDES produit (Certification → FDES produit).</p>`;
+    return;
+  }
+  const frnSel = typeof fournisseurOptionsHtml === "function"
+    ? `<label class="comp-field full"><span>Fournisseur</span><select data-k="fournisseurId">${fournisseurOptionsHtml(c.fournisseurId, "— Choisir un fournisseur —")}</select></label>`
+    : "";
+  const ouv = def.isOuvrage ? renderOuvrageLignesEditor(c.lignes || [], def.family) : "";
+  $("compModalBody").innerHTML = seg + `<div class="comp-form">${frnSel}${def.fields.map((f) => compFieldHtml(f, c)).join("")}</div>${ouv}`;
+}
+
+function compFdesFieldHtml(f, fdes) {
+  const v = fdes[f.key] ?? "";
+  const span = f.full ? ' style="grid-column:1/-1"' : "";
+  if (f.type === "textarea") {
+    return `<label class="comp-field"${span}><span>${f.label}</span><textarea data-fdes-k="${f.key}" rows="3">${escHtml(v)}</textarea></label>`;
+  }
+  if (f.type === "select") {
+    const opts = (f.options || []).map(([val, lab]) => `<option value="${val}"${String(v) === val ? " selected" : ""}>${lab}</option>`).join("");
+    return `<label class="comp-field"${span}><span>${f.label}</span><select data-fdes-k="${f.key}">${opts}</select></label>`;
+  }
+  const unit = f.unit ? `<span class="unit">${f.unit}</span>` : "";
+  return `<label class="comp-field"${span}><span>${f.label}</span><input data-fdes-k="${f.key}" type="${f.type || "text"}" value="${escHtml(v)}"${f.step != null ? ` step="${f.step}"` : ""} placeholder="${escHtml(f.placeholder || "")}">${unit}</label>`;
 }
 
 function compFieldHtml(f, c) {
@@ -1042,15 +1576,36 @@ function readCompModal() {
 
 function saveCompModal() {
   if (!COMP_EDIT) return;
+  gatherCompModalPartial();
   const { type, idx } = COMP_EDIT;
   const prev = idx != null ? state.composants[type][idx] : {};
-  const data = { ...prev, ...readCompModal() };
+  const draft = COMP_EDIT._draft || {};
+  const data = { ...prev };
+  Object.keys(draft).forEach((k) => {
+    if (k !== "fdes") data[k] = draft[k];
+  });
+  if (draft.fdes) {
+    data.fdes = { ...ensureCompFdes(prev), ...draft.fdes };
+    COMP_FDES_FIELDS.forEach((f) => {
+      if (f.type === "number" && data.fdes[f.key] !== "" && data.fdes[f.key] != null) data.fdes[f.key] = num(data.fdes[f.key]);
+      else if (f.type === "number" && data.fdes[f.key] === "") data.fdes[f.key] = null;
+    });
+    if (data.fdes.acvTotal == null) {
+      const t = compFdesTotal(data.fdes);
+      if (t != null) data.fdes.acvTotal = t;
+    }
+  }
   data.id = idx != null ? prev.id : nextCompId();
   data.type = type;
   COMP_TYPES[type].fields.forEach((f) => {
+    if (data[f.key] === undefined) return;
     if (f.type === "number" && data[f.key] !== "" && data[f.key] != null) data[f.key] = num(data[f.key]);
     else if (f.type === "number" && data[f.key] === "") data[f.key] = null;
   });
+  if (COMP_TYPES[type].isOuvrage) {
+    data.lignes = draft.lignes?.length ? draft.lignes : gatherOuvrageLignesFromForm();
+    if (!data.lignes?.length && prev.lignes?.length) data.lignes = prev.lignes;
+  }
   if (idx != null) state.composants[type][idx] = data;
   else state.composants[type].push(data);
   closeCompModal();
@@ -1063,6 +1618,7 @@ function saveCompModal() {
 function closeCompModal() {
   $("modalComp").classList.remove("show");
   COMP_EDIT = null;
+  COMP_MODAL_VIEW = "fiche";
 }
 
 function delComp(type, idx) {
@@ -1133,16 +1689,12 @@ if ($("modalComp")) $("modalComp").addEventListener("click", (e) => { if (e.targ
 
 function initComposantsTab() {
   ensureBundledComposants();
-  const tabs = $("compTabs");
-  if (!tabs) return;
-  if (!tabs.dataset.ready) {
-    tabs.innerHTML = Object.keys(COMP_TYPES)
-      .map(
-        (k) =>
-          `<button type="button" class="comp-tab" data-comp="${k}" onclick="setCompType('${k}')">${COMP_TYPES[k].icon} ${COMP_TYPES[k].label}</button>`
-      )
-      .join("");
-    tabs.dataset.ready = "1";
-    setCompType("circulateur");
-  } else renderComposants();
+  if (!$("compTabs")) return;
+  if (typeof renderCompMainSeg === "function") renderCompMainSeg();
+  if (typeof setCompMainView === "function") setCompMainView(COMP_MAIN_VIEW || "catalogue");
+  renderCompFamilyTabs();
+  renderCompOuvrageTabs();
+  renderCompTypeTabs();
+  renderCompSubTabs();
+  renderComposants();
 }
